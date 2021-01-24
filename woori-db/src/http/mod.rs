@@ -1,4 +1,6 @@
-use actix_web::{get, HttpResponse, Responder};
+use actix_web::{get, guard, web, HttpResponse, Responder};
+
+use crate::controllers::wql::wql_handler;
 
 #[get("/ping")]
 pub async fn ping() -> impl Responder {
@@ -16,4 +18,14 @@ pub async fn readiness() -> impl Responder {
         Ok(_) => HttpResponse::Accepted(),
         Err(_) => HttpResponse::InternalServerError(),
     }
+}
+
+pub fn routes(config: &mut web::ServiceConfig) {
+    config.service(
+        web::scope("/wql")
+            .guard(guard::Header("Content-Type", "application/wql"))
+            .route("/query", web::post().to(wql_handler)),
+            )
+            .route("", web::get().to(|| HttpResponse::NotFound()),
+    );
 }
