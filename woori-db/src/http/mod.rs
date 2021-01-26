@@ -1,6 +1,7 @@
-use actix_web::{get, guard, web, HttpResponse, Responder};
-
 use crate::controllers::wql::wql_handler;
+use crate::repository::local::LocalContext;
+use actix_web::{get, guard, web, HttpResponse, Responder};
+use std::sync::{Arc, Mutex};
 
 #[get("/ping")]
 pub async fn ping() -> impl Responder {
@@ -21,11 +22,39 @@ pub async fn readiness() -> impl Responder {
 }
 
 pub fn routes(config: &mut web::ServiceConfig) {
-    config.service(
-        web::scope("/wql")
-            .guard(guard::Header("Content-Type", "application/wql"))
-            .route("/query", web::post().to(wql_handler)),
-            )
-            .route("", web::get().to(|| HttpResponse::NotFound()),
-    );
+    let wql_context = Arc::new(Mutex::new(LocalContext::new()));
+
+    config
+        .service(
+            web::scope("/wql")
+                .guard(guard::Header("Content-Type", "application/wql"))
+                .data(wql_context.clone())
+                .route("/query", web::post().to(wql_handler)),
+        )
+        .route("", web::get().to(|| HttpResponse::NotFound()));
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use actix_web::{body::Body, test, App};
+
+    #[actix_rt::test]
+    async fn test_ping_get() {
+        let mut app = test::init_service(App::new().service(ping)).await;
+        let req = test::TestRequest::get().uri("/ping").to_request();
+        let mut resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert_eq!(&Body::from("pong!"), body)
+    }
+
+    #[actix_rt::test]
+    async fn test_ready_get() {
+        let mut app = test::init_service(App::new().service(readiness)).await;
+        let req = test::TestRequest::get().uri("/~/ready").to_request();
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+    }
 }

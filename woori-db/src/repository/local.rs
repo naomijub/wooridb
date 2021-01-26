@@ -15,5 +15,5 @@ pub enum Types {
     Vector(Vec<String>),
     Map(HashMap<String, String>),
     //DateTime
-    Nil
+    Nil,
 }
