@@ -23,7 +23,7 @@ pub async fn readiness() -> impl Responder {
 pub fn routes(config: &mut web::ServiceConfig) {
     config.service(
         web::scope("/wql")
-            // .guard(guard::Header("Content-Type", "application/wql"))
+            .guard(guard::Header("Content-Type", "application/wql"))
             .route("/query", web::post().to(wql_handler)),
             )
             .route("", web::get().to(|| HttpResponse::NotFound()),
