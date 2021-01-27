@@ -21,14 +21,18 @@ pub async fn readiness() -> impl Responder {
     }
 }
 
+use std::sync::atomic::{AtomicUsize};
+
 pub fn routes(config: &mut web::ServiceConfig) {
     let wql_context = Arc::new(Mutex::new(LocalContext::new()));
+    let write_offset = web::Data::new(AtomicUsize::new(0usize));
 
     config
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))
                 .data(wql_context.clone())
+                .data(write_offset)
                 .route("/query", web::post().to(wql_handler)),
         )
         .route("", web::get().to(|| HttpResponse::NotFound()));

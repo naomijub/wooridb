@@ -6,6 +6,9 @@ use actix_web::{
 mod controllers;
 mod http;
 mod repository;
+mod model;
+mod io;
+mod core;
 
 use http::{ping, readiness, routes};
 
