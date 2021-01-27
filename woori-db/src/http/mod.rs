@@ -25,7 +25,7 @@ use std::sync::atomic::{AtomicUsize};
 
 pub fn routes(config: &mut web::ServiceConfig) {
     let wql_context = Arc::new(Mutex::new(LocalContext::new()));
-    let write_offset = web::Data::new(AtomicUsize::new(0usize));
+    let write_offset = AtomicUsize::new(0usize);
 
     config
         .service(

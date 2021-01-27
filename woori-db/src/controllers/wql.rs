@@ -48,6 +48,7 @@ pub async fn create_controller(
 #[cfg(test)]
 mod test {
     use crate::http::routes;
+    use crate::io::read;
     use actix_web::{body::Body, test, App};
 
     #[actix_rt::test]
@@ -63,7 +64,8 @@ mod test {
         assert!(resp.status().is_success());
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
-        assert_eq!(&Body::from("Entity test_ok created"), body)
+        assert_eq!(&Body::from("Entity test_ok created"), body);
+        read::assert_content("CREATE_ENTITY|test_ok");
     }
 
     #[actix_rt::test]
@@ -93,7 +95,7 @@ mod test {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert_eq!(
-            &Body::from("Query \n ```DO SOMETHIG weird``` \n has illegal arguments"),
+            &Body::from("\"Query \\n ```DO SOMETHIG weird``` \\n has illegal arguments\""),
             body
         )
     }
