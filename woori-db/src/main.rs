@@ -4,7 +4,10 @@ use actix_web::{
 };
 
 mod controllers;
+mod core;
 mod http;
+mod io;
+mod model;
 mod repository;
 
 use http::{ping, readiness, routes};

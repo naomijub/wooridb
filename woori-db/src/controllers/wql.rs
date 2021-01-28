@@ -1,24 +1,35 @@
+use crate::core::wql::create_entity;
+use crate::io::write::write_to_log;
+use crate::model::error::Error;
 use crate::repository::local::LocalContext;
+
 use actix_web::{web, HttpResponse, Responder};
 use std::{
     collections::BTreeMap,
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc, Mutex,
+    },
 };
 
 pub async fn wql_handler(
     body: String,
     data: web::Data<Arc<Mutex<LocalContext>>>,
+    bytes_counter: web::Data<AtomicUsize>,
 ) -> impl Responder {
     let query = body;
     let response = match true {
         _ if query.starts_with("CREATE ENTITY ") => {
-            create_controller(query, data.into_inner()).await
+            create_controller(query, data.into_inner(), bytes_counter).await
         }
-        _ => Err(format!("Query \n ```{}``` \n has illegal arguments", query)),
+        _ => Err(Error::QueryFormat(format!(
+            "Query \n ```{}``` \n has illegal arguments",
+            query
+        ))),
     };
 
     match response {
-        Err(e) => HttpResponse::BadRequest().body(e),
+        Err(e) => HttpResponse::BadRequest().body(e.to_string()),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
@@ -26,13 +37,16 @@ pub async fn wql_handler(
 pub async fn create_controller(
     query: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
-) -> Result<String, String> {
+    bytes_counter: web::Data<AtomicUsize>,
+) -> Result<String, Error> {
     let entity = query[14..]
         .chars()
         .take_while(|c| c.is_alphanumeric() || c == &'_')
         .collect::<String>();
     let mut data = data.lock().unwrap();
     data.insert(entity.trim().to_string(), BTreeMap::new());
+    let offset = write_to_log(&create_entity(&entity)).await?;
+    bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
     Ok(format!("Entity {} created", entity))
 }
@@ -40,6 +54,7 @@ pub async fn create_controller(
 #[cfg(test)]
 mod test {
     use crate::http::routes;
+    use crate::io::read;
     use actix_web::{body::Body, test, App};
 
     #[actix_rt::test]
@@ -55,7 +70,8 @@ mod test {
         assert!(resp.status().is_success());
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
-        assert_eq!(&Body::from("Entity test_ok created"), body)
+        assert_eq!(&Body::from("Entity test_ok created"), body);
+        read::assert_content("CREATE_ENTITY|test_ok");
     }
 
     #[actix_rt::test]
@@ -85,7 +101,7 @@ mod test {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert_eq!(
-            &Body::from("Query \n ```DO SOMETHIG weird``` \n has illegal arguments"),
+            &Body::from("\"Query \\n ```DO SOMETHIG weird``` \\n has illegal arguments\""),
             body
         )
     }

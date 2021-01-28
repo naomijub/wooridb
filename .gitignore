@@ -6,3 +6,4 @@ Cargo.lock
 **/target/
 **/Cargo.lock
 **/**/*.rs.bk
+**/*.log
