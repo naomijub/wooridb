@@ -11,3 +11,7 @@ clippy:
 	 cargo clippy -- -W clippy::pedantic
 
 lint: fmt clippy
+
+test:
+	cargo test
+	rm -rf *.log
