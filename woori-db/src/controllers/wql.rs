@@ -6,7 +6,10 @@ use crate::repository::local::LocalContext;
 use actix_web::{web, HttpResponse, Responder};
 use std::{
     collections::BTreeMap,
-    sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}},
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc, Mutex,
+    },
 };
 
 pub async fn wql_handler(
@@ -19,7 +22,10 @@ pub async fn wql_handler(
         _ if query.starts_with("CREATE ENTITY ") => {
             create_controller(query, data.into_inner(), bytes_counter).await
         }
-        _ => Err(Error::QueryFormat(format!("Query \n ```{}``` \n has illegal arguments", query))),
+        _ => Err(Error::QueryFormat(format!(
+            "Query \n ```{}``` \n has illegal arguments",
+            query
+        ))),
     };
 
     match response {

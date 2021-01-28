@@ -1,2 +1,2 @@
-pub (crate) mod wql;
-pub (crate) mod error;
+pub(crate) mod error;
+pub(crate) mod wql;

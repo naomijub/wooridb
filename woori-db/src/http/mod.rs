@@ -21,7 +21,7 @@ pub async fn readiness() -> impl Responder {
     }
 }
 
-use std::sync::atomic::{AtomicUsize};
+use std::sync::atomic::AtomicUsize;
 
 pub fn routes(config: &mut web::ServiceConfig) {
     let wql_context = Arc::new(Mutex::new(LocalContext::new()));
