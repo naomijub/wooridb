@@ -9,6 +9,7 @@ mod http;
 mod io;
 mod model;
 mod repository;
+mod actors;
 
 use http::{ping, readiness, routes};
 
