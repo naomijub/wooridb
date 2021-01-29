@@ -20,7 +20,7 @@ pub async fn wql_handler(
     let query = body;
     let response = match true {
         _ if query.starts_with("CREATE ENTITY ") => {
-            create_controller(query, data.into_inner(), bytes_counter).await
+            create_controller(&query[14..], data.into_inner(), bytes_counter).await
         }
         _ => Err(Error::QueryFormat(format!(
             "Query \n ```{}``` \n has illegal arguments",
@@ -35,11 +35,11 @@ pub async fn wql_handler(
 }
 
 pub async fn create_controller(
-    query: String,
+    query: &str,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
 ) -> Result<String, Error> {
-    let entity = query[14..]
+    let entity = query
         .chars()
         .take_while(|c| c.is_alphanumeric() || c == &'_')
         .collect::<String>();
