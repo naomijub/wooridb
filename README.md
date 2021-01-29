@@ -2,7 +2,17 @@
 
 WooriDB is an immutable time serial database.
 
-## Could be implemented Relation Algebra:
+## Operations
+- [ ] Create entity
+    - [x] By Query
+    - [ ] By Endpoint
+- [ ] Insert entity
+- [ ] Update entity
+- [ ] Delete entity
+- [ ] Evict entity
+- [ ] Select entitees
+
+### SELECT = Could be implemented Relation Algebra:
 - [ ] Select
 - [ ] Projection
 - [ ] Union
@@ -16,11 +26,3 @@ WooriDB is an immutable time serial database.
 - [ ] Sort
 - [ ] Aggregate
 - [ ] Division
-
-## Operations
-- [ ] Create entity
-- [ ] Insert entity
-- [ ] Update entity
-- [ ] Delete entity
-- [ ] Evict entity
-- [ ] Select entitees
