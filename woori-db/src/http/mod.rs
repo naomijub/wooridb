@@ -1,6 +1,9 @@
+use crate::actors::wql::Executor;
 use crate::controllers::wql::wql_handler;
 use crate::repository::local::LocalContext;
+use actix::Actor;
 use actix_web::{get, guard, web, HttpResponse, Responder};
+use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Mutex};
 
 #[get("/ping")]
@@ -21,11 +24,10 @@ pub async fn readiness() -> impl Responder {
     }
 }
 
-use std::sync::atomic::AtomicUsize;
-
 pub fn routes(config: &mut web::ServiceConfig) {
     let wql_context = Arc::new(Mutex::new(LocalContext::new()));
     let write_offset = AtomicUsize::new(0usize);
+    let actor = Executor::new().start();
 
     config
         .service(
@@ -33,6 +35,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
                 .guard(guard::Header("Content-Type", "application/wql"))
                 .data(wql_context.clone())
                 .data(write_offset)
+                .data(actor)
                 .route("/query", web::post().to(wql_handler)),
         )
         .route("", web::get().to(|| HttpResponse::NotFound()));
