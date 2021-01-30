@@ -4,13 +4,11 @@ use crate::repository::local::LocalContext;
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
-use std::{
-    collections::BTreeMap,
-    sync::{
+use std::{collections::BTreeMap, str::FromStr, sync::{
         atomic::{AtomicUsize, Ordering},
         Arc, Mutex,
-    },
-};
+    }};
+use wql::Wql;
 
 pub async fn wql_handler(
     body: String,
@@ -18,15 +16,14 @@ pub async fn wql_handler(
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
-    let query = body;
-    let response = match true {
-        _ if query.to_uppercase().starts_with("CREATE ENTITY ") => {
-            create_controller(&query[14..], data.into_inner(), bytes_counter, actor).await
-        }
-        _ => Err(Error::QueryFormat(format!(
+    let query = wql::Wql::from_str(&body);
+    let response = match query {
+        Ok(Wql::CreateEntity(entity)) => create_controller(entity, data.into_inner(), bytes_counter, actor).await,
+        Ok(_) =>  Err(Error::QueryFormat(format!(
             "Query \n ```{}``` \n has illegal arguments",
-            query
+            body
         ))),
+        Err(e) => Err(Error::QueryFormat(e))
     };
 
     match response {
@@ -36,17 +33,11 @@ pub async fn wql_handler(
 }
 use crate::actors::wql::CreateEntity;
 pub async fn create_controller(
-    query: &str,
+    entity: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let entity = query
-        .chars()
-        .take_while(|c| c.is_alphanumeric() || c == &'_')
-        .collect::<String>()
-        .trim()
-        .to_string();
     let mut data = data.lock().unwrap();
     if !data.contains_key(&entity) {
         data.insert(entity.clone(), BTreeMap::new());
@@ -140,7 +131,7 @@ mod test {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert_eq!(
-            &Body::from("\"Query \\n ```DO SOMETHIG weird``` \\n has illegal arguments\""),
+            &Body::from("\"Symbol `DO` not implemented\""),
             body
         )
     }
