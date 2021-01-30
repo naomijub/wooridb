@@ -20,7 +20,7 @@ pub async fn wql_handler(
 ) -> impl Responder {
     let query = body;
     let response = match true {
-        _ if query.starts_with("CREATE ENTITY ") => {
+        _ if query.to_uppercase().starts_with("CREATE ENTITY ") => {
             create_controller(&query[14..], data.into_inner(), bytes_counter, actor).await
         }
         _ => Err(Error::QueryFormat(format!(
@@ -48,7 +48,11 @@ pub async fn create_controller(
         .trim()
         .to_string();
     let mut data = data.lock().unwrap();
-    data.insert(entity.clone(), BTreeMap::new());
+    if !data.contains_key(&entity) {
+        data.insert(entity.clone(), BTreeMap::new());
+    } else {
+        return Err(Error::EntityAlreadyCreated(entity));
+    }
 
     let offset = actor
         .send(CreateEntity {
@@ -83,6 +87,30 @@ mod test {
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity test_ok created"), body);
         read::assert_content("CREATE_ENTITY|test_ok");
+    }
+
+    #[actix_rt::test]
+    async fn test_create_post_duplicated_err() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_ok")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let duplicated_req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_ok")
+            .uri("/wql/query")
+            .to_request();
+        let mut resp = test::call_service(&mut app, duplicated_req).await;
+
+        assert!(resp.status().is_client_error());
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert_eq!(&Body::from("Entity `test_ok` already created"), body);
     }
 
     #[actix_rt::test]

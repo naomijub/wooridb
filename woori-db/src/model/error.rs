@@ -4,6 +4,7 @@ use std::io;
 pub enum Error {
     Io(io::Error),
     QueryFormat(String),
+    EntityAlreadyCreated(String),
 }
 
 impl std::fmt::Display for Error {
@@ -11,6 +12,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::QueryFormat(s) => write!(f, "{:?}", s),
             Error::Io(e) => write!(f, "{:?}", e),
+            Error::EntityAlreadyCreated(e) => write!(f, "Entity `{}` already created", e),
         }
     }
 }
