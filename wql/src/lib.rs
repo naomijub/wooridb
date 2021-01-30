@@ -1,15 +1,16 @@
+use serde::Serialize;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub enum Wql {
     CreateEntity(String),
-    Insert(String, Entity)
+    Insert(String, Entity),
 }
 
 pub type Entity = HashMap<String, Types>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub enum Types {
     Char(char),
     Integer(isize),
@@ -22,7 +23,6 @@ pub enum Types {
     //DateTime
     Nil,
 }
-
 
 pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
     wql.chars()
@@ -39,35 +39,27 @@ impl std::str::FromStr for Wql {
     }
 }
 
-pub(crate) fn parse(
-    c: Option<char>,
-    chars: &mut std::str::Chars,
-) -> Result<Wql, String> {
+pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql, String> {
     if c.is_some() {
         read_symbol(c.unwrap(), chars)
     } else {
         Err(String::from("Empty WQL"))
     }
-
 }
 
 fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
-    let symbol = chars.take_while(|c| {
-        !c.is_whitespace()
-    }).collect::<String>();
+    let symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
 
-    match(a, &symbol.to_uppercase()[..]) {
+    match (a, &symbol.to_uppercase()[..]) {
         ('c', "REATE") | ('C', "REATE") => create_entity(chars),
         ('i', "NSERT") | ('I', "NSERT") => insert(chars),
-        _ => Err(format!("Symbol `{}{}` not implemented", a,symbol))
+        _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }
 
 fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
-    let entity_symbol = chars.take_while(|c| {
-            !c.is_whitespace()
-        }).collect::<String>();
-    
+    let entity_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
+
     if entity_symbol.to_uppercase() != String::from("ENTITY") {
         return Err(String::from("Keyword ENTITY is required for CREATE"));
     }
@@ -85,9 +77,8 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
     let entity_map = read_map(chars)?;
     let entity_symbol = chars
         .skip_while(|c| c.is_whitespace())
-        .take_while(|c| {
-            !c.is_whitespace()
-        }).collect::<String>();
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
 
     if entity_symbol.to_uppercase() != String::from("INTO") {
         return Err(String::from("Keyword INTO is required for INSERT"));
@@ -112,7 +103,9 @@ fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Types>, Strin
     let mut val: Option<Types> = None;
 
     if chars.next() != Some('{') {
-        return Err(String::from("Entity map should start with `{` and end with `}`"));
+        return Err(String::from(
+            "Entity map should start with `{` and end with `}`",
+        ));
     }
 
     loop {
@@ -126,9 +119,7 @@ fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Types>, Strin
                 }
             }
             Some(c) if c.is_whitespace() || c == ',' => (),
-            _ => {
-                return Err(String::from("Entity HashMap could not be created"))
-            }
+            _ => return Err(String::from("Entity HashMap could not be created")),
         }
 
         if key.is_some() && val.is_some() {
@@ -140,18 +131,24 @@ fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Types>, Strin
 }
 
 fn parse_key(c: char, chars: &mut std::str::Chars) -> String {
-    let key_rest = chars.take_while(|c| c.is_alphanumeric() || c == &'_').collect::<String>();
+    let key_rest = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'_')
+        .collect::<String>();
     format!("{}{}", c, key_rest)
 }
 
-pub (crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types, String> {
+pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types, String> {
     if c == '"' {
         return read_str(chars);
     }
 
-    let value = format!("{}{}", c, chars
-        .take_while(|c| !c.is_whitespace() && c != &',')
-        .collect::<String>());
+    let value = format!(
+        "{}{}",
+        c,
+        chars
+            .take_while(|c| !c.is_whitespace() && c != &',')
+            .collect::<String>()
+    );
 
     if value.parse::<isize>().is_ok() {
         Ok(Types::Integer(value.parse().unwrap()))
@@ -171,37 +168,29 @@ pub (crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types
 }
 
 fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
-    let result = chars.try_fold(
-        (false, String::new()),
-        |(last_was_escape, mut s), c| {
-            if last_was_escape {
-                // Supported escape characters, per https://github.com/edn-format/edn#strings
-                match c {
-                    't' => s.push('\t'),
-                    'r' => s.push('\r'),
-                    'n' => s.push('\n'),
-                    '\\' => s.push('\\'),
-                    '\"' => s.push('\"'),
-                    _ => {
-                        return Err(Err(format!(
-                            "Invalid escape sequence \\{}",
-                            c
-                        )))
-                    }
-                };
+    let result = chars.try_fold((false, String::new()), |(last_was_escape, mut s), c| {
+        if last_was_escape {
+            // Supported escape characters, per https://github.com/edn-format/edn#strings
+            match c {
+                't' => s.push('\t'),
+                'r' => s.push('\r'),
+                'n' => s.push('\n'),
+                '\\' => s.push('\\'),
+                '\"' => s.push('\"'),
+                _ => return Err(Err(format!("Invalid escape sequence \\{}", c))),
+            };
 
-                Ok((false, s))
-            } else if c == '\"' {
-                // Unescaped quote means we're done
-                Err(Ok(s))
-            } else if c == '\\' {
-                Ok((true, s))
-            } else {
-                s.push(c);
-                Ok((false, s))
-            }
-        },
-    );
+            Ok((false, s))
+        } else if c == '\"' {
+            // Unescaped quote means we're done
+            Err(Ok(s))
+        } else if c == '\\' {
+            Ok((true, s))
+        } else {
+            s.push(c);
+            Ok((false, s))
+        }
+    });
 
     match result {
         // An Ok means we actually finished parsing *without* seeing the end of the string, so that's
@@ -229,14 +218,20 @@ mod test_create {
     fn create_shit() {
         let wql = Wql::from_str("CREATE SHIT oh_yeah");
 
-        assert_eq!(wql.err(), Some(String::from("Keyword ENTITY is required for CREATE")));
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Keyword ENTITY is required for CREATE"))
+        );
     }
 
     #[test]
     fn create_mispelled() {
         let wql = Wql::from_str("KREATE ENTITY mispelled");
 
-        assert_eq!(wql.err(), Some(String::from("Symbol `KREATE` not implemented")));
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Symbol `KREATE` not implemented"))
+        );
     }
 
     #[test]
@@ -255,7 +250,8 @@ mod test_insert {
 
     #[test]
     fn insert_entity() {
-        let wql = Wql::from_str("INSERT {
+        let wql = Wql::from_str(
+            "INSERT {
             a: 123,
             b: 12.3,
             c: 'd' ,
@@ -263,27 +259,41 @@ mod test_insert {
             e: false,
             f: \"hello\",
             g: NiL
-        } INTO my_entity");
+        } INTO my_entity",
+        );
 
-        assert_eq!(wql.unwrap(), Wql::Insert("my_entity".to_string(), hashmap()));
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Insert("my_entity".to_string(), hashmap())
+        );
     }
 
     #[test]
     fn insert_missing_into() {
-        let wql = Wql::from_str("INSERT {
+        let wql = Wql::from_str(
+            "INSERT {
             a: 123,
-        } INTRO my_entity");
+        } INTRO my_entity",
+        );
 
-        assert_eq!(wql.err(), Some(String::from("Keyword INTO is required for INSERT")));
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Keyword INTO is required for INSERT"))
+        );
     }
 
     #[test]
     fn insert_missing_entity_name() {
-        let wql = Wql::from_str("INSERT {
+        let wql = Wql::from_str(
+            "INSERT {
             a: 123,
-        } INTO ");
-        
-        assert_eq!(wql.err(), Some(String::from("Entity name is required after INTO")));
+        } INTO ",
+        );
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Entity name is required after INTO"))
+        );
     }
 
     fn hashmap() -> Entity {
@@ -297,5 +307,4 @@ mod test_insert {
         hm.insert("g".to_string(), Types::Nil);
         hm
     }
-
 }
