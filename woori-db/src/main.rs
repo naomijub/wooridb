@@ -3,13 +3,13 @@ use actix_web::{
     web, App, HttpResponse, HttpServer,
 };
 
+mod actors;
 mod controllers;
 mod core;
 mod http;
 mod io;
 mod model;
 mod repository;
-mod actors;
 
 use http::{ping, readiness, routes};
 

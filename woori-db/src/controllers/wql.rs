@@ -1,8 +1,8 @@
+use crate::actors::wql::Executor;
 use crate::model::error::Error;
 use crate::repository::local::LocalContext;
-use crate::actors::wql::Executor;
 
-use actix::{Addr};
+use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
 use std::{
     collections::BTreeMap,
@@ -16,7 +16,7 @@ pub async fn wql_handler(
     body: String,
     data: web::Data<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
-    actor: web::Data<Addr<Executor>>
+    actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = body;
     let response = match true {
@@ -34,21 +34,28 @@ pub async fn wql_handler(
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
-use crate::actors::wql::{CreateEntity};
+use crate::actors::wql::CreateEntity;
 pub async fn create_controller(
     query: &str,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
-    actor: web::Data<Addr<Executor>>
+    actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let entity = query
         .chars()
         .take_while(|c| c.is_alphanumeric() || c == &'_')
-        .collect::<String>().trim().to_string();
+        .collect::<String>()
+        .trim()
+        .to_string();
     let mut data = data.lock().unwrap();
     data.insert(entity.clone(), BTreeMap::new());
-    
-    let offset = actor.send(CreateEntity{name: entity.clone()}).await.unwrap()?;
+
+    let offset = actor
+        .send(CreateEntity {
+            name: entity.clone(),
+        })
+        .await
+        .unwrap()?;
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 

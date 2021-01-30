@@ -1,10 +1,10 @@
+use crate::actors::wql::Executor;
 use crate::controllers::wql::wql_handler;
 use crate::repository::local::LocalContext;
-use crate::actors::wql::Executor;
 use actix::Actor;
 use actix_web::{get, guard, web, HttpResponse, Responder};
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicUsize;
+use std::sync::{Arc, Mutex};
 
 #[get("/ping")]
 pub async fn ping() -> impl Responder {
