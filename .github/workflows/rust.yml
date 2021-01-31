@@ -11,14 +11,19 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Run tests
-      run: cargo test --verbose
+      run: | 
+        cargo test -- --nocapture
+        rm -rf *.log
+        cargo test -- --ignored controllers::wql::test::test_update_content_post_ok
+        rm -rf *.log
+        cargo test -- --ignored controllers::wql::test::test_update_set_post_ok
     - name: FMT
       run: cargo fmt -- --check
+
