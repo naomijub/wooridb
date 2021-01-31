@@ -5,6 +5,8 @@ pub enum Error {
     Io(io::Error),
     QueryFormat(String),
     EntityAlreadyCreated(String),
+    EntityNotCreated(String),
+    SerializationError(ron::Error),
 }
 
 impl std::fmt::Display for Error {
@@ -13,6 +15,8 @@ impl std::fmt::Display for Error {
             Error::QueryFormat(s) => write!(f, "{:?}", s),
             Error::Io(e) => write!(f, "{:?}", e),
             Error::EntityAlreadyCreated(e) => write!(f, "Entity `{}` already created", e),
+            Error::EntityNotCreated(e) => write!(f, "Entity `{}` not created", e),
+            Error::SerializationError(e) => write!(f, "{:?}", e),
         }
     }
 }

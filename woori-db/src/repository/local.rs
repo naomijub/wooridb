@@ -1,5 +1,7 @@
-use std::collections::{BTreeMap};
+use std::collections::BTreeMap;
 
 use uuid::Uuid;
 
-pub type LocalContext = BTreeMap<String, BTreeMap<Uuid, String>>;
+use crate::model::DataRegister;
+
+pub type LocalContext = BTreeMap<String, BTreeMap<Uuid, DataRegister>>;

@@ -13,5 +13,5 @@ clippy:
 lint: fmt clippy
 
 test:
-	cargo test
+	cargo test -- --nocapture
 	rm -rf *.log
