@@ -2,10 +2,11 @@ pub(crate) mod error;
 pub(crate) mod wql;
 
 use actix::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::io::Error;
 
 use crate::actors::wql::Executor;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct DataRegister {
     pub file_name: String,
     pub offset: usize,

@@ -11,6 +11,7 @@ pub enum Error {
     SerializationError(ron::Error),
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
+    FailedToParseRegistry,
 }
 
 impl std::fmt::Display for Error {
@@ -25,6 +26,7 @@ impl std::fmt::Display for Error {
                 write!(f, "Uuid {:?} not created for entity {}", id, s)
             }
             Error::FailedToParseState => write!(f, "Failed to parse state"),
+            Error::FailedToParseRegistry => write!(f, "Failed to parse registry"),
         }
     }
 }

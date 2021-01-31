@@ -3,12 +3,9 @@ use chrono::{DateTime, Utc};
 use std::io::Error;
 use uuid::Uuid;
 
-use crate::{
-    core::wql::{
-        create_entity, insert_entity_content, update_content_entity_content,
-        update_set_entity_content,
-    },
-    model::DataRegister,
+use crate::core::wql::{
+    create_entity, delete_entity_content, insert_entity_content, update_content_entity_content,
+    update_set_entity_content,
 };
 
 pub struct Executor;
@@ -65,7 +62,7 @@ pub struct UpdateSetEntityContent {
     pub current_state: String,
     pub content_log: String,
     pub id: Uuid,
-    pub previous_registry: DataRegister,
+    pub previous_registry: String,
 }
 
 impl Message for UpdateSetEntityContent {
@@ -88,7 +85,7 @@ pub struct UpdateContentEntityContent {
     pub current_state: String,
     pub content_log: String,
     pub id: Uuid,
-    pub previous_registry: DataRegister,
+    pub previous_registry: String,
 }
 
 impl Message for UpdateContentEntityContent {
@@ -101,6 +98,27 @@ impl Handler<UpdateContentEntityContent> for Executor {
     fn handle(&mut self, msg: UpdateContentEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = update_content_entity_content(msg);
+        Ok((date, write_to_log(&content)?))
+    }
+}
+
+pub struct DeleteId {
+    pub name: String,
+    pub content_log: String,
+    pub uuid: Uuid,
+    pub previous_registry: String,
+}
+
+impl Message for DeleteId {
+    type Result = Result<(DateTime<Utc>, usize), Error>;
+}
+
+impl Handler<DeleteId> for Executor {
+    type Result = Result<(DateTime<Utc>, usize), Error>;
+
+    fn handle(&mut self, msg: DeleteId, _: &mut Self::Context) -> Self::Result {
+        use crate::io::write::write_to_log;
+        let (date, content) = delete_entity_content(msg);
         Ok((date, write_to_log(&content)?))
     }
 }

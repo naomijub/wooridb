@@ -29,7 +29,7 @@ async fn main() -> std::io::Result<()> {
             .route("", web::get().to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:1438")?
-    .workers(num_cpus::get_physical() + 2)
+    .workers(1)
     .run()
     .await
 }

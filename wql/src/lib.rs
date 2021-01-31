@@ -339,7 +339,10 @@ mod test_delete {
     fn delete_id() {
         let wql = Wql::from_str("DELETE this-is-an-uuid FROM my_entity");
 
-        assert_eq!(wql.unwrap(), Wql::Delete("my_entity".to_string(), "this-is-an-uuid".to_string()))
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Delete("my_entity".to_string(), "this-is-an-uuid".to_string())
+        )
     }
 
     #[test]
@@ -372,7 +375,6 @@ mod test_delete {
         );
     }
 }
-
 
 #[cfg(test)]
 mod test_insert {
