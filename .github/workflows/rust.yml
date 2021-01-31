@@ -10,8 +10,14 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  fmt:
+    runs-on: ubuntu-latest
 
+    steps:
+    - name: FMT
+      run: cargo fmt -- --check
+      
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,5 +31,4 @@ jobs:
         cargo test -- --ignored controllers::wql::test::test_update_content_post_ok
         rm -rf *.log
         cargo test -- --ignored controllers::wql::test::test_update_set_post_ok
-    - name: FMT
-      run: cargo fmt -- --check
+

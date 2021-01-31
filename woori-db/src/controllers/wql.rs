@@ -649,10 +649,10 @@ mod test {
 
     fn clear() {
         std::process::Command::new("rm")
-        .arg("-rf")
-        .arg("*.log")
-        .output()
-        .expect("failed to execute process")
-        .stdout;
+            .arg("-rf")
+            .arg("*.log")
+            .output()
+            .expect("failed to execute process")
+            .stdout;
     }
 }
