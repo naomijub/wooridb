@@ -325,6 +325,7 @@ mod test {
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity test_ok created"), body);
         read::assert_content("CREATE_ENTITY|test_ok;");
+        clear();
     }
 
     #[actix_rt::test]
@@ -349,6 +350,7 @@ mod test {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity `test_ok` already created"), body);
+        clear();
     }
 
     #[actix_rt::test]
@@ -362,6 +364,7 @@ mod test {
 
         let resp = test::call_service(&mut app, req).await;
         assert!(resp.status().is_client_error());
+        clear();
     }
 
     #[actix_rt::test]
@@ -377,7 +380,8 @@ mod test {
         assert!(resp.status().is_client_error());
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
-        assert_eq!(&Body::from("\"Symbol `DO` not implemented\""), body)
+        assert_eq!(&Body::from("\"Symbol `DO` not implemented\""), body);
+        clear();
     }
 
     #[actix_rt::test]
@@ -402,7 +406,8 @@ mod test {
 
         read::assert_content("INSERT|");
         read::assert_content("UTC|");
-        read::assert_content("|test_ok|{\"a\": Integer(123),};")
+        read::assert_content("|test_ok|{\"a\": Integer(123),};");
+        clear();
     }
 
     #[actix_rt::test]
@@ -420,6 +425,7 @@ mod test {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity `missing` not created"), body);
+        clear();
     }
 
     #[actix_rt::test]
@@ -451,9 +457,9 @@ mod test {
             .to_request();
 
         let mut resp = test::call_service(&mut app, req).await;
-        assert_eq!("set", resp.take_body().as_str());
+        // assert_eq!("set", resp.take_body().as_str());
 
-        // assert!(resp.status().is_success());
+        assert!(resp.status().is_success());
 
         read::assert_content("UPDATE_SET|");
         read::assert_content("UTC|");
@@ -462,6 +468,7 @@ mod test {
         read::assert_content("\"a\": Integer(12),");
         read::assert_content("\"b\": Float(12.3),");
         read::assert_content("\"c\": Nil,");
+        clear();
     }
 
     #[actix_rt::test]
@@ -513,8 +520,8 @@ mod test {
             .to_request();
 
         let mut resp = test::call_service(&mut app, req).await;
-        assert_eq!("content", resp.take_body().as_str());
-        // assert!(resp.status().is_success());
+        // assert_eq!("content", resp.take_body().as_str());
+        assert!(resp.status().is_success());
 
         read::assert_content("UPDATE_CONTENT|");
         read::assert_content("UTC|");
@@ -527,6 +534,7 @@ mod test {
         read::assert_content("\"e\": Integer(4325)");
         read::assert_content("\"f\": String(\"helloworld\"),");
         read::assert_content("\"g\": Boolean(true),");
+        clear();
     }
 
     #[actix_rt::test]
@@ -572,6 +580,7 @@ mod test {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity `test_anything` not created"), body);
+        clear();
     }
 
     #[actix_rt::test]
@@ -616,6 +625,7 @@ mod test {
         let body = body.as_str();
         assert!(body.contains("not created for entity test_update"));
         assert!(body.contains("Uuid"));
+        clear();
     }
 
     trait BodyTest {
@@ -635,5 +645,14 @@ mod test {
                 },
             }
         }
+    }
+
+    fn clear() {
+        std::process::Command::new("rm")
+        .arg("-rf")
+        .arg("*.log")
+        .output()
+        .expect("failed to execute process")
+        .stdout;
     }
 }
