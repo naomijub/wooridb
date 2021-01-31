@@ -18,6 +18,11 @@ test:
 	cargo test -- --ignored controllers::wql::test::test_update_content_post_ok
 	rm -rf *.log
 	cargo test -- --ignored controllers::wql::test::test_update_set_post_ok
+	rm -rf *.log
+	cargo test -- --ignored controllers::wql::test::test_delete_withput_update
+	rm -rf *.log
+	cargo test -- --ignored controllers::wql::test::test_delete_post_ok
+	rm -rf *.log
 
 release:
 	cargo run --release
