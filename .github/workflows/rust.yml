@@ -19,6 +19,11 @@ jobs:
     - name: Build
       run: cargo build
     - name: Run tests
-      run: cargo test -- --nocapture
+      run: | 
+      cargo test -- --nocapture
+      rm -rf *.log
+      cargo test -- --ignored controllers::wql::test::test_update_content_post_ok
+	    rm -rf *.log
+	    cargo test -- --ignored controllers::wql::test::test_update_set_post_ok
     - name: FMT
       run: cargo fmt -- --check
