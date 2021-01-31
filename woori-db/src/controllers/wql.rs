@@ -450,8 +450,10 @@ mod test {
             .uri("/wql/query")
             .to_request();
 
-        let resp = test::call_service(&mut app, req).await;
-        assert!(resp.status().is_success());
+        let mut resp = test::call_service(&mut app, req).await;
+        assert_eq!("set", resp.take_body().as_str());
+
+        // assert!(resp.status().is_success());
 
         read::assert_content("UPDATE_SET|");
         read::assert_content("UTC|");
@@ -510,8 +512,9 @@ mod test {
             .uri("/wql/query")
             .to_request();
 
-        let resp = test::call_service(&mut app, req).await;
-        assert!(resp.status().is_success());
+        let mut resp = test::call_service(&mut app, req).await;
+        assert_eq!("content", resp.take_body().as_str());
+        // assert!(resp.status().is_success());
 
         read::assert_content("UPDATE_CONTENT|");
         read::assert_content("UTC|");
