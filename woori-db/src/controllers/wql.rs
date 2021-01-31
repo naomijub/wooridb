@@ -1,6 +1,8 @@
 use crate::actors::{
-    state::State,
-    wql::{Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
+    state::{PreviousRegistry, State},
+    wql::{
+        DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
+    },
 };
 use crate::model::{error::Error, DataRegister};
 use crate::repository::local::LocalContext;
@@ -35,6 +37,9 @@ pub async fn wql_handler(
     let response = match query {
         Ok(Wql::CreateEntity(entity)) => {
             create_controller(entity, data.into_inner(), bytes_counter, actor).await
+        }
+        Ok(Wql::Delete(entity, uuid)) => {
+            delete_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Insert(entity, content)) => {
             insert_controller(entity, content, data.into_inner(), bytes_counter, actor).await
@@ -176,7 +181,8 @@ pub async fn update_set_controller(
             current_state: state_log,
             content_log,
             id,
-            previous_registry: previous_entry.clone(),
+            previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
+                .map_err(|e| Error::SerializationError(e))?,
         })
         .await
         .unwrap()?;
@@ -260,8 +266,10 @@ pub async fn update_content_controller(
             Types::Map(m) => {
                 if let Types::Map(local) = local_state {
                     m.iter().for_each(|(key, value)| {
-                        let map_key = local.entry(key.to_string()).or_insert(value.to_owned());
-                        *map_key = value.to_owned();
+                        local
+                            .entry(key.to_string())
+                            .and_modify(|v| *v = value.to_owned())
+                            .or_insert(value.to_owned());
                     });
                     *local_state = Types::Map(local.to_owned());
                 }
@@ -281,7 +289,8 @@ pub async fn update_content_controller(
             current_state: state_log,
             content_log,
             id,
-            previous_registry: previous_entry.clone(),
+            previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
+                .map_err(|e| Error::SerializationError(e))?,
         })
         .await
         .unwrap()?;
@@ -301,6 +310,83 @@ pub async fn update_content_controller(
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
     Ok(format!("Entity {} with Uuid {} updated", entity, id))
+}
+
+pub async fn delete_controller(
+    entity: String,
+    id: String,
+    data: Arc<Arc<Mutex<LocalContext>>>,
+    bytes_counter: web::Data<AtomicUsize>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    let uuid = Uuid::from_str(&id).unwrap();
+    let offset = bytes_counter.load(Ordering::SeqCst);
+    // let content_log =
+    //     to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+
+    let mut data = data.lock().unwrap();
+    if !data.contains_key(&entity) {
+        return Err(Error::EntityNotCreated(entity));
+    } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&uuid) {
+        return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+    }
+
+    let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
+    let two_registries_ago = actor
+        .send(PreviousRegistry(previous_state_str))
+        .await
+        .unwrap()?;
+
+    let state_to_be = match two_registries_ago {
+        Some(reg) => {
+            let state_str = actor.send(reg.clone()).await.unwrap()?;
+            (
+                actor.send(State(state_str.clone())).await.unwrap()?,
+                reg.to_owned(),
+            )
+        }
+        None => {
+            let insert_reg = data.get(&entity).unwrap().get(&uuid).unwrap();
+            // let state_str = actor.send(insert_reg.clone().to_owned()).await.unwrap()?;
+            // (actor
+            //     .send(State(state_str.clone()))
+            //     .await
+            //     .unwrap()?, insert_reg.to_owned())
+            (HashMap::new(), insert_reg.to_owned())
+        }
+    };
+    let content_log = to_string_pretty(&state_to_be.0, pretty_config())
+        .map_err(|e| Error::SerializationError(e))?;
+
+    let previous_register_log = to_string_pretty(&state_to_be.1, pretty_config())
+        .map_err(|e| Error::SerializationError(e))?;
+
+    let content_value = actor
+        .send(DeleteId {
+            name: entity.clone(),
+            content_log,
+            uuid,
+            previous_registry: previous_register_log,
+        })
+        .await
+        .unwrap()?;
+
+    let data_register = DataRegister {
+        offset,
+        bytes_length: content_value.1,
+        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+    };
+
+    if let Some(map) = data.get_mut(&entity) {
+        if let Some(reg) = map.get_mut(&uuid) {
+            *reg = data_register;
+        }
+    }
+
+    bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+
+    Ok(format!("Entity {} with Uuid {} deleted", entity, id))
 }
 
 #[cfg(test)]
@@ -625,6 +711,90 @@ mod test {
         let body = body.as_str();
         assert!(body.contains("not created for entity test_update"));
         assert!(body.contains("Uuid"));
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_delete_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_delete")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_delete")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!("UPDATE test_delete SET {{a: 12, c: Nil,}} INTO {}", uuid);
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let payload = format!("Delete {} FROM test_delete", uuid);
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_success());
+
+        read::assert_content("DELETE");
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_delete_withput_update() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_delete")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_delete")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!("Delete {} FROM test_delete", uuid);
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_success());
+
+        read::assert_content("DELETE");
+        read::assert_content("|{}|");
         clear();
     }
 
