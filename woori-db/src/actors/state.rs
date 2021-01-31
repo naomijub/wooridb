@@ -18,6 +18,7 @@ impl Handler<State> for Executor {
         use ron::de::from_str;
 
         let fractions = msg.0.split("|").collect::<Vec<&str>>();
+        assert_eq!(Vec::<&str>::new(), fractions);
         if fractions[0].eq("INSERT") {
             let state = fractions.last().unwrap().to_owned();
             let state = &state[..(state.len() - 1)];

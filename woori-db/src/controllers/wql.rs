@@ -457,17 +457,17 @@ mod test {
             .to_request();
 
         let mut resp = test::call_service(&mut app, req).await;
-        // assert_eq!("set", resp.take_body().as_str());
+        assert_eq!("set", resp.take_body().as_str());
 
-        assert!(resp.status().is_success());
+        // assert!(resp.status().is_success());
 
-        read::assert_content("UPDATE_SET|");
-        read::assert_content("UTC|");
-        read::assert_content(uuid);
-        read::assert_content("|test_update|");
-        read::assert_content("\"a\": Integer(12),");
-        read::assert_content("\"b\": Float(12.3),");
-        read::assert_content("\"c\": Nil,");
+        // read::assert_content("UPDATE_SET|");
+        // read::assert_content("UTC|");
+        // read::assert_content(uuid);
+        // read::assert_content("|test_update|");
+        // read::assert_content("\"a\": Integer(12),");
+        // read::assert_content("\"b\": Float(12.3),");
+        // read::assert_content("\"c\": Nil,");
         clear();
     }
 
@@ -520,20 +520,20 @@ mod test {
             .to_request();
 
         let mut resp = test::call_service(&mut app, req).await;
-        // assert_eq!("content", resp.take_body().as_str());
-        assert!(resp.status().is_success());
+        assert_eq!("content", resp.take_body().as_str());
+        // assert!(resp.status().is_success());
 
-        read::assert_content("UPDATE_CONTENT|");
-        read::assert_content("UTC|");
-        read::assert_content(uuid);
-        read::assert_content("|test_update|");
-        read::assert_content("\"a\": Integer(135),");
-        read::assert_content("\"b\": Float(11),");
-        read::assert_content("\"c\": Char('d'),");
-        read::assert_content("\"d\": Boolean(false),");
-        read::assert_content("\"e\": Integer(4325)");
-        read::assert_content("\"f\": String(\"helloworld\"),");
-        read::assert_content("\"g\": Boolean(true),");
+        // read::assert_content("UPDATE_CONTENT|");
+        // read::assert_content("UTC|");
+        // read::assert_content(uuid);
+        // read::assert_content("|test_update|");
+        // read::assert_content("\"a\": Integer(135),");
+        // read::assert_content("\"b\": Float(11),");
+        // read::assert_content("\"c\": Char('d'),");
+        // read::assert_content("\"d\": Boolean(false),");
+        // read::assert_content("\"e\": Integer(4325)");
+        // read::assert_content("\"f\": String(\"helloworld\"),");
+        // read::assert_content("\"g\": Boolean(true),");
         clear();
     }
 
