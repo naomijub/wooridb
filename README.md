@@ -2,6 +2,16 @@
 
 WooriDB is an immutable time serial database.
 
+## Installation
+
+- `make release` at `./woori-db`; or
+- `cargo run --release`
+- `cargo run --release` at root or at `./woori-db`;
+
+## Usage
+
+
+
 ## Transactions:
 
 ### Parser
@@ -9,19 +19,19 @@ WooriDB is an immutable time serial database.
 
 ### Transactions by Query
 - [x] Create entity
-- [ ] Insert entity
+- [x] Insert entity
 - [ ] Update entity
 - [ ] Delete entity
 - [ ] Evict entity
 - [ ] Select entities
 
-### Transactions by Endpoint
+<!-- ### Transactions by Endpoint
 - [ ] Create entity
 - [ ] Insert entity
 - [ ] Update entity
 - [ ] Delete entity
 - [ ] Evict entity
-- [ ] Select entities
+- [ ] Select entities ???? -->
 
 
 ### SELECT = Functions that could be implemented from Relation Algebra:

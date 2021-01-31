@@ -1,5 +1,9 @@
-#[cfg(test)]
-use std::{fs::OpenOptions, io::Read};
+use std::{
+    fs::OpenOptions,
+    io::{Error, Read, Seek, SeekFrom},
+};
+
+use crate::model::DataRegister;
 
 #[cfg(test)]
 pub fn assert_content(pat: &str) {
@@ -12,4 +16,17 @@ pub fn assert_content(pat: &str) {
     file.read_to_string(&mut s).unwrap();
 
     assert!(s.contains(pat));
+}
+
+pub fn read_log(registry: DataRegister) -> Result<String, Error> {
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open(registry.file_name)
+        .unwrap();
+    file.seek(SeekFrom::Start(registry.offset as u64))?;
+    let mut res = String::with_capacity(registry.bytes_length);
+    file.take(registry.bytes_length as u64)
+        .read_to_string(&mut res)?;
+
+    Ok(res)
 }

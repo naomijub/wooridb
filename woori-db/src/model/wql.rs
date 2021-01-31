@@ -2,7 +2,8 @@ pub enum Action {
     CreateEntity,
     Insert,
     Read,
-    Update,
+    UpdateSet,
+    UpdateContent,
     Error,
 }
 
@@ -12,7 +13,8 @@ impl std::fmt::Display for Action {
             Action::Read => write!(f, "READ"),
             Action::CreateEntity => write!(f, "CREATE_ENTITY"),
             Action::Insert => write!(f, "INSERT"),
-            Action::Update => write!(f, "UPDATE"),
+            Action::UpdateSet => write!(f, "UPDATE_SET"),
+            Action::UpdateContent => write!(f, "UPDATE_CONTENT"),
             Action::Error => write!(f, "Error"),
         }
     }
@@ -24,7 +26,8 @@ impl From<String> for Action {
             "READ" => Action::Read,
             "CREATE_ENTITY" => Action::CreateEntity,
             "INSERT" => Action::Insert,
-            "UPDATE" => Action::Update,
+            "UPDATE_SET" => Action::UpdateSet,
+            "UPDATE_CONTENT" => Action::UpdateContent,
             _ => Action::Error,
         }
     }

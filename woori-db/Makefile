@@ -15,3 +15,6 @@ lint: fmt clippy
 test:
 	cargo test -- --nocapture
 	rm -rf *.log
+
+release:
+	cargo run --release
