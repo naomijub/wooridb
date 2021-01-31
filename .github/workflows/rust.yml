@@ -10,13 +10,11 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_db:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
-    - name: DB-Build
-      run: cargo build
     - name: DB-tests
       run: | 
         cargo test -- --nocapture
@@ -30,4 +28,14 @@ jobs:
         cargo test -- --ignored controllers::wql::test::test_delete_post_ok
     - name: DB-FMT
       run: cargo fmt -- --check
+  
+  build_wql:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: WQL-tests
+      run:  cargo test --manifest-path wql/Cargo.toml
+    - name: WQL-FMT
+      run: cargo fmt --manifest-path wql/Cargo.toml -- --check
 

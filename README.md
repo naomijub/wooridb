@@ -15,7 +15,7 @@ WooriDB is an immutable time serial database.
 ## Transactions:
 
 ### Parser
-- [] [DOING] Woori Query language parser
+- [ ] [DOING] Woori Query language parser
 
 ### Transactions by Query
 - [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires a rntity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'CREATE ENTITY my_entity_name'`.
