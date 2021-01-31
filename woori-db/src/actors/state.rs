@@ -22,6 +22,7 @@ impl Handler<State> for Executor {
             let state = fractions.last().unwrap().to_owned();
             let state = &state[..(state.len() - 1)];
 
+            println!("{:?}", state);
             let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
                 Ok(x) => Ok(x),
                 Err(_) => Err(Error::FailedToParseState),
