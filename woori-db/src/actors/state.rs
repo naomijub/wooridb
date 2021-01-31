@@ -18,11 +18,18 @@ impl Handler<State> for Executor {
         use ron::de::from_str;
 
         let fractions = msg.0.split("|").collect::<Vec<&str>>();
+        #[cfg(test)] 
+        {
+            let vecs: Vec<&str> = Vec::new();
+            assert_eq!(vecs, fractions);
+        }
         if fractions[0].eq("INSERT") {
             let state = fractions.last().unwrap().to_owned();
             let state = &state[..(state.len() - 1)];
 
-            assert_eq!("state", state);
+            #[cfg(test)] {
+                assert_eq!("state", state);
+            }
             let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
                 Ok(x) => Ok(x),
                 Err(_) => Err(Error::FailedToParseState),
