@@ -8,6 +8,7 @@ pub enum Wql {
     Insert(String, Entity),
     UpdateContent(String, Entity, Uuid),
     UpdateSet(String, Entity, Uuid),
+    Delete(String, String),
 }
 
 pub type Entity = HashMap<String, Types>;
@@ -56,6 +57,7 @@ fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
         ('c', "REATE") | ('C', "REATE") => create_entity(chars),
         ('i', "NSERT") | ('I', "NSERT") => insert(chars),
         ('u', "PDATE") | ('U', "PDATE") => update(chars),
+        ('d', "ELETE") | ('D', "ELETE") => delete(chars),
         _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }
@@ -74,6 +76,39 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .to_string();
 
     Ok(Wql::CreateEntity(entity_name))
+}
+
+fn delete(chars: &mut std::str::Chars) -> Result<Wql, String> {
+    let entity_id = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'-')
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    if entity_id.is_empty() || entity_id == "FROM" {
+        return Err(String::from("Entity UUID is required for DELETE"));
+    }
+
+    let entity_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if entity_symbol.to_uppercase() != String::from("FROM") {
+        return Err(String::from("Keyword FROM is required for DELETE"));
+    }
+
+    let entity_name = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'_')
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    if entity_name.is_empty() {
+        return Err(String::from("Entity name is required after FROM"));
+    }
+
+    Ok(Wql::Delete(entity_name, entity_id))
 }
 
 fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
@@ -293,6 +328,51 @@ mod test_create {
         assert_eq!(wql.unwrap(), Wql::CreateEntity(String::from("entity")));
     }
 }
+
+#[cfg(test)]
+mod test_delete {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn delete_id() {
+        let wql = Wql::from_str("DELETE this-is-an-uuid FROM my_entity");
+
+        assert_eq!(wql.unwrap(), Wql::Delete("my_entity".to_string(), "this-is-an-uuid".to_string()))
+    }
+
+    #[test]
+    fn delete_missing_id() {
+        let wql = Wql::from_str("DELETE FROM my_entity");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Entity UUID is required for DELETE"))
+        );
+    }
+
+    #[test]
+    fn delete_missing_keyword_from() {
+        let wql = Wql::from_str("DELETE this-is-an-uuid my_entity");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Keyword FROM is required for DELETE"))
+        );
+    }
+
+    #[test]
+    fn delete_missing_entity() {
+        let wql = Wql::from_str("DELETE this-is-an-uuid FROM");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Entity name is required after FROM"))
+        );
+    }
+}
+
 
 #[cfg(test)]
 mod test_insert {

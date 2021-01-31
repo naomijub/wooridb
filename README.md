@@ -20,7 +20,7 @@ WooriDB is an immutable time serial database.
 ### Transactions by Query
 - [x] Create entity
 - [x] Insert entity
-- [ ] Update entity
+- [x] Update entity
 - [ ] Delete entity
 - [ ] Evict entity
 - [ ] Select entities
