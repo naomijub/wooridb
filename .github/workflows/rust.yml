@@ -19,7 +19,7 @@ jobs:
     - name: Build
       run: cargo build
     - name: Run tests
-      run: > 
+      run: | 
         cargo test -- --nocapture
         rm -rf *.log
         cargo test -- --ignored controllers::wql::test::test_update_content_post_ok
