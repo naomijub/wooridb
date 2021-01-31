@@ -53,7 +53,14 @@ WooriDB is an immutable time serial database.
 
 * `create_entity`
 ```
-time:   [15.504 ms 15.568 ms 15.634 ms]
+time:  [15.443 ms 15.496 ms 15.547 ms]
 Found 5 outliers among 100 measurements (5.00%)
   5 (5.00%) high mild
+```
+
+* `insert_entity`
+```
+time:   [15.623 ms 15.661 ms 15.699 ms]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) low mild
 ```

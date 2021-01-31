@@ -34,7 +34,8 @@ wql = {path = "./wql"}
 [dev-dependencies]
 bytes = "1.0.1"
 criterion = "0.3"
+rand = "*"
 
 [[bench]]
-name = "create_entity"
+name = "query"
 harness = false
