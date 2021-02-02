@@ -704,8 +704,16 @@ mod test {
         let _ = test::call_service(&mut app, req).await;
 
         let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: 12.3,} INTO test_unique_set_update")
+        .uri("/wql/query")
+        .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
             .header("Content-Type", "application/wql")
-            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_unique_set_update")
+            .set_payload("INSERT {a: 321, b: 12.3,} INTO test_unique_set_update")
             .uri("/wql/query")
             .to_request();
 
