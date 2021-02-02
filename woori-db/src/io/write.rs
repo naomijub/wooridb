@@ -15,3 +15,13 @@ pub fn write_to_log(log: &str) -> Result<usize, Error> {
 
     Ok(written_bytes)
 }
+pub fn write_to_uniques(log: &str) -> Result<(), Error> {
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("uniques.log")?;
+
+    let _ = file.write(log.as_bytes())?;
+
+    Ok(())
+}

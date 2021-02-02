@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Wql {
-    CreateEntity(String),
+    CreateEntity(String, Vec<String>),
     Insert(String, Entity),
     UpdateContent(String, Entity, Uuid),
     UpdateSet(String, Entity, Uuid),
@@ -75,7 +75,26 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .trim()
         .to_string();
 
-    Ok(Wql::CreateEntity(entity_name))
+    let unique_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
+    if unique_symbol.to_uppercase() == String::from("UNIQUES") {
+        let unique_names = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| {
+                c.is_alphanumeric() || c == &'_' || c == &',' || c.is_whitespace() || c != &';'
+            })
+            .collect::<String>()
+            .trim()
+            .to_string();
+
+        let unique_vec = unique_names
+            .split(",")
+            .map(|w| w.trim().to_string())
+            .collect::<Vec<String>>();
+
+        Ok(Wql::CreateEntity(entity_name, unique_vec))
+    } else {
+        Ok(Wql::CreateEntity(entity_name, Vec::new()))
+    }
 }
 
 fn delete(chars: &mut std::str::Chars) -> Result<Wql, String> {
@@ -325,7 +344,27 @@ mod test_create {
     fn create_entity() {
         let wql = Wql::from_str("CREATE ENTITY entity");
 
-        assert_eq!(wql.unwrap(), Wql::CreateEntity(String::from("entity")));
+        assert_eq!(
+            wql.unwrap(),
+            Wql::CreateEntity(String::from("entity"), Vec::new())
+        );
+    }
+
+    #[test]
+    fn create_entity_with_uniques() {
+        let wql = Wql::from_str("CREATE ENTITY entity UNIQUES name, ssn, something");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::CreateEntity(
+                String::from("entity"),
+                vec![
+                    "name".to_string(),
+                    "ssn".to_string(),
+                    "something".to_string()
+                ]
+            )
+        );
     }
 }
 

@@ -1,6 +1,7 @@
 use std::io;
 
 use uuid::Uuid;
+use wql::Types;
 
 #[derive(Debug)]
 pub enum Error {
@@ -12,6 +13,7 @@ pub enum Error {
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
+    DuplicatedUnique(String, String, Types),
 }
 
 impl std::fmt::Display for Error {
@@ -27,6 +29,11 @@ impl std::fmt::Display for Error {
             }
             Error::FailedToParseState => write!(f, "Failed to parse state"),
             Error::FailedToParseRegistry => write!(f, "Failed to parse registry"),
+            Error::DuplicatedUnique(entity, key, t) => write!(
+                f,
+                "key `{}` in entity `{}` already contains value `{:?}`",
+                key, entity, t
+            ),
         }
     }
 }

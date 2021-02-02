@@ -1,11 +1,13 @@
 use crate::actors::{
     state::{PreviousRegistry, State},
+    uniques::{CreateUniques, WriteUniques},
     wql::{
         DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
     },
 };
+use crate::actors::{uniques::CheckForUnique, wql::CreateEntity};
 use crate::model::{error::Error, DataRegister};
-use crate::repository::local::LocalContext;
+use crate::repository::local::{LocalContext, UniquenessContext};
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
@@ -30,19 +32,29 @@ fn pretty_config() -> PrettyConfig {
 pub async fn wql_handler(
     body: String,
     data: web::Data<Arc<Mutex<LocalContext>>>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = wql::Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::CreateEntity(entity)) => {
+        Ok(Wql::CreateEntity(entity, uniques)) => {
+            let _ = create_unique_controller(&entity, uniques, uniqueness, &actor).await;
             create_controller(entity, data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Delete(entity, uuid)) => {
             delete_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Insert(entity, content)) => {
-            insert_controller(entity, content, data.into_inner(), bytes_counter, actor).await
+            insert_controller(
+                entity,
+                content,
+                data.into_inner(),
+                bytes_counter,
+                uniqueness,
+                actor,
+            )
+            .await
         }
         Ok(Wql::UpdateContent(entity, content, uuid)) => {
             update_content_controller(
@@ -51,6 +63,7 @@ pub async fn wql_handler(
                 uuid,
                 data.into_inner(),
                 bytes_counter,
+                uniqueness,
                 actor,
             )
             .await
@@ -62,6 +75,7 @@ pub async fn wql_handler(
                 uuid,
                 data.into_inner(),
                 bytes_counter,
+                uniqueness,
                 actor,
             )
             .await
@@ -74,7 +88,6 @@ pub async fn wql_handler(
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
-use crate::actors::wql::CreateEntity;
 pub async fn create_controller(
     entity: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
@@ -100,11 +113,41 @@ pub async fn create_controller(
     Ok(format!("Entity {} created", entity))
 }
 
+pub async fn create_unique_controller(
+    entity: &str,
+    uniques: Vec<String>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    actor: &web::Data<Addr<Executor>>,
+) -> Result<(), Error> {
+    if uniques.is_empty() {
+        Ok(())
+    } else {
+        let data = uniqueness.into_inner();
+        actor
+            .send(WriteUniques {
+                entity: entity.to_string(),
+                uniques: uniques.clone(),
+            })
+            .await
+            .unwrap()?;
+        actor
+            .send(CreateUniques {
+                entity: entity.to_string(),
+                uniques,
+                data,
+            })
+            .await
+            .unwrap()?;
+        Ok(())
+    }
+}
+
 pub async fn insert_controller(
     entity: String,
     content: HashMap<String, Types>,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -115,6 +158,16 @@ pub async fn insert_controller(
     if !data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
     }
+
+    let uniqueness = uniqueness.into_inner();
+    actor
+        .send(CheckForUnique {
+            entity: entity.clone(),
+            content,
+            uniqueness,
+        })
+        .await
+        .unwrap()?;
 
     let content_value = actor
         .send(InsertEntityContent {
@@ -147,6 +200,7 @@ pub async fn update_set_controller(
     id: Uuid,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -159,6 +213,16 @@ pub async fn update_set_controller(
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
         return Err(Error::UuidNotCreatedForEntity(entity, id));
     }
+
+    let uniqueness = uniqueness.into_inner();
+    actor
+        .send(CheckForUnique {
+            entity: entity.clone(),
+            content: content.clone(),
+            uniqueness,
+        })
+        .await
+        .unwrap()?;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
     let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
@@ -210,6 +274,7 @@ pub async fn update_content_controller(
     id: Uuid,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -222,6 +287,16 @@ pub async fn update_content_controller(
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
         return Err(Error::UuidNotCreatedForEntity(entity, id));
     }
+
+    let uniqueness = uniqueness.into_inner();
+    actor
+        .send(CheckForUnique {
+            entity: entity.clone(),
+            content: content.clone(),
+            uniqueness,
+        })
+        .await
+        .unwrap()?;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
     let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
@@ -321,8 +396,6 @@ pub async fn delete_controller(
 ) -> Result<String, Error> {
     let uuid = Uuid::from_str(&id).unwrap();
     let offset = bytes_counter.load(Ordering::SeqCst);
-    // let content_log =
-    //     to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
 
     let mut data = data.lock().unwrap();
     if !data.contains_key(&entity) {
@@ -348,11 +421,6 @@ pub async fn delete_controller(
         }
         None => {
             let insert_reg = data.get(&entity).unwrap().get(&uuid).unwrap();
-            // let state_str = actor.send(insert_reg.clone().to_owned()).await.unwrap()?;
-            // (actor
-            //     .send(State(state_str.clone()))
-            //     .await
-            //     .unwrap()?, insert_reg.to_owned())
             (HashMap::new(), insert_reg.to_owned())
         }
     };
@@ -411,6 +479,23 @@ mod test {
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity test_ok created"), body);
         read::assert_content("CREATE_ENTITY|test_ok;");
+        clear();
+    }
+
+    #[actix_rt::test]
+    async fn test_create_uniques_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_uniques UNIQUES name, ssn, id")
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+        read::assert_content("CREATE_ENTITY|test_uniques;");
+        read::assert_uniques("test_uniques");
+        read::assert_uniques("uniques: [\"name\",\"ssn\",\"id\",]");
         clear();
     }
 
@@ -497,6 +582,55 @@ mod test {
     }
 
     #[actix_rt::test]
+    async fn test_insert_unique_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_insert_unique UNIQUES id")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {id: 123, a: \"hello\",} INTO test_insert_unique")
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {id: 123, a: \"world\",} INTO test_insert_unique")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_client_error());
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert_eq!(
+            &Body::from(
+                "key `id` in entity `test_insert_unique` already contains value `Integer(123)`"
+            ),
+            body
+        );
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {id: 234, a: \"hello\",} INTO test_insert_unique")
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+
+        clear();
+    }
+
+    #[actix_rt::test]
     async fn test_insert_entity_not_created() {
         let mut app = test::init_service(App::new().configure(routes)).await;
 
@@ -557,6 +691,59 @@ mod test {
         clear();
     }
 
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_update_uniqueness_set_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_unique_set_update UNIQUES a")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: 12.3,} INTO test_unique_set_update")
+        .uri("/wql/query")
+        .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 321, b: 12.3,} INTO test_unique_set_update")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "UPDATE test_unique_set_update SET {{a: 123, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_client_error());
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert_eq!(
+            &Body::from(
+                "key `a` in entity `test_unique_set_update` already contains value `Integer(123)`"
+            ),
+            body
+        );
+        clear();
+    }
     #[ignore]
     #[actix_rt::test]
     async fn test_update_content_post_ok() {
