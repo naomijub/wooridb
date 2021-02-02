@@ -6,6 +6,7 @@ use std::{
 use actix::prelude::*;
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::Serialize;
+use wql::Types;
 
 use crate::{actors::wql::Executor, model::error::Error, repository::local::UniquenessContext};
 
@@ -59,6 +60,45 @@ impl Handler<CreateUniques> for Executor {
                 uniqueness_data.entry(msg.entity.clone()).or_insert(hm);
             });
         }
+        Ok(())
+    }
+}
+
+pub struct CheckForUnique {
+    pub entity: String,
+    pub content: HashMap<String, Types>,
+    pub uniqueness: Arc<Arc<Mutex<UniquenessContext>>>,
+}
+
+impl Message for CheckForUnique {
+    type Result = Result<(), Error>;
+}
+
+impl Handler<CheckForUnique> for Executor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: CheckForUnique, _: &mut Self::Context) -> Self::Result {
+        let mut uniqueness_data = msg.uniqueness.lock().unwrap();
+
+        let uniques_for_entity = uniqueness_data.get_mut(&msg.entity).unwrap();
+        msg.content.iter().try_for_each(|(k, v)| {
+            if uniques_for_entity.contains_key(k) {
+                let val = uniques_for_entity.get_mut(k).unwrap();
+                if val.contains(&format!("{:?}", v)) {
+                    Err(Error::DuplicatedUnique(
+                        msg.entity.clone(),
+                        k.to_string(),
+                        v.to_owned(),
+                    ))
+                } else {
+                    val.insert(format!("{:?}", v));
+                    Ok(())
+                }
+            } else {
+                Ok(())
+            }
+        })?;
+
         Ok(())
     }
 }

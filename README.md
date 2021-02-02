@@ -19,7 +19,7 @@ WooriDB is an immutable time serial database.
 
 ### Transactions by Query
 - [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires a rntity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'CREATE ENTITY my_entity_name'`. 
-  - [ ] Create entity with Unique identifier. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'CREATE ENTITY my_entity_name UNIQUES name, ssn'`
+  - [x] Create entity with Unique identifier. This prevents duplciated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'CREATE ENTITY my_entity_name UNIQUES name, ssn'`
 - [x] Insert entity: it inserts a HashMap into the entity created (`my_entity_name`). This request returns a `Uuid`. Ecample request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'insert {a: 123,} INTO my_entity_name'`.
 - [x] Update entity: There are 2 updates possible.
   - [x] SET: `SET` updates defines the current value of the entity to the ones being passed, so if your entity is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state value will be `{a: 432, b: 12.5, c: \"hello\",}`. Example request:  `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
