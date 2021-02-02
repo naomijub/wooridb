@@ -298,7 +298,6 @@ pub async fn update_content_controller(
         .await
         .unwrap()?;
 
-
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
     let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
     let mut previous_state = actor
@@ -692,6 +691,51 @@ mod test {
         clear();
     }
 
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_update_uniqueness_set_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_unique_set_update UNIQUES a")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_unique_set_update")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "UPDATE test_unique_set_update SET {{a: 123, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_client_error());
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert_eq!(
+            &Body::from(
+                "key `a` in entity `test_unique_set_update` already contains value `Integer(123)`"
+            ),
+            body
+        );
+        clear();
+    }
     #[ignore]
     #[actix_rt::test]
     async fn test_update_content_post_ok() {
