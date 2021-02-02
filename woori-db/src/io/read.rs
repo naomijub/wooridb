@@ -18,6 +18,15 @@ pub fn assert_content(pat: &str) {
     assert!(s.contains(pat));
 }
 
+#[cfg(test)]
+pub fn assert_uniques(pat: &str) {
+    let mut file = OpenOptions::new().read(true).open("uniques.log").unwrap();
+    let mut s = String::new();
+    file.read_to_string(&mut s).unwrap();
+
+    assert!(s.contains(pat));
+}
+
 pub fn read_log(registry: DataRegister) -> Result<String, Error> {
     let mut file = OpenOptions::new()
         .read(true)

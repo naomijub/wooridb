@@ -1,11 +1,13 @@
+use crate::actors::wql::CreateEntity;
 use crate::actors::{
     state::{PreviousRegistry, State},
+    uniques::{CreateUniques, WriteUniques},
     wql::{
         DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
     },
 };
 use crate::model::{error::Error, DataRegister};
-use crate::repository::local::LocalContext;
+use crate::repository::local::{LocalContext, UniquenessContext};
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
@@ -30,12 +32,14 @@ fn pretty_config() -> PrettyConfig {
 pub async fn wql_handler(
     body: String,
     data: web::Data<Arc<Mutex<LocalContext>>>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = wql::Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::CreateEntity(entity)) => {
+        Ok(Wql::CreateEntity(entity, uniques)) => {
+            let _ = create_unique_controller(&entity, uniques, uniqueness, &actor).await;
             create_controller(entity, data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Delete(entity, uuid)) => {
@@ -74,7 +78,6 @@ pub async fn wql_handler(
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
-use crate::actors::wql::CreateEntity;
 pub async fn create_controller(
     entity: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
@@ -98,6 +101,35 @@ pub async fn create_controller(
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
     Ok(format!("Entity {} created", entity))
+}
+
+pub async fn create_unique_controller(
+    entity: &str,
+    uniques: Vec<String>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    actor: &web::Data<Addr<Executor>>,
+) -> Result<(), Error> {
+    if uniques.is_empty() {
+        Ok(())
+    } else {
+        let data = uniqueness.into_inner();
+        actor
+            .send(WriteUniques {
+                entity: entity.to_string(),
+                uniques: uniques.clone(),
+            })
+            .await
+            .unwrap()?;
+        actor
+            .send(CreateUniques {
+                entity: entity.to_string(),
+                uniques,
+                data,
+            })
+            .await
+            .unwrap()?;
+        Ok(())
+    }
 }
 
 pub async fn insert_controller(
@@ -411,6 +443,23 @@ mod test {
         let body = body.as_ref().unwrap();
         assert_eq!(&Body::from("Entity test_ok created"), body);
         read::assert_content("CREATE_ENTITY|test_ok;");
+        clear();
+    }
+
+    #[actix_rt::test]
+    async fn test_create_uniques_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_uniques UNIQUES name, ssn, id")
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+        read::assert_content("CREATE_ENTITY|test_uniques;");
+        read::assert_uniques("test_uniques");
+        read::assert_uniques("uniques: [\"name\",\"ssn\",\"id\",]");
         clear();
     }
 
