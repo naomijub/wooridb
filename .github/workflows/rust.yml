@@ -27,7 +27,7 @@ jobs:
         rm -rf *.log
         cargo test -- --ignored controllers::wql::test::test_delete_post_ok
         rm -rf *.log
-	      cargo test -- --ignored controllers::wql::test::test_update_uniqueness_set_post_ok
+        cargo test -- --ignored controllers::wql::test::test_update_uniqueness_set_post_ok
     - name: DB-FMT
       run: cargo fmt -- --check
   
