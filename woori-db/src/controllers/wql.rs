@@ -63,6 +63,7 @@ pub async fn wql_handler(
                 uuid,
                 data.into_inner(),
                 bytes_counter,
+                uniqueness,
                 actor,
             )
             .await
@@ -74,6 +75,7 @@ pub async fn wql_handler(
                 uuid,
                 data.into_inner(),
                 bytes_counter,
+                uniqueness,
                 actor,
             )
             .await
@@ -198,6 +200,7 @@ pub async fn update_set_controller(
     id: Uuid,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -210,6 +213,16 @@ pub async fn update_set_controller(
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
         return Err(Error::UuidNotCreatedForEntity(entity, id));
     }
+
+    let uniqueness = uniqueness.into_inner();
+    actor
+        .send(CheckForUnique {
+            entity: entity.clone(),
+            content: content.clone(),
+            uniqueness,
+        })
+        .await
+        .unwrap()?;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
     let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
@@ -261,6 +274,7 @@ pub async fn update_content_controller(
     id: Uuid,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -273,6 +287,17 @@ pub async fn update_content_controller(
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
         return Err(Error::UuidNotCreatedForEntity(entity, id));
     }
+
+    let uniqueness = uniqueness.into_inner();
+    actor
+        .send(CheckForUnique {
+            entity: entity.clone(),
+            content: content.clone(),
+            uniqueness,
+        })
+        .await
+        .unwrap()?;
+
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
     let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
@@ -372,8 +397,6 @@ pub async fn delete_controller(
 ) -> Result<String, Error> {
     let uuid = Uuid::from_str(&id).unwrap();
     let offset = bytes_counter.load(Ordering::SeqCst);
-    // let content_log =
-    //     to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
 
     let mut data = data.lock().unwrap();
     if !data.contains_key(&entity) {
@@ -399,11 +422,6 @@ pub async fn delete_controller(
         }
         None => {
             let insert_reg = data.get(&entity).unwrap().get(&uuid).unwrap();
-            // let state_str = actor.send(insert_reg.clone().to_owned()).await.unwrap()?;
-            // (actor
-            //     .send(State(state_str.clone()))
-            //     .await
-            //     .unwrap()?, insert_reg.to_owned())
             (HashMap::new(), insert_reg.to_owned())
         }
     };
@@ -600,6 +618,15 @@ mod test {
             ),
             body
         );
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {id: 234, a: \"hello\",} INTO test_insert_unique")
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
 
         clear();
     }

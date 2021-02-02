@@ -80,24 +80,26 @@ impl Handler<CheckForUnique> for Executor {
     fn handle(&mut self, msg: CheckForUnique, _: &mut Self::Context) -> Self::Result {
         let mut uniqueness_data = msg.uniqueness.lock().unwrap();
 
-        let uniques_for_entity = uniqueness_data.get_mut(&msg.entity).unwrap();
-        msg.content.iter().try_for_each(|(k, v)| {
-            if uniques_for_entity.contains_key(k) {
-                let val = uniques_for_entity.get_mut(k).unwrap();
-                if val.contains(&format!("{:?}", v)) {
-                    Err(Error::DuplicatedUnique(
-                        msg.entity.clone(),
-                        k.to_string(),
-                        v.to_owned(),
-                    ))
+        if !uniqueness_data.is_empty() {
+            let uniques_for_entity = uniqueness_data.get_mut(&msg.entity).unwrap();
+            msg.content.iter().try_for_each(|(k, v)| {
+                if uniques_for_entity.contains_key(k) {
+                    let val = uniques_for_entity.get_mut(k).unwrap();
+                    if val.contains(&format!("{:?}", v)) {
+                        Err(Error::DuplicatedUnique(
+                            msg.entity.clone(),
+                            k.to_string(),
+                            v.to_owned(),
+                        ))
+                    } else {
+                        val.insert(format!("{:?}", v));
+                        Ok(())
+                    }
                 } else {
-                    val.insert(format!("{:?}", v));
                     Ok(())
                 }
-            } else {
-                Ok(())
-            }
-        })?;
+            })?;
+        }
 
         Ok(())
     }
