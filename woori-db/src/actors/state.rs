@@ -133,7 +133,7 @@ impl Handler<MatchUpdate> for Executor {
                         }
                         _ => false,
                     })
-                    .fold(true, |acc, c| acc && c);
+                    .all(|c| c);
                 match conds {
                     true => Ok(()),
                     false => Err(Error::FailedMatchCondition),
@@ -187,7 +187,7 @@ impl Handler<MatchUpdate> for Executor {
                         }
                         _ => false,
                     })
-                    .fold(false, |acc, c| acc || c);
+                    .any(|c|  c);
                 match conds {
                     true => Ok(()),
                     false => Err(Error::FailedMatchCondition),
