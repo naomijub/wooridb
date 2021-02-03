@@ -53,5 +53,5 @@ jobs:
     - name: WQL-install-clippy
       run: rustup component add clippy
     - name: WQL-clippy
-      run: cargo clippy -- -W clippy::pedantic
+      run: cargo clippy --manifest-path wql/Cargo.toml -- -W clippy::pedantic
 
