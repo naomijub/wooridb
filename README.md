@@ -78,7 +78,6 @@ Found 1 outliers among 100 measurements (1.00%)
 - [ ] Docs
 - [ ] Clippy
 - [ ] Benchmarks
-- [ ] Refactor WQL
 - [ ] Transactions endpoints??
 <!-- ### Transactions by Endpoint
 - [ ] Create entity
