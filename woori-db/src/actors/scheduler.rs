@@ -54,13 +54,12 @@ impl Scheduler {
                         .append(false)
                         .open(&file_zip)
                         .unwrap();
-                    write.write(encoded.as_slice()).unwrap();
+                    write.write_all(encoded.as_slice()).unwrap();
                     Command::new("rm")
                         .arg("-rf")
                         .arg(&file_name)
                         .output()
-                        .expect("Couldn't remove file")
-                        .stdout;
+                        .expect("Couldn't remove file");
                 }
             }
         });

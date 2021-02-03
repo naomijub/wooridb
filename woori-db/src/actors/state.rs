@@ -17,7 +17,7 @@ impl Handler<State> for Executor {
     fn handle(&mut self, msg: State, _: &mut Self::Context) -> Self::Result {
         use ron::de::from_str;
 
-        let fractions = msg.0.split("|").collect::<Vec<&str>>();
+        let fractions = msg.0.split('|').collect::<Vec<&str>>();
         if fractions[0].eq("INSERT") {
             let state = fractions.last().unwrap().to_owned();
             let state = &state[..(state.len() - 1)];
@@ -53,7 +53,7 @@ impl Handler<PreviousRegistry> for Executor {
     fn handle(&mut self, msg: PreviousRegistry, _: &mut Self::Context) -> Self::Result {
         use ron::de::from_str;
 
-        let fractions = msg.0.split("|").collect::<Vec<&str>>();
+        let fractions = msg.0.split('|').collect::<Vec<&str>>();
         if fractions[0].eq("INSERT") {
             Ok(None)
         } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
