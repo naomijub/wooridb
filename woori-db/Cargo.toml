@@ -26,6 +26,9 @@ futures = "0.3.12"
 ron = "0.6.4"
 mime = "*"
 wql = {path = "../wql"}
+cron = "0.7.0"
+glob = "0.3.0"
+zstd = "0.6.0+zstd.1.4.8"
 
 [dev-dependencies]
 bytes = "1.0.1"
