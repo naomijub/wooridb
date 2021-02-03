@@ -50,4 +50,8 @@ jobs:
       run:  cargo test --manifest-path wql/Cargo.toml
     - name: WQL-FMT
       run: cargo fmt --manifest-path wql/Cargo.toml -- --check
+    - name: WQL-install-clippy
+      run: rustup component add clippy
+    - name: WQL-clippy
+      run: cargo clippy -- -W clippy::pedantic
 
