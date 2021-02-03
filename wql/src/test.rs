@@ -296,9 +296,8 @@ mod test_update {
         into Some-crazy-id",
         );
 
-        assert_eq!(
-            wql.err(),
-            Some(String::from("Couldn\'t create uuid from Some-crazy-id"))
+        assert!(
+            wql.err().unwrap().starts_with("Couldn\'t create uuid from Some-crazy-id")
         );
     }
 }
@@ -468,9 +467,8 @@ mod test_match {
         INTO",
         );
 
-        assert_eq!(
-            wql.err().unwrap(),
-            String::from("Couldn\'t create uuid from ")
+        assert!(
+            wql.err().unwrap().starts_with("Couldn\'t create uuid from ")
         );
     }
 
