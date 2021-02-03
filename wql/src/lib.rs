@@ -36,6 +36,22 @@ pub enum Types {
     Nil,
 }
 
+impl Types {
+    pub fn default_values(&self) -> Types {
+        match self {
+            Types::Char(_) => Types::Char(' '),
+            Types::Integer(_) => Types::Integer(0),
+            Types::String(_) => Types::String(String::new()),
+            Types::Uuid(_) => Types::Uuid(Uuid::new_v4()),
+            Types::Float(_) => Types::Float(0f64),
+            Types::Boolean(_) => Types::Boolean(false),
+            Types::Vector(_) => Types::Vector(Vec::new()),
+            Types::Map(_) => Types::Map(HashMap::new()),
+            Types::Nil => Types::Nil,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum MatchCondition {
     All(Vec<MatchCondition>),

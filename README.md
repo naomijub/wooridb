@@ -76,6 +76,7 @@ Found 1 outliers among 100 measurements (1.00%)
 ### Extra TODOS
 - [ ] Test Actors
 - [ ] Docs
+- [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...)
 - [ ] Clippy
 - [ ] Benchmarks
 - [ ] Transactions endpoints??

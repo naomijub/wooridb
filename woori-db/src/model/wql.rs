@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use wql::{MatchCondition, Types};
+
 #[derive(Debug, PartialEq)]
 pub enum Action {
     CreateEntity,
@@ -34,6 +38,19 @@ impl From<String> for Action {
             "UPDATE_CONTENT" => Action::UpdateContent,
             _ => Action::Error,
         }
+    }
+}
+
+pub struct MatchUpdateArgs {
+    pub entity: String,
+    pub content: HashMap<String, Types>,
+    pub id: uuid::Uuid,
+    pub conditions: MatchCondition,
+}
+
+impl MatchUpdateArgs {
+    pub fn new(entity: String, content: HashMap<String, Types>, id: uuid::Uuid, conditions: MatchCondition,) -> Self {
+        Self {entity, content, id, conditions}
     }
 }
 

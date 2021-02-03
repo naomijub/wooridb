@@ -1,10 +1,10 @@
-use crate::actors::{
+use crate::{actors::{
     state::{MatchUpdate, PreviousRegistry, State},
     uniques::{CreateUniques, WriteUniques},
     wql::{
         DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
     },
-};
+}, model::wql::MatchUpdateArgs};
 use crate::actors::{uniques::CheckForUnique, wql::CreateEntity};
 use crate::model::{error::Error, DataRegister};
 use crate::repository::local::{LocalContext, UniquenessContext};
@@ -21,7 +21,7 @@ use std::{
     },
 };
 use uuid::Uuid;
-use wql::{MatchCondition, Types, Wql};
+use wql::{Types, Wql};
 
 fn pretty_config() -> PrettyConfig {
     PrettyConfig::new()
@@ -82,10 +82,12 @@ pub async fn wql_handler(
         }
         Ok(Wql::MatchUpdate(entity, content, uuid, conditions)) => {
             match_update_set_controller(
-                entity,
-                content,
-                uuid,
-                conditions,
+                MatchUpdateArgs::new(
+                    entity,
+                    content,
+                    uuid,
+                    conditions
+                ),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -319,7 +321,7 @@ pub async fn update_content_controller(
         .unwrap()?;
 
     content.into_iter().for_each(|(k, v)| {
-        let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
+        let local_state = previous_state.entry(k).or_insert_with(|| v.default_values());
         match v {
             Types::Char(c) => {
                 *local_state = Types::Char(c);
@@ -470,25 +472,21 @@ pub async fn delete_controller(
     Ok(format!("Entity {} with Uuid {} deleted", entity, id))
 }
 
-#[deny(clippy::too_many_arguments)]
 pub async fn match_update_set_controller(
-    entity: String,
-    content: HashMap<String, Types>,
-    id: Uuid,
-    conditions: MatchCondition,
+    args: MatchUpdateArgs,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let mut data = data.lock().unwrap();
-    if !data.contains_key(&entity) {
-        return Err(Error::EntityNotCreated(entity));
-    } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
-        return Err(Error::UuidNotCreatedForEntity(entity, id));
+    if !data.contains_key(&args.entity) {
+        return Err(Error::EntityNotCreated(args.entity));
+    } else if data.contains_key(&args.entity) && !data.get(&args.entity).unwrap().contains_key(&args.id) {
+        return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
-    let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
+    let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
     let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
     let mut previous_state = actor
         .send(State(previous_state_str.clone()))
@@ -497,7 +495,7 @@ pub async fn match_update_set_controller(
 
     actor
         .send(MatchUpdate {
-            conditions,
+            conditions: args.conditions,
             previous_state: previous_state.clone(),
         })
         .await
@@ -505,19 +503,19 @@ pub async fn match_update_set_controller(
 
     let offset = bytes_counter.load(Ordering::SeqCst);
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&args.content, pretty_config()).map_err(Error::SerializationError)?;
 
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.clone(),
-            content: content.clone(),
+            entity: args.entity.clone(),
+            content: args.content.clone(),
             uniqueness,
         })
         .await
         .unwrap()?;
 
-    content.into_iter().for_each(|(k, v)| {
+    args.content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         *local_state = v;
     });
@@ -527,10 +525,10 @@ pub async fn match_update_set_controller(
 
     let content_value = actor
         .send(UpdateSetEntityContent {
-            name: entity.clone(),
+            name: args.entity.clone(),
             current_state: state_log,
             content_log,
-            id,
+            id: args.id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
                 .map_err(Error::SerializationError)?,
         })
@@ -543,13 +541,13 @@ pub async fn match_update_set_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&entity) {
-        if let Some(reg) = map.get_mut(&id) {
+    if let Some(map) = data.get_mut(&args.entity) {
+        if let Some(reg) = map.get_mut(&args.id) {
             *reg = data_register;
         }
     }
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(format!("Entity {} with Uuid {} updated", entity, id))
+    Ok(format!("Entity {} with Uuid {} updated", args.entity, args.id))
 }
