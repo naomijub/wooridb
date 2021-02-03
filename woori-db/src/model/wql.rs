@@ -49,8 +49,18 @@ pub struct MatchUpdateArgs {
 }
 
 impl MatchUpdateArgs {
-    pub fn new(entity: String, content: HashMap<String, Types>, id: uuid::Uuid, conditions: MatchCondition,) -> Self {
-        Self {entity, content, id, conditions}
+    pub fn new(
+        entity: String,
+        content: HashMap<String, Types>,
+        id: uuid::Uuid,
+        conditions: MatchCondition,
+    ) -> Self {
+        Self {
+            entity,
+            content,
+            id,
+            conditions,
+        }
     }
 }
 

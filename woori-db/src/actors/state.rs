@@ -187,7 +187,7 @@ impl Handler<MatchUpdate> for Executor {
                         }
                         _ => false,
                     })
-                    .any(|c|  c);
+                    .any(|c| c);
                 match conds {
                     true => Ok(()),
                     false => Err(Error::FailedMatchCondition),

@@ -1,13 +1,17 @@
-use crate::{actors::{
-    state::{MatchUpdate, PreviousRegistry, State},
-    uniques::{CreateUniques, WriteUniques},
-    wql::{
-        DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
-    },
-}, model::wql::MatchUpdateArgs};
 use crate::actors::{uniques::CheckForUnique, wql::CreateEntity};
 use crate::model::{error::Error, DataRegister};
 use crate::repository::local::{LocalContext, UniquenessContext};
+use crate::{
+    actors::{
+        state::{MatchUpdate, PreviousRegistry, State},
+        uniques::{CreateUniques, WriteUniques},
+        wql::{
+            DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent,
+            UpdateSetEntityContent,
+        },
+    },
+    model::wql::MatchUpdateArgs,
+};
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
@@ -82,12 +86,7 @@ pub async fn wql_handler(
         }
         Ok(Wql::MatchUpdate(entity, content, uuid, conditions)) => {
             match_update_set_controller(
-                MatchUpdateArgs::new(
-                    entity,
-                    content,
-                    uuid,
-                    conditions
-                ),
+                MatchUpdateArgs::new(entity, content, uuid, conditions),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -251,8 +250,8 @@ pub async fn update_set_controller(
         *local_state = v;
     });
 
-    let state_log = to_string_pretty(&previous_state, pretty_config())
-        .map_err(Error::SerializationError)?;
+    let state_log =
+        to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent {
@@ -321,7 +320,9 @@ pub async fn update_content_controller(
         .unwrap()?;
 
     content.into_iter().for_each(|(k, v)| {
-        let local_state = previous_state.entry(k).or_insert_with(|| v.default_values());
+        let local_state = previous_state
+            .entry(k)
+            .or_insert_with(|| v.default_values());
         match v {
             Types::Char(c) => {
                 *local_state = Types::Char(c);
@@ -370,8 +371,8 @@ pub async fn update_content_controller(
         }
     });
 
-    let state_log = to_string_pretty(&previous_state, pretty_config())
-        .map_err(Error::SerializationError)?;
+    let state_log =
+        to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(UpdateContentEntityContent {
@@ -439,11 +440,11 @@ pub async fn delete_controller(
             (HashMap::new(), insert_reg.to_owned())
         }
     };
-    let content_log = to_string_pretty(&state_to_be.0, pretty_config())
-        .map_err(Error::SerializationError)?;
+    let content_log =
+        to_string_pretty(&state_to_be.0, pretty_config()).map_err(Error::SerializationError)?;
 
-    let previous_register_log = to_string_pretty(&state_to_be.1, pretty_config())
-        .map_err(Error::SerializationError)?;
+    let previous_register_log =
+        to_string_pretty(&state_to_be.1, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(DeleteId {
@@ -482,7 +483,9 @@ pub async fn match_update_set_controller(
     let mut data = data.lock().unwrap();
     if !data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
-    } else if data.contains_key(&args.entity) && !data.get(&args.entity).unwrap().contains_key(&args.id) {
+    } else if data.contains_key(&args.entity)
+        && !data.get(&args.entity).unwrap().contains_key(&args.id)
+    {
         return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
@@ -520,8 +523,8 @@ pub async fn match_update_set_controller(
         *local_state = v;
     });
 
-    let state_log = to_string_pretty(&previous_state, pretty_config())
-        .map_err(Error::SerializationError)?;
+    let state_log =
+        to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent {
@@ -549,5 +552,8 @@ pub async fn match_update_set_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(format!("Entity {} with Uuid {} updated", args.entity, args.id))
+    Ok(format!(
+        "Entity {} with Uuid {} updated",
+        args.entity, args.id
+    ))
 }
