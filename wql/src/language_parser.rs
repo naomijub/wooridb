@@ -1,4 +1,5 @@
-use super::*;
+use super::{read_map, read_match_args, FromStr, MatchCondition, Uuid, Wql};
+
 pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
     let symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
 
@@ -15,7 +16,7 @@ pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, S
 fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
     let entity_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
 
-    if entity_symbol.to_uppercase() != String::from("ENTITY") {
+    if entity_symbol.to_uppercase() != "ENTITY" {
         return Err(String::from("Keyword ENTITY is required for CREATE"));
     }
 
@@ -26,7 +27,7 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .to_string();
 
     let unique_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
-    if unique_symbol.to_uppercase() == String::from("UNIQUES") {
+    if unique_symbol.to_uppercase() == "UNIQUES" {
         let unique_names = chars
             .skip_while(|c| c.is_whitespace())
             .take_while(|c| {
@@ -37,7 +38,7 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
             .to_string();
 
         let unique_vec = unique_names
-            .split(",")
+            .split(',')
             .map(|w| w.trim().to_string())
             .collect::<Vec<String>>();
 
@@ -63,7 +64,7 @@ fn delete(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .take_while(|c| !c.is_whitespace())
         .collect::<String>();
 
-    if entity_symbol.to_uppercase() != String::from("FROM") {
+    if entity_symbol.to_uppercase() != "FROM" {
         return Err(String::from("Keyword FROM is required for DELETE"));
     }
 
@@ -87,7 +88,7 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .take_while(|c| !c.is_whitespace())
         .collect::<String>();
 
-    if entity_symbol.to_uppercase() != String::from("INTO") {
+    if entity_symbol.to_uppercase() != "INTO" {
         return Err(String::from("Keyword INTO is required for INSERT"));
     }
 
@@ -133,7 +134,7 @@ fn update(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .take_while(|c| !c.is_whitespace())
         .collect::<String>();
 
-    if into_symbol.to_uppercase() != String::from("INTO") {
+    if into_symbol.to_uppercase() != "INTO" {
         return Err(String::from("Keyword INTO is required for UPDATE"));
     };
 
@@ -210,7 +211,7 @@ fn match_update(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .take_while(|c| !c.is_whitespace())
         .collect::<String>();
 
-    if into_symbol.to_uppercase() != String::from("INTO") {
+    if into_symbol.to_uppercase() != "INTO" {
         return Err(String::from("Keyword INTO is required for MATCH UPDATE"));
     };
 

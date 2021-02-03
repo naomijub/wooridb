@@ -1,4 +1,4 @@
-use super::*;
+use super::{FromStr, HashMap, MatchCondition, Types};
 
 pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCondition>, String> {
     let base = chars
@@ -8,15 +8,15 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
         .trim()
         .to_string();
     let mut conditions: Vec<MatchCondition> = Vec::new();
-    base.split(",")
+    base.split(',')
         .map(|l| {
             let k = l
-                .split(" ")
+                .split(' ')
                 .filter(|f| !f.is_empty())
                 .collect::<Vec<&str>>();
             let mut c = k[2].chars();
-            match k[1] {
-                "==" => Ok(MatchCondition::Eq(
+            match k.get(1) {
+                Some(&"==") => Ok(MatchCondition::Eq(
                     k[0].to_string(),
                     parse_value(
                         c.next()
@@ -24,7 +24,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
                         &mut c,
                     )?,
                 )),
-                "!=" => Ok(MatchCondition::NotEq(
+                Some(&"!=") => Ok(MatchCondition::NotEq(
                     k[0].to_string(),
                     parse_value(
                         c.next()
@@ -32,7 +32,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
                         &mut c,
                     )?,
                 )),
-                ">=" => Ok(MatchCondition::GEq(
+                Some(&">=") => Ok(MatchCondition::GEq(
                     k[0].to_string(),
                     parse_value(
                         c.next()
@@ -40,7 +40,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
                         &mut c,
                     )?,
                 )),
-                "<=" => Ok(MatchCondition::LEq(
+                Some(&"<=") => Ok(MatchCondition::LEq(
                     k[0].to_string(),
                     parse_value(
                         c.next()
@@ -48,7 +48,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
                         &mut c,
                     )?,
                 )),
-                ">" => Ok(MatchCondition::G(
+                Some(&">") => Ok(MatchCondition::G(
                     k[0].to_string(),
                     parse_value(
                         c.next()
@@ -56,7 +56,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
                         &mut c,
                     )?,
                 )),
-                "<" => Ok(MatchCondition::L(
+                Some(&"<") => Ok(MatchCondition::L(
                     k[0].to_string(),
                     parse_value(
                         c.next()
@@ -138,7 +138,7 @@ pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types,
         Ok(Types::Boolean(value.parse().unwrap()))
     } else if &value.to_lowercase() == "nil" {
         Ok(Types::Nil)
-    } else if value.starts_with("'") && value.ends_with("'") && value.len() == 3 {
+    } else if value.starts_with('\'') && value.ends_with('\'') && value.len() == 3 {
         Ok(Types::Char(value.chars().nth(1).unwrap()))
     } else {
         Err(format!("Value Type could not be created from {}", value))

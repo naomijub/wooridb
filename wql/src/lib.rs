@@ -30,7 +30,7 @@ pub enum Types {
     Uuid(Uuid),
     Float(f64),
     Boolean(bool),
-    Vector(Vec<Box<Types>>),
+    Vector(Vec<Types>),
     Map(HashMap<String, Box<Types>>),
     //DateTime
     Nil,
@@ -64,8 +64,8 @@ impl std::str::FromStr for Wql {
 }
 
 pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql, String> {
-    if c.is_some() {
-        read_symbol(c.unwrap(), chars)
+    if let Some(ch) = c {
+        read_symbol(ch, chars)
     } else {
         Err(String::from("Empty WQL"))
     }
