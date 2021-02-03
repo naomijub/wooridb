@@ -26,7 +26,7 @@ async fn main() -> std::io::Result<()> {
             .service(ping)
             .service(readiness)
             .configure(routes)
-            .route("", web::get().to(|| HttpResponse::NotFound()))
+            .route("", web::get().to(HttpResponse::NotFound))
     })
     .bind("0.0.0.0:1438")?
     .workers(1)

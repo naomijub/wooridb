@@ -26,7 +26,7 @@ impl Handler<WriteUniques> for Executor {
     fn handle(&mut self, msg: WriteUniques, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_uniques;
         let unique_log =
-            to_string_pretty(&msg, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+            to_string_pretty(&msg, pretty_config()).map_err(Error::SerializationError)?;
         Ok(write_to_uniques(&unique_log)?)
     }
 }

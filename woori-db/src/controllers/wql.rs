@@ -165,7 +165,7 @@ pub async fn insert_controller(
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = data.lock().unwrap();
     if !data.contains_key(&entity) {
@@ -218,7 +218,7 @@ pub async fn update_set_controller(
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = data.lock().unwrap();
     if !data.contains_key(&entity) {
@@ -250,7 +250,7 @@ pub async fn update_set_controller(
     });
 
     let state_log = to_string_pretty(&previous_state, pretty_config())
-        .map_err(|e| Error::SerializationError(e))?;
+        .map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent {
@@ -259,7 +259,7 @@ pub async fn update_set_controller(
             content_log,
             id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
-                .map_err(|e| Error::SerializationError(e))?,
+                .map_err(Error::SerializationError)?,
         })
         .await
         .unwrap()?;
@@ -292,7 +292,7 @@ pub async fn update_content_controller(
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = data.lock().unwrap();
     if !data.contains_key(&entity) {
@@ -369,7 +369,7 @@ pub async fn update_content_controller(
     });
 
     let state_log = to_string_pretty(&previous_state, pretty_config())
-        .map_err(|e| Error::SerializationError(e))?;
+        .map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(UpdateContentEntityContent {
@@ -378,7 +378,7 @@ pub async fn update_content_controller(
             content_log,
             id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
-                .map_err(|e| Error::SerializationError(e))?,
+                .map_err(Error::SerializationError)?,
         })
         .await
         .unwrap()?;
@@ -438,10 +438,10 @@ pub async fn delete_controller(
         }
     };
     let content_log = to_string_pretty(&state_to_be.0, pretty_config())
-        .map_err(|e| Error::SerializationError(e))?;
+        .map_err(Error::SerializationError)?;
 
     let previous_register_log = to_string_pretty(&state_to_be.1, pretty_config())
-        .map_err(|e| Error::SerializationError(e))?;
+        .map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(DeleteId {
@@ -504,7 +504,7 @@ pub async fn match_update_set_controller(
 
     let offset = bytes_counter.load(Ordering::SeqCst);
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
     let uniqueness = uniqueness.into_inner();
     actor
@@ -522,7 +522,7 @@ pub async fn match_update_set_controller(
     });
 
     let state_log = to_string_pretty(&previous_state, pretty_config())
-        .map_err(|e| Error::SerializationError(e))?;
+        .map_err(Error::SerializationError)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent {
@@ -531,7 +531,7 @@ pub async fn match_update_set_controller(
             content_log,
             id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
-                .map_err(|e| Error::SerializationError(e))?,
+                .map_err(Error::SerializationError)?,
         })
         .await
         .unwrap()?;

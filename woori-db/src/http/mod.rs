@@ -44,7 +44,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
                 .data(actor)
                 .route("/tx", web::post().to(wql_handler)),
         )
-        .route("", web::get().to(|| HttpResponse::NotFound()));
+        .route("", web::get().to(HttpResponse::NotFound));
 }
 
 #[cfg(test)]

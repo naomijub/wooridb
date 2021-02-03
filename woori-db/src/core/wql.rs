@@ -8,7 +8,7 @@ use crate::{
     model::wql::Action,
 };
 
-pub fn create_entity(entity: &String) -> String {
+pub fn create_entity(entity: &str) -> String {
     format!("{}|{};", Action::CreateEntity, entity)
 }
 
