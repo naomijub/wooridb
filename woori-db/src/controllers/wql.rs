@@ -1,5 +1,5 @@
 use crate::actors::{
-    state::{PreviousRegistry, State},
+    state::{MatchUpdate, PreviousRegistry, State},
     uniques::{CreateUniques, WriteUniques},
     wql::{
         DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
@@ -21,7 +21,7 @@ use std::{
     },
 };
 use uuid::Uuid;
-use wql::{Types, Wql};
+use wql::{MatchCondition, Types, Wql};
 
 fn pretty_config() -> PrettyConfig {
     PrettyConfig::new()
@@ -73,6 +73,19 @@ pub async fn wql_handler(
                 entity,
                 content,
                 uuid,
+                data.into_inner(),
+                bytes_counter,
+                uniqueness,
+                actor,
+            )
+            .await
+        }
+        Ok(Wql::MatchUpdate(entity, content, uuid, conditions)) => {
+            match_update_set_controller(
+                entity,
+                content,
+                uuid,
+                conditions,
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -455,6 +468,89 @@ pub async fn delete_controller(
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
     Ok(format!("Entity {} with Uuid {} deleted", entity, id))
+}
+
+pub async fn match_update_set_controller(
+    entity: String,
+    content: HashMap<String, Types>,
+    id: Uuid,
+    conditions: MatchCondition,
+    data: Arc<Arc<Mutex<LocalContext>>>,
+    bytes_counter: web::Data<AtomicUsize>,
+    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    let mut data = data.lock().unwrap();
+    if !data.contains_key(&entity) {
+        return Err(Error::EntityNotCreated(entity));
+    } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
+        return Err(Error::UuidNotCreatedForEntity(entity, id));
+    }
+
+    let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
+    let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
+    let mut previous_state = actor
+        .send(State(previous_state_str.clone()))
+        .await
+        .unwrap()?;
+
+    actor
+        .send(MatchUpdate {
+            conditions,
+            previous_state: previous_state.clone(),
+        })
+        .await
+        .unwrap()?;
+
+    let offset = bytes_counter.load(Ordering::SeqCst);
+    let content_log =
+        to_string_pretty(&content, pretty_config()).map_err(|e| Error::SerializationError(e))?;
+
+    let uniqueness = uniqueness.into_inner();
+    actor
+        .send(CheckForUnique {
+            entity: entity.clone(),
+            content: content.clone(),
+            uniqueness,
+        })
+        .await
+        .unwrap()?;
+
+    content.into_iter().for_each(|(k, v)| {
+        let local_state = previous_state.entry(k).or_insert(v.clone());
+        *local_state = v;
+    });
+
+    let state_log = to_string_pretty(&previous_state, pretty_config())
+        .map_err(|e| Error::SerializationError(e))?;
+
+    let content_value = actor
+        .send(UpdateSetEntityContent {
+            name: entity.clone(),
+            current_state: state_log,
+            content_log,
+            id,
+            previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
+                .map_err(|e| Error::SerializationError(e))?,
+        })
+        .await
+        .unwrap()?;
+
+    let data_register = DataRegister {
+        offset,
+        bytes_length: content_value.1,
+        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+    };
+
+    if let Some(map) = data.get_mut(&entity) {
+        if let Some(reg) = map.get_mut(&id) {
+            *reg = data_register;
+        }
+    }
+
+    bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+
+    Ok(format!("Entity {} with Uuid {} updated", entity, id))
 }
 
 #[cfg(test)]
@@ -982,6 +1078,199 @@ mod test {
 
         read::assert_content("DELETE");
         read::assert_content("|{}|");
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_all_update_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_success());
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_any_update_post_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ANY(a > 100, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_success());
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_any_update_fail() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ANY(a > 200, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_client_error());
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert_eq!(&Body::from("One or more MATCH CONDITIONS failed"), body);
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_any_update_fake_key() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ANY(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_success());
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_all_update_fake_key() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ALL(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_client_error());
         clear();
     }
 

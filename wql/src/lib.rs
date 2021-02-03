@@ -9,6 +9,7 @@ pub enum Wql {
     UpdateContent(String, Entity, Uuid),
     UpdateSet(String, Entity, Uuid),
     Delete(String, String),
+    MatchUpdate(String, Entity, Uuid, MatchCondition),
 }
 
 pub type Entity = HashMap<String, Types>;
@@ -25,6 +26,18 @@ pub enum Types {
     Map(HashMap<String, Box<Types>>),
     //DateTime
     Nil,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum MatchCondition {
+    All(Vec<MatchCondition>),
+    Any(Vec<MatchCondition>),
+    Eq(String, Types),
+    NotEq(String, Types),
+    GEq(String, Types),
+    G(String, Types),
+    LEq(String, Types),
+    L(String, Types),
 }
 
 pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
@@ -58,6 +71,7 @@ fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
         ('i', "NSERT") | ('I', "NSERT") => insert(chars),
         ('u', "PDATE") | ('U', "PDATE") => update(chars),
         ('d', "ELETE") | ('D', "ELETE") => delete(chars),
+        ('m', "ATCH") | ('M', "ATCH") => match_update(chars),
         _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }
@@ -201,6 +215,157 @@ fn update(chars: &mut std::str::Chars) -> Result<Wql, String> {
         "CONTENT" => Ok(Wql::UpdateContent(entity_name, entity_map, uuid)),
         _ => Err("Couldn't parse UPDATE query".to_string()),
     }
+}
+
+fn match_update(chars: &mut std::str::Chars) -> Result<Wql, String> {
+    let match_arg_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| c.is_alphabetic())
+        .collect::<String>();
+
+    if &match_arg_symbol.to_uppercase() != "ALL" && &match_arg_symbol.to_uppercase() != "ANY" {
+        return Err(String::from("MATCH requires ALL or ANY symbols"));
+    }
+
+    let logical_args = read_match_args(chars)?;
+
+    let match_args = if match_arg_symbol.to_uppercase().eq("ALL") {
+        Ok(MatchCondition::All(logical_args))
+    } else if match_arg_symbol.to_uppercase().eq("ANY") {
+        Ok(MatchCondition::Any(logical_args))
+    } else {
+        Err(String::from("MATCH requires ALL or ANY symbols"))
+    };
+
+    let update_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| c.is_alphabetic())
+        .collect::<String>();
+
+    if update_symbol.to_uppercase() != "UPDATE" {
+        return Err(String::from("UPDATE keyword is required for MATCH UPDATE"));
+    };
+
+    let entity_name = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'_')
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    if entity_name.is_empty() {
+        return Err(String::from("Entity name is required for MATCH UPDATE"));
+    };
+
+    let entity_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if entity_symbol.to_uppercase() != "SET" {
+        return Err(String::from(
+            "MATCH UPDATE type is required after entity. Keyword is SET",
+        ));
+    };
+
+    let entity_map = read_map(chars)?;
+
+    let into_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if into_symbol.to_uppercase() != String::from("INTO") {
+        return Err(String::from("Keyword INTO is required for MATCH UPDATE"));
+    };
+
+    let uuid_str = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'-')
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    let uuid =
+        Uuid::from_str(&uuid_str).map_err(|_| format!("Couldn't create uuid from {}", uuid_str))?;
+
+    match &entity_symbol.to_uppercase()[..] {
+        "SET" => Ok(Wql::MatchUpdate(entity_name, entity_map, uuid, match_args?)),
+        _ => Err("Couldn't parse UPDATE query".to_string()),
+    }
+}
+
+fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCondition>, String> {
+    let base = chars
+        .skip_while(|c| c == &'(' || c.is_whitespace())
+        .take_while(|c| c != &')')
+        .collect::<String>()
+        .trim()
+        .to_string();
+    let mut conditions: Vec<MatchCondition> = Vec::new();
+    base.split(",")
+        .map(|l| {
+            let k = l
+                .split(" ")
+                .filter(|f| !f.is_empty())
+                .collect::<Vec<&str>>();
+            let mut c = k[2].chars();
+            match k[1] {
+                "==" => Ok(MatchCondition::Eq(
+                    k[0].to_string(),
+                    parse_value(
+                        c.next()
+                            .ok_or_else(|| String::from("Not able to parse match argument"))?,
+                        &mut c,
+                    )?,
+                )),
+                "!=" => Ok(MatchCondition::NotEq(
+                    k[0].to_string(),
+                    parse_value(
+                        c.next()
+                            .ok_or_else(|| String::from("Not able to parse match argument"))?,
+                        &mut c,
+                    )?,
+                )),
+                ">=" => Ok(MatchCondition::GEq(
+                    k[0].to_string(),
+                    parse_value(
+                        c.next()
+                            .ok_or_else(|| String::from("Not able to parse match argument"))?,
+                        &mut c,
+                    )?,
+                )),
+                "<=" => Ok(MatchCondition::LEq(
+                    k[0].to_string(),
+                    parse_value(
+                        c.next()
+                            .ok_or_else(|| String::from("Not able to parse match argument"))?,
+                        &mut c,
+                    )?,
+                )),
+                ">" => Ok(MatchCondition::G(
+                    k[0].to_string(),
+                    parse_value(
+                        c.next()
+                            .ok_or_else(|| String::from("Not able to parse match argument"))?,
+                        &mut c,
+                    )?,
+                )),
+                "<" => Ok(MatchCondition::L(
+                    k[0].to_string(),
+                    parse_value(
+                        c.next()
+                            .ok_or_else(|| String::from("Not able to parse match argument"))?,
+                        &mut c,
+                    )?,
+                )),
+                _ => Err(String::from("Unidentified Match Condition")),
+            }
+        })
+        .try_for_each(|e: Result<MatchCondition, String>| {
+            conditions.push(e?);
+            Ok::<(), String>(())
+        })?;
+
+    Ok(conditions)
 }
 
 fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Types>, String> {
@@ -605,5 +770,184 @@ mod test_update {
             wql.err(),
             Some(String::from("Couldn\'t create uuid from Some-crazy-id"))
         );
+    }
+}
+
+#[cfg(test)]
+mod test_match {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_read_match_args() {
+        let mut args = "(a == 1, b != 2, c > 3, d >= 4, e < 5, f <= 6)".chars();
+        let actual = read_match_args(&mut args).unwrap();
+        let expected = vec![
+            MatchCondition::Eq("a".to_string(), Types::Integer(1)),
+            MatchCondition::NotEq("b".to_string(), Types::Integer(2)),
+            MatchCondition::G("c".to_string(), Types::Integer(3)),
+            MatchCondition::GEq("d".to_string(), Types::Integer(4)),
+            MatchCondition::L("e".to_string(), Types::Integer(5)),
+            MatchCondition::LEq("f".to_string(), Types::Integer(6)),
+        ];
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn match_update_set_entity() {
+        let wql = Wql::from_str(
+            " MATCH ALL(a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE this_entity 
+        SET {
+            a: 123,
+            g: NiL
+        } 
+        INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::MatchUpdate(
+                "this_entity".to_string(),
+                hashmap(),
+                Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap(),
+                MatchCondition::All(vec![
+                    MatchCondition::Eq("a".to_string(), Types::Integer(1)),
+                    MatchCondition::GEq("b".to_string(), Types::Integer(3)),
+                    MatchCondition::NotEq("c".to_string(), Types::String("hello".to_string())),
+                    MatchCondition::L("d".to_string(), Types::Integer(7)),
+                ])
+            )
+        );
+    }
+
+    #[test]
+    fn match_update_missing_logical_arg() {
+        let wql = Wql::from_str(
+            " MATCH (a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE this_entity 
+        SET {
+            a: 123,
+            g: NiL
+        } 
+        INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("MATCH requires ALL or ANY symbols")
+        );
+    }
+
+    #[test]
+    fn match_update_missing_update_key() {
+        let wql = Wql::from_str(
+            " MATCH Any(a == 1, b >= 3, c != \"hello\", d < 7)
+        this_entity 
+        SET {
+            a: 123,
+            g: NiL
+        } 
+        INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("UPDATE keyword is required for MATCH UPDATE")
+        );
+    }
+
+    #[test]
+    fn match_update_missing_entity_name() {
+        let wql = Wql::from_str(
+            " MATCH All(a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE 
+        SET {
+            a: 123,
+            g: NiL
+        } 
+        INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("Entity name is required for MATCH UPDATE")
+        );
+    }
+
+    #[test]
+    fn match_update_missing_set() {
+        let wql = Wql::from_str(
+            " MATCH All(a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE this_entity 
+        {
+            a: 123,
+            g: NiL
+        } 
+        INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("MATCH UPDATE type is required after entity. Keyword is SET")
+        );
+    }
+
+    #[test]
+    fn match_update_missing_content() {
+        let wql = Wql::from_str(
+            " MATCH All(a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE this_entity 
+        SET 
+        INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("Entity map should start with `{` and end with `}`")
+        );
+    }
+
+    #[test]
+    fn match_update_missing_into() {
+        let wql = Wql::from_str(
+            " MATCH All(a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE this_entity 
+        SET {
+            a: 123,
+            g: NiL
+        } 
+        d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("Keyword INTO is required for MATCH UPDATE")
+        );
+    }
+
+    #[test]
+    fn match_update_missing_id() {
+        let wql = Wql::from_str(
+            " MATCH All(a == 1, b >= 3, c != \"hello\", d < 7)
+        UPDATE this_entity 
+        SET {
+            a: 123,
+            g: NiL
+        } 
+        INTO",
+        );
+
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("Couldn\'t create uuid from ")
+        );
+    }
+
+    fn hashmap() -> Entity {
+        let mut hm = HashMap::new();
+        hm.insert("a".to_string(), Types::Integer(123));
+        hm.insert("g".to_string(), Types::Nil);
+        hm
     }
 }
