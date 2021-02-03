@@ -36,7 +36,7 @@ WooriDB is an immutable time serial database.
   - `<` means lesser, so if `a < 100`, this means that the entity key `a` must lesser than `100`. 
 
 - [x] Delete entity: This is pretty simple, it deletes the last state of an entity. So if you have one update on you entity it will roll back to the `INSERT` event. However, if you have only an `INSERT` event you state will become an empty hashmap. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
-  - [ ] Delete entity at specified time. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name AT <DATE-TIME>'`
+  <!-- - [ ] Delete entity at specified time. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name AT <DATE-TIME>'` -->
 
 - [ ] Evict entity: Removes all ocurrences of an entity. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
 

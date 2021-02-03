@@ -1,3 +1,5 @@
+use crate::logic::read_entities;
+
 use super::{read_map, read_match_args, FromStr, MatchCondition, Uuid, Wql};
 
 pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
@@ -26,21 +28,9 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .trim()
         .to_string();
 
-    let unique_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
-    if unique_symbol.to_uppercase() == "UNIQUES" {
-        let unique_names = chars
-            .skip_while(|c| c.is_whitespace())
-            .take_while(|c| {
-                c.is_alphanumeric() || c == &'_' || c == &',' || c.is_whitespace() || c != &';'
-            })
-            .collect::<String>()
-            .trim()
-            .to_string();
-
-        let unique_vec = unique_names
-            .split(',')
-            .map(|w| w.trim().to_string())
-            .collect::<Vec<String>>();
+    let next_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
+    if next_symbol.to_uppercase() == "UNIQUES" {
+        let unique_vec = read_entities(chars);
 
         Ok(Wql::CreateEntity(entity_name, unique_vec))
     } else {

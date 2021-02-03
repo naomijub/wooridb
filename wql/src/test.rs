@@ -57,7 +57,7 @@ mod test_create {
                     "name".to_string(),
                     "ssn".to_string(),
                     "something".to_string()
-                ]
+                ],
             )
         );
     }
