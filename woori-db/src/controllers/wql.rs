@@ -108,11 +108,13 @@ pub async fn create_controller(
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let mut data = data.lock().unwrap();
-    if !data.contains_key(&entity) {
-        data.insert(entity.clone(), BTreeMap::new());
-    } else {
-        return Err(Error::EntityAlreadyCreated(entity));
+    {
+        let mut data = data.lock().unwrap();
+        if !data.contains_key(&entity) {
+            data.insert(entity.clone(), BTreeMap::new());
+        } else {
+            return Err(Error::EntityAlreadyCreated(entity));
+        }
     }
 
     let offset = actor

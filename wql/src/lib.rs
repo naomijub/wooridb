@@ -18,6 +18,7 @@ pub enum Wql {
     UpdateSet(String, Entity, Uuid),
     Delete(String, String),
     MatchUpdate(String, Entity, Uuid, MatchCondition),
+    Evict(String, Option<Uuid>),
 }
 
 pub type Entity = HashMap<String, Types>;

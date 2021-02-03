@@ -11,6 +11,7 @@ pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, S
         ('u', "PDATE") | ('U', "PDATE") => update(chars),
         ('d', "ELETE") | ('D', "ELETE") => delete(chars),
         ('m', "ATCH") | ('M', "ATCH") => match_update(chars),
+        ('e', "VICT") | ('E', "VICT") => evict(chars),
         _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }
@@ -217,5 +218,43 @@ fn match_update(chars: &mut std::str::Chars) -> Result<Wql, String> {
     match &entity_symbol.to_uppercase()[..] {
         "SET" => Ok(Wql::MatchUpdate(entity_name, entity_map, uuid, match_args?)),
         _ => Err("Couldn't parse UPDATE query".to_string()),
+    }
+}
+
+fn evict(chars: &mut std::str::Chars) -> Result<Wql, String> {
+    let info = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'-' || c == &'_')
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    let uuid = Uuid::from_str(&info);
+    if uuid.is_err() {
+        if info.chars().any(|c| c == '-') {
+            return Err("Entity name cannot contain `-`".to_string());
+        }
+        Ok(Wql::Evict(info, None))
+    } else {
+        let from_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>()
+            .trim()
+            .to_string();
+
+        if from_symbol.to_uppercase() != "FROM" {
+            return Err(String::from("FROM keyword is required to EVICT an UUID"));
+        }
+        let name = chars
+            .take_while(|c| c.is_alphanumeric() || c == &'_')
+            .collect::<String>()
+            .trim()
+            .to_string();
+
+        if name.is_empty() {
+            return Err(String::from("Entity name is required"));
+        }
+
+        Ok(Wql::Evict(name, uuid.ok()))
     }
 }
