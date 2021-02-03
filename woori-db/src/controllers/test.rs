@@ -717,6 +717,29 @@ async fn test_match_all_update_fake_key() {
     clear();
 }
 
+#[actix_rt::test]
+async fn test_evict_entity_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_evict")
+        .uri("/wql/tx")
+        .to_request();
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("Evict test_evict")
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+    read::assert_content("EVICT_ENTITY|");
+    read::assert_content("|test_evict;");
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

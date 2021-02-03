@@ -1,4 +1,7 @@
-use crate::actors::{uniques::CheckForUnique, wql::CreateEntity};
+use crate::actors::{
+    uniques::CheckForUnique,
+    wql::{CreateEntity, EvictEntity, EvictEntityId},
+};
 use crate::model::{error::Error, DataRegister};
 use crate::repository::local::{LocalContext, UniquenessContext};
 use crate::{
@@ -94,6 +97,9 @@ pub async fn wql_handler(
             )
             .await
         }
+        Ok(Wql::Evict(entity, uuid)) => {
+            evict_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
+        }
         Err(e) => Err(Error::QueryFormat(e)),
     };
 
@@ -127,6 +133,45 @@ pub async fn create_controller(
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
     Ok(format!("Entity {} created", entity))
+}
+
+pub async fn evict_controller(
+    entity: String,
+    uuid: Option<Uuid>,
+    data: Arc<Arc<Mutex<LocalContext>>>,
+    bytes_counter: web::Data<AtomicUsize>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    if uuid.is_none() {
+        let offset = actor
+            .send(EvictEntity {
+                name: entity.clone(),
+            })
+            .await
+            .unwrap()?;
+        bytes_counter.fetch_add(offset, Ordering::SeqCst);
+
+        let mut data = data.lock().unwrap();
+        data.remove(&entity);
+        Ok(format!("Entity {} evicted", entity))
+    } else {
+        let id = uuid.unwrap();
+        let offset = actor
+            .send(EvictEntityId {
+                name: entity.clone(),
+                id: id.clone(),
+            })
+            .await
+            .unwrap()?;
+        bytes_counter.fetch_add(offset, Ordering::SeqCst);
+
+        let mut data = data.lock().unwrap();
+        if let Some(d) = data.get_mut(&entity) {
+            d.remove(&id);
+        }
+
+        Ok(format!("Entity {} with id {} evicted", entity, id))
+    }
 }
 
 pub async fn create_unique_controller(

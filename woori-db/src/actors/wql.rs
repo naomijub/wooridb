@@ -4,8 +4,8 @@ use std::io::Error;
 use uuid::Uuid;
 
 use crate::core::wql::{
-    create_entity, delete_entity_content, insert_entity_content, update_content_entity_content,
-    update_set_entity_content,
+    create_entity, delete_entity_content, evict_entity_content, evict_entity_id_content,
+    insert_entity_content, update_content_entity_content, update_set_entity_content,
 };
 
 pub struct Executor;
@@ -120,5 +120,42 @@ impl Handler<DeleteId> for Executor {
         use crate::io::write::write_to_log;
         let (date, content) = delete_entity_content(msg);
         Ok((date, write_to_log(&content)?))
+    }
+}
+
+pub struct EvictEntity {
+    pub name: String,
+}
+
+impl Message for EvictEntity {
+    type Result = Result<usize, Error>;
+}
+
+impl Handler<EvictEntity> for Executor {
+    type Result = Result<usize, Error>;
+
+    fn handle(&mut self, msg: EvictEntity, _: &mut Self::Context) -> Self::Result {
+        use crate::io::write::write_to_log;
+        let content = evict_entity_content(&msg.name);
+        Ok(write_to_log(&content)?)
+    }
+}
+
+pub struct EvictEntityId {
+    pub name: String,
+    pub id: Uuid,
+}
+
+impl Message for EvictEntityId {
+    type Result = Result<usize, Error>;
+}
+
+impl Handler<EvictEntityId> for Executor {
+    type Result = Result<usize, Error>;
+
+    fn handle(&mut self, msg: EvictEntityId, _: &mut Self::Context) -> Self::Result {
+        use crate::io::write::write_to_log;
+        let content = evict_entity_id_content(msg);
+        Ok(write_to_log(&content)?)
     }
 }
