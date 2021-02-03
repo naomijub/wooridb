@@ -144,8 +144,8 @@ fn update(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .trim()
         .to_string();
 
-    let uuid =
-        Uuid::from_str(&uuid_str).map_err(|e| format!("Couldn't create uuid from {}. Error: {:?}", uuid_str, e))?;
+    let uuid = Uuid::from_str(&uuid_str)
+        .map_err(|e| format!("Couldn't create uuid from {}. Error: {:?}", uuid_str, e))?;
 
     match &entity_symbol.to_uppercase()[..] {
         "SET" => Ok(Wql::UpdateSet(entity_name, entity_map, uuid)),
@@ -221,8 +221,8 @@ fn match_update(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .trim()
         .to_string();
 
-    let uuid =
-        Uuid::from_str(&uuid_str).map_err(|e| format!("Couldn't create uuid from {}, Error: {:?}", uuid_str, e))?;
+    let uuid = Uuid::from_str(&uuid_str)
+        .map_err(|e| format!("Couldn't create uuid from {}, Error: {:?}", uuid_str, e))?;
 
     match &entity_symbol.to_uppercase()[..] {
         "SET" => Ok(Wql::MatchUpdate(entity_name, entity_map, uuid, match_args?)),

@@ -296,9 +296,10 @@ mod test_update {
         into Some-crazy-id",
         );
 
-        assert!(
-            wql.err().unwrap().starts_with("Couldn\'t create uuid from Some-crazy-id")
-        );
+        assert!(wql
+            .err()
+            .unwrap()
+            .starts_with("Couldn\'t create uuid from Some-crazy-id"));
     }
 }
 
@@ -467,9 +468,10 @@ mod test_match {
         INTO",
         );
 
-        assert!(
-            wql.err().unwrap().starts_with("Couldn\'t create uuid from ")
-        );
+        assert!(wql
+            .err()
+            .unwrap()
+            .starts_with("Couldn\'t create uuid from "));
     }
 
     fn hashmap() -> Entity {

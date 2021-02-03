@@ -64,5 +64,8 @@ impl std::str::FromStr for Wql {
 }
 
 pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql, String> {
-    c.map_or_else(|| Err(String::from("Empty WQL")), |ch| read_symbol(ch, chars))
+    c.map_or_else(
+        || Err(String::from("Empty WQL")),
+        |ch| read_symbol(ch, chars),
+    )
 }
