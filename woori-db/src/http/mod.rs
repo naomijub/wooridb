@@ -1,4 +1,4 @@
-use crate::controllers::wql::wql_handler;
+use crate::{actors::scheduler::Scheduler, controllers::wql::wql_handler};
 use crate::{
     actors::wql::Executor,
     repository::local::{LocalContext, UniquenessContext},
@@ -32,6 +32,8 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let write_offset = AtomicUsize::new(0usize);
     let actor = Executor::new().start();
 
+    Scheduler.start();
+
     config
         .service(
             web::scope("/wql")
@@ -40,7 +42,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
                 .data(unique_context)
                 .data(write_offset)
                 .data(actor)
-                .route("/query", web::post().to(wql_handler)),
+                .route("/tx", web::post().to(wql_handler)),
         )
         .route("", web::get().to(|| HttpResponse::NotFound()));
 }

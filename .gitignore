@@ -6,3 +6,7 @@
 **/**/*.rs.bk
 **/*.log
 wql/Cargo.lock
+compress
+decompress
+**/*.zst
+**/.DS_Store
