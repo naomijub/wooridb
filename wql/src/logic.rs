@@ -179,18 +179,18 @@ pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
     }
 }
 
-pub (crate) fn read_entities(chars: &mut std::str::Chars) -> Vec<String> {
+pub(crate) fn read_entities(chars: &mut std::str::Chars) -> Vec<String> {
     let names = chars
-            .skip_while(|c| c.is_whitespace())
-            .take_while(|c| {
-                c.is_alphanumeric() || c == &'_' || c == &',' || c.is_whitespace() || c != &';'
-            })
-            .collect::<String>()
-            .trim()
-            .to_string();
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| {
+            c.is_alphanumeric() || c == &'_' || c == &',' || c.is_whitespace() || c != &';'
+        })
+        .collect::<String>()
+        .trim()
+        .to_string();
 
-        names
-            .split(',')
-            .map(|w| w.trim().to_string())
-            .collect::<Vec<String>>()
+    names
+        .split(',')
+        .map(|w| w.trim().to_string())
+        .collect::<Vec<String>>()
 }
