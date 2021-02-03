@@ -245,7 +245,7 @@ pub async fn update_set_controller(
         .unwrap()?;
 
     content.into_iter().for_each(|(k, v)| {
-        let local_state = previous_state.entry(k).or_insert(v.clone());
+        let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         *local_state = v;
     });
 
@@ -319,7 +319,7 @@ pub async fn update_content_controller(
         .unwrap()?;
 
     content.into_iter().for_each(|(k, v)| {
-        let local_state = previous_state.entry(k).or_insert(v.clone());
+        let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         match v {
             Types::Char(c) => {
                 *local_state = Types::Char(c);
@@ -357,7 +357,7 @@ pub async fn update_content_controller(
                         local
                             .entry(key.to_string())
                             .and_modify(|v| *v = value.to_owned())
-                            .or_insert(value.to_owned());
+                            .or_insert_with(|| value.to_owned());
                     });
                     *local_state = Types::Map(local.to_owned());
                 }
@@ -470,6 +470,7 @@ pub async fn delete_controller(
     Ok(format!("Entity {} with Uuid {} deleted", entity, id))
 }
 
+#[deny(clippy::too_many_arguments)]
 pub async fn match_update_set_controller(
     entity: String,
     content: HashMap<String, Types>,
@@ -517,7 +518,7 @@ pub async fn match_update_set_controller(
         .unwrap()?;
 
     content.into_iter().for_each(|(k, v)| {
-        let local_state = previous_state.entry(k).or_insert(v.clone());
+        let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         *local_state = v;
     });
 
