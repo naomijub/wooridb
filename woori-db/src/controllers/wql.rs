@@ -1198,6 +1198,82 @@ mod test {
         clear();
     }
 
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_any_update_fake_key() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ANY(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_success());
+        clear();
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn test_match_all_update_fake_key() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("CREATE ENTITY test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload("INSERT {a: 123, b: 12.3,} INTO test_match_all")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp_insert = test::call_service(&mut app, req).await;
+        let body = resp_insert.take_body().as_str().to_string();
+        let uuid = &body[(body.len() - 36)..];
+
+        let payload = format!(
+            "MATCH ALL(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(payload)
+            .uri("/wql/query")
+            .to_request();
+
+        let resp = test::call_service(&mut app, req).await;
+
+        assert!(resp.status().is_client_error());
+        clear();
+    }
+
     trait BodyTest {
         fn as_str(&self) -> &str;
     }
