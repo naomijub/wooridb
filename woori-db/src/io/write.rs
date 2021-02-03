@@ -25,3 +25,20 @@ pub fn write_to_uniques(log: &str) -> Result<(), Error> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::io::read::{assert_uniques, assert_content};
+    #[test]
+    fn write_unique() {
+        let _ = write_to_uniques("oh crazy unique log");
+        assert_uniques("oh crazy unique log");
+    }
+
+    #[test]
+    fn write_log() {
+        let _ = write_to_log("oh crazy log");
+        assert_content("oh crazy log");
+    }
+}
