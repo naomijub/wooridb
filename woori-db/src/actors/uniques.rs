@@ -110,3 +110,37 @@ fn pretty_config() -> PrettyConfig {
         .with_indentor("".to_string())
         .with_new_line("".to_string())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::actors::wql::Executor;
+    use crate::io::read::assert_uniques;
+
+    #[actix_rt::test]
+    async fn write_uniques() {
+        let uniques = WriteUniques {
+            entity: String::from("my-entity"),
+            uniques: vec![String::from("id"), String::from("ssn")],
+        };
+        let actor = Executor::new().start();
+
+        let resp = actor.send(uniques).await.unwrap();
+        assert!(resp.is_ok());
+        assert_uniques("uniques: [\"id\",\"ssn\",]");
+    }
+
+    #[actix_rt::test]
+    async fn create_uniques_test() {
+        let data = UniquenessContext::new();
+        let uniques = CreateUniques {
+            entity: String::from("my-entity"),
+            uniques: vec![String::from("id"), String::from("ssn")],
+            data: Arc::new(Arc::new(Mutex::new(data.clone()))),
+        };
+        let actor = Executor::new().start();
+
+        let resp = actor.send(uniques).await.unwrap();
+        assert!(resp.is_ok());
+    }
+}
