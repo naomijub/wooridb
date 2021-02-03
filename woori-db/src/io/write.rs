@@ -29,7 +29,7 @@ pub fn write_to_uniques(log: &str) -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::io::read::{assert_uniques, assert_content};
+    use crate::io::read::{assert_content, assert_uniques};
     #[test]
     fn write_unique() {
         let _ = write_to_uniques("oh crazy unique log");
