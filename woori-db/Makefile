@@ -25,6 +25,12 @@ test:
 	rm -rf *.log
 	cargo test -- --ignored controllers::wql::test::test_update_uniqueness_set_post_ok
 	rm -rf *.log
+	cargo test -- --ignored controllers::wql::test::test_match_any_update_fail
+	rm -rf *.log
+	cargo test -- --ignored controllers::wql::test::test_match_any_update_post_ok
+	rm -rf *.log
+	cargo test -- --ignored controllers::wql::test::test_match_all_update_post_ok
+	rm -rf *.log
 
 release:
 	cargo run --release

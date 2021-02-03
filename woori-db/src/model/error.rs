@@ -13,6 +13,8 @@ pub enum Error {
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
+    UnkwonCondition,
+    FailedMatchCondition,
     DuplicatedUnique(String, String, Types),
 }
 
@@ -34,6 +36,8 @@ impl std::fmt::Display for Error {
                 "key `{}` in entity `{}` already contains value `{:?}`",
                 key, entity, t
             ),
+            Error::UnkwonCondition => write!(f, "UNKNOWN MATCH CONDITION"),
+            Error::FailedMatchCondition => write!(f, "One or more MATCH CONDITIONS failed"),
         }
     }
 }
