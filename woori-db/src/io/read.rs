@@ -39,3 +39,36 @@ pub fn read_log(registry: DataRegister) -> Result<String, Error> {
 
     Ok(res)
 }
+
+#[cfg(test)]
+mod test {
+    use std::{fs::OpenOptions, io::Write};
+
+    use super::*;
+    use crate::model::DataRegister;
+
+    #[test]
+    fn read_log_range() {
+        let log_size = write_new();
+        let data = DataRegister {
+            file_name: "read_test.log".to_string(),
+            offset: 30,
+            bytes_length: log_size - 58,
+        };
+
+        let log = read_log(data).unwrap();
+        assert_eq!(log, "i am too lazy to create.");
+    }
+
+    fn write_new() -> usize {
+        let log =
+            "this is a very long text that i am too lazy to create. Guess it is enough already.";
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("read_test.log")
+            .unwrap();
+
+        file.write(log.as_bytes()).unwrap()
+    }
+}

@@ -1,3 +1,4 @@
+#[derive(Debug, PartialEq)]
 pub enum Action {
     CreateEntity,
     Insert,
@@ -33,5 +34,26 @@ impl From<String> for Action {
             "UPDATE_CONTENT" => Action::UpdateContent,
             _ => Action::Error,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn from_str() {
+        assert_eq!(Action::from(String::from("READ")), Action::Read);
+        assert_eq!(
+            Action::from(String::from("CREATE_ENTITY")),
+            Action::CreateEntity
+        );
+        assert_eq!(Action::from(String::from("INSERT")), Action::Insert);
+        assert_eq!(Action::from(String::from("DELETE")), Action::Delete);
+        assert_eq!(Action::from(String::from("UPDATE_SET")), Action::UpdateSet);
+        assert_eq!(
+            Action::from(String::from("UPDATE_CONTENT")),
+            Action::UpdateContent
+        );
     }
 }
