@@ -481,3 +481,57 @@ mod test_match {
         hm
     }
 }
+
+#[cfg(test)]
+mod evict {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn evict_entity() {
+        let wql = Wql::from_str("EVICT my_entity");
+
+        assert_eq!(wql.unwrap(), Wql::Evict(String::from("my_entity"), None));
+    }
+
+    #[test]
+    fn evict_entity_with_dash() {
+        let wql = Wql::from_str("EVICT my-entity");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Entity name cannot contain `-`"))
+        );
+    }
+
+    #[test]
+    fn evict_entity_from_id() {
+        let wql = Wql::from_str("EVICT d6ca73c0-41ff-4975-8a60-fc4a061ce536 FROM my_entity");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Evict(
+                String::from("my_entity"),
+                Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").ok()
+            )
+        );
+    }
+
+    #[test]
+    fn evict_entity_without_from() {
+        let wql = Wql::from_str("EVICT d6ca73c0-41ff-4975-8a60-fc4a061ce536 my_entity");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("FROM keyword is required to EVICT an UUID"))
+        );
+    }
+
+    #[test]
+    fn evict_entity_without_entity_name() {
+        let wql = Wql::from_str("EVICT d6ca73c0-41ff-4975-8a60-fc4a061ce536 FROM");
+
+        assert_eq!(wql.err(), Some(String::from("Entity name is required")));
+    }
+}

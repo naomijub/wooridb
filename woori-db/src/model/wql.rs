@@ -10,6 +10,8 @@ pub enum Action {
     UpdateSet,
     UpdateContent,
     Delete,
+    EvictEntity,
+    EvictEntityId,
     Error,
 }
 
@@ -22,6 +24,8 @@ impl std::fmt::Display for Action {
             Action::UpdateSet => write!(f, "UPDATE_SET"),
             Action::UpdateContent => write!(f, "UPDATE_CONTENT"),
             Action::Delete => write!(f, "DELETE"),
+            Action::EvictEntity => write!(f, "EVICT_ENTITY"),
+            Action::EvictEntityId => write!(f, "EVICT_ENTITY_ID"),
             Action::Error => write!(f, "Error"),
         }
     }
@@ -36,6 +40,8 @@ impl From<String> for Action {
             "DELETE" => Action::Delete,
             "UPDATE_SET" => Action::UpdateSet,
             "UPDATE_CONTENT" => Action::UpdateContent,
+            "EVICT_ENTITY" => Action::EvictEntity,
+            "EVICT_ENTITY_ID" => Action::EvictEntityId,
             _ => Action::Error,
         }
     }

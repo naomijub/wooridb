@@ -3,13 +3,30 @@ use uuid::Uuid;
 
 use crate::{
     actors::wql::{
-        DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent,
+        DeleteId, EvictEntityId, InsertEntityContent, UpdateContentEntityContent,
+        UpdateSetEntityContent,
     },
     model::wql::Action,
 };
 
 pub fn create_entity(entity: &str) -> String {
     format!("{}|{};", Action::CreateEntity, entity)
+}
+
+pub fn evict_entity_content(entity: &str) -> String {
+    let date: DateTime<Utc> = Utc::now();
+    format!("{}|{}|{};", Action::EvictEntity, date.to_string(), entity)
+}
+
+pub fn evict_entity_id_content(entity: EvictEntityId) -> String {
+    let date: DateTime<Utc> = Utc::now();
+    format!(
+        "{}|{}|{}|{};",
+        Action::EvictEntityId,
+        date.to_string(),
+        entity.id,
+        entity.name
+    )
 }
 
 pub fn insert_entity_content(content: InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
@@ -157,5 +174,30 @@ mod test {
         assert!(s.contains("my-entity"));
         assert!(s.contains("log"));
         assert!(s.contains("reg"));
+    }
+
+    #[test]
+    fn evict_entity_test() {
+        let entity = "hello";
+
+        let actual = evict_entity_content(entity);
+
+        assert!(actual.starts_with("EVICT_ENTITY"));
+        assert!(actual.contains("hello"))
+    }
+
+    #[test]
+    fn evict_entity_id_test() {
+        let uuid = Uuid::new_v4();
+        let entity = EvictEntityId {
+            name: "hello".to_string(),
+            id: uuid,
+        };
+
+        let actual = evict_entity_id_content(entity);
+
+        assert!(actual.starts_with("EVICT_ENTITY_ID"));
+        assert!(actual.contains("hello"));
+        assert!(actual.contains(&uuid.to_string()));
     }
 }
