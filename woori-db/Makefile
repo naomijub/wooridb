@@ -39,6 +39,10 @@ test:
 	rm -rf *.log
 	cargo test -- --ignored controllers::query_test::test_select_args_id_post_ok
 	rm -rf *.log
+	cargo test -- --ignored controllers::query_test::test_select_keys_post_ok
+	rm -rf *.log
+	cargo test -- --ignored controllers::query_test::test_select_all_post_ok
+	rm -rf *.log
 
 release:
 	cargo run --release

@@ -42,6 +42,10 @@ jobs:
         cargo test -- --ignored controllers::query_test::test_update_set_post_ok
         rm -rf *.log
         cargo test -- --ignored controllers::query_test::test_select_args_id_post_ok
+        rm -rf *.log
+        cargo test -- --ignored controllers::query_test::test_select_keys_post_ok
+        rm -rf *.log
+        cargo test -- --ignored controllers::query_test::test_select_all_post_ok
     - name: DB-FMT
       run: cargo fmt -- --check
   
