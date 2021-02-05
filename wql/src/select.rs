@@ -191,6 +191,18 @@ mod test {
     }
 
     #[test]
+    fn select_keys_ids() {
+        let wql = Wql::from_str("SelEct #{a, b, c,} FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,}");
+        let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectIds("my_entity".to_string(), ToSelect::Keys(vec!["a".to_string(), "b".to_string(), "c". to_string()]), vec![uuid1, uuid2])
+        );
+    }
+
+    #[test]
     fn select_all_ids_missing_in() {
         let wql = Wql::from_str("SelEct * FROM my_entity IDS #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,}");
 
