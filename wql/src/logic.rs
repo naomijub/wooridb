@@ -89,6 +89,20 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
     loop {
         match chars.next() {
             Some('}') => return Ok(res),
+            Some('{') => {
+                if key.is_some() {
+                    val = Some(Types::Map(read_inner_map(chars)?));
+                } else {
+                    return Err(String::from("Key must be an alphanumeric value"));
+                }
+            }
+            Some('[') => {
+                if key.is_some() {
+                    val = Some(Types::Vector(read_vec(chars)?));
+                } else {
+                    return Err(String::from("Key must be an alphanumeric value"));
+                }
+            }
             Some(c) if !c.is_whitespace() && c != ',' => {
                 if key.is_some() {
                     val = Some(parse_value(c, chars)?);
@@ -104,6 +118,90 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
             res.insert(key.unwrap().to_string(), val.unwrap());
             key = None;
             val = None;
+        }
+    }
+}
+
+pub(crate) fn read_inner_map(
+    chars: &mut std::str::Chars,
+) -> Result<HashMap<String, Types>, String> {
+    let mut res: HashMap<String, Types> = HashMap::new();
+    let mut key: Option<String> = None;
+    let mut val: Option<Types> = None;
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some('{') => {
+                if key.is_some() {
+                    val = Some(Types::Map(read_inner_map(chars)?));
+                } else {
+                    return Err(String::from("Key must be an alphanumeric value"));
+                }
+            }
+            Some('[') => {
+                if key.is_some() {
+                    val = Some(Types::Vector(read_vec(chars)?));
+                } else {
+                    return Err(String::from("Key must be an alphanumeric value"));
+                }
+            }
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                if key.is_some() {
+                    val = Some(parse_value(c, chars)?);
+                } else {
+                    key = Some(parse_key(c, chars));
+                }
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            _ => return Err(String::from("Entity HashMap could not be created")),
+        }
+
+        if key.is_some() && val.is_some() {
+            res.insert(key.unwrap().to_string(), val.unwrap());
+            key = None;
+            val = None;
+        }
+    }
+}
+
+fn read_vec(chars: &mut std::str::Chars) -> Result<Vec<Types>, String> {
+    let mut res: Vec<Types> = vec![];
+    loop {
+        match chars.next() {
+            Some(']') => return Ok(res),
+            Some('[') => res.push(Types::Vector(read_vec(chars)?)),
+            Some('{') => res.push(Types::Map(read_inner_map(chars)?)),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                res.push(parse_value(c, chars)?);
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            err => return Err(format!("{:?} could not be parsed at char", err)),
+        }
+    }
+}
+
+pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
+    let mut res = Vec::new();
+    if chars.next() != Some('{') {
+        return Err(String::from(
+            "SELECT arguments set should start with `#{` and end with `}`",
+        ));
+    }
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                let key_rest = chars
+                    .take_while(|c| c.is_alphanumeric() || c == &'_')
+                    .collect::<String>();
+
+                let key = format!("{}{}", c, key_rest);
+                res.push(key);
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            err => return Err(format!("{:?} could not be parsed at char", err)),
         }
     }
 }

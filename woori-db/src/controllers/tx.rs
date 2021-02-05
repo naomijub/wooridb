@@ -100,6 +100,7 @@ pub async fn wql_handler(
         Ok(Wql::Evict(entity, uuid)) => {
             evict_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
         }
+        Ok(Wql::Select(_, _, _)) => Err(Error::SelectBadRequest),
         Err(e) => Err(Error::QueryFormat(e)),
     };
 
@@ -108,6 +109,7 @@ pub async fn wql_handler(
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
+
 pub async fn create_controller(
     entity: String,
     data: Arc<Arc<Mutex<LocalContext>>>,

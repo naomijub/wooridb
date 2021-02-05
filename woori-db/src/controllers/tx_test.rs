@@ -22,6 +22,26 @@ async fn test_create_post_ok() {
 }
 
 #[actix_rt::test]
+async fn test_select_post_err() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("SELECT * FROM test_ok")
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_client_error());
+    let body = resp.take_body();
+    let body = body.as_ref().unwrap();
+    assert_eq!(
+        &Body::from("SELECT statements are handled by `/wql/query` endpoint"),
+        body
+    );
+    clear();
+}
+
+#[actix_rt::test]
 async fn test_create_uniques_post_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
     let req = test::TestRequest::post()
