@@ -751,6 +751,57 @@ async fn test_evict_entity_post_ok() {
     clear();
 }
 
+#[actix_rt::test]
+async fn test_evict_entity_id_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_evict_id")
+        .uri("/wql/tx")
+        .to_request();
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: 12.3,} INTO test_evict_id")
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp_insert = test::call_service(&mut app, req).await;
+    let body = resp_insert.take_body().as_str().to_string();
+    let uuid = &body[(body.len() - 36)..];
+    assert!(resp_insert.status().is_success());
+
+    let evict = format!("Evict {} from test_evict_id", uuid);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(evict)
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+    read::assert_content("EVICT_ENTITY_ID|");
+    read::assert_content("|test_evict_id;");
+
+    let payload = format!("UPDATE test_evict_id SET {{a: 12, c: Nil,}} INTO {}", uuid);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_client_error());
+    let body = resp.take_body().as_str().to_string();
+
+    assert_eq!(
+        body,
+        format!("Uuid {} not created for entity test_evict_id", uuid)
+    );
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }
