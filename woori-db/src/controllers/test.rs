@@ -737,6 +737,17 @@ async fn test_evict_entity_post_ok() {
     assert!(resp.status().is_success());
     read::assert_content("EVICT_ENTITY|");
     read::assert_content("|test_evict;");
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: 12.3,} INTO test_evict")
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp_insert = test::call_service(&mut app, req).await;
+    let body = resp_insert.take_body().as_str().to_string();
+    assert!(resp_insert.status().is_client_error());
+    assert_eq!("Entity `test_evict` not created", body);
     clear();
 }
 
