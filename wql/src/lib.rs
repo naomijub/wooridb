@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 mod language_parser;
 mod logic;
+mod select;
 #[cfg(test)]
 mod test;
 
@@ -19,6 +20,13 @@ pub enum Wql {
     Delete(String, String),
     MatchUpdate(String, Entity, Uuid, MatchCondition),
     Evict(String, Option<Uuid>),
+    Select(String, ToSelect),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum ToSelect {
+    All,
+    Keys(Vec<String>),
 }
 
 pub type Entity = HashMap<String, Types>;

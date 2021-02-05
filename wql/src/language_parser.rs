@@ -1,4 +1,7 @@
-use crate::logic::read_entities;
+use crate::{
+    logic::read_entities,
+    select::{select_all, select_args},
+};
 
 use super::{read_map, read_match_args, FromStr, MatchCondition, Uuid, Wql};
 
@@ -12,6 +15,7 @@ pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, S
         ('d', "ELETE") | ('D', "ELETE") => delete(chars),
         ('m', "ATCH") | ('M', "ATCH") => match_update(chars),
         ('e', "VICT") | ('E', "VICT") => evict(chars),
+        ('s', "ELECT") | ('S', "ELECT") => select(chars),
         _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }
@@ -36,6 +40,17 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
         Ok(Wql::CreateEntity(entity_name, unique_vec))
     } else {
         Ok(Wql::CreateEntity(entity_name, Vec::new()))
+    }
+}
+
+fn select(chars: &mut std::str::Chars) -> Result<Wql, String> {
+    loop {
+        match chars.next() {
+            Some(' ') => (),
+            Some('*') => return select_all(chars),
+            Some('#') => return select_args(chars),
+            _ => return Err(String::from("SELECT statement should be followed by `*` for ALL keys or `#{key_names...}` for some keys"))
+        }
     }
 }
 

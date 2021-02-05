@@ -176,7 +176,31 @@ fn read_vec(chars: &mut std::str::Chars) -> Result<Vec<Types>, String> {
                 res.push(parse_value(c, chars)?);
             }
             Some(c) if c.is_whitespace() || c == ',' => (),
-            Some(a) => println!("{:?}, {:?}", a, chars),
+            err => return Err(format!("{:?} could not be parsed at char", err)),
+        }
+    }
+}
+
+pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
+    let mut res = Vec::new();
+    if chars.next() != Some('{') {
+        return Err(String::from(
+            "SELECT arguments set should start with `#{` and end with `}`",
+        ));
+    }
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                let key_rest = chars
+                    .take_while(|c| c.is_alphanumeric() || c == &'_')
+                    .collect::<String>();
+
+                let key = format!("{}{}", c, key_rest);
+                res.push(key);
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
             err => return Err(format!("{:?} could not be parsed at char", err)),
         }
     }
