@@ -1,6 +1,11 @@
 use std::str::FromStr;
 
-use super::{logic::read_args, ToSelect, Wql};
+use uuid::Uuid;
+
+use super::{
+    logic::{read_args, read_uuids},
+    ToSelect, Wql,
+};
 
 pub(crate) fn select_all(chars: &mut std::str::Chars) -> Result<Wql, String> {
     let arg = ToSelect::All;
@@ -36,7 +41,8 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
     let id_symbol = chars
         .skip_while(|c| c.is_whitespace())
         .take_while(|c| !c.is_whitespace())
-        .collect::<String>();
+        .collect::<String>()
+        .to_uppercase();
 
     if id_symbol == "ID" {
         let id = chars
@@ -49,9 +55,24 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             return Err(String::from("Field ID must be a UUID v4"));
         }
         Ok(Wql::Select(entity_name, arg, uuid.ok()))
-    } else if !id_symbol.is_empty() && id_symbol != "ID" {
+    } else if id_symbol == "IDS" {
+        let in_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>()
+            .to_uppercase();
+
+        if in_symbol != "IN" {
+            Err(String::from(
+                "IN keyword is required after IDS to define a set of uuids",
+            ))
+        } else {
+            let uuids: Vec<Uuid> = read_uuids(chars)?;
+            Ok(Wql::SelectIds(entity_name, arg, uuids))
+        }
+    } else if !id_symbol.is_empty() && (id_symbol != "ID" || id_symbol != "IDS") {
         Err(String::from(
-            "ID keyword is required to set an uuid in SELECT",
+            "ID/IDS keyword is required to set an uuid in SELECT",
         ))
     } else {
         Ok(Wql::Select(entity_name, arg, None))
@@ -152,7 +173,31 @@ mod test {
         assert_eq!(
             wql.err(),
             Some(String::from(
-                "ID keyword is required to set an uuid in SELECT"
+                "ID/IDS keyword is required to set an uuid in SELECT"
+            ))
+        );
+    }
+
+    #[test]
+    fn select_all_ids() {
+        let wql = Wql::from_str("SelEct * FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,}");
+        let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectIds("my_entity".to_string(), ToSelect::All, vec![uuid1, uuid2])
+        );
+    }
+
+    #[test]
+    fn select_all_ids_missing_in() {
+        let wql = Wql::from_str("SelEct * FROM my_entity IDS #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,}");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from(
+                "IN keyword is required after IDS to define a set of uuids"
             ))
         );
     }
