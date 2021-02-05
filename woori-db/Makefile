@@ -15,25 +15,29 @@ lint: fmt clippy
 test:
 	cargo test -- --nocapture
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_update_content_post_ok
+	cargo test -- --ignored controllers::tx_test::test_update_content_post_ok
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_update_set_post_ok
+	cargo test -- --ignored controllers::tx_test::test_update_set_post_ok
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_delete_withput_update
+	cargo test -- --ignored controllers::tx_test::test_delete_withput_update
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_delete_post_ok
+	cargo test -- --ignored controllers::tx_test::test_delete_post_ok
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_update_uniqueness_set_post_ok
+	cargo test -- --ignored controllers::tx_test::test_update_uniqueness_set_post_ok
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_match_any_update_fail
+	cargo test -- --ignored controllers::tx_test::test_match_any_update_fail
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_match_any_update_post_ok
+	cargo test -- --ignored controllers::tx_test::test_match_any_update_post_ok
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_match_all_update_post_ok
+	cargo test -- --ignored controllers::tx_test::test_match_all_update_post_ok
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_match_all_update_fake_key
+	cargo test -- --ignored controllers::tx_test::test_match_all_update_fake_key
 	rm -rf *.log
-	cargo test -- --ignored controllers::test::test_match_any_update_fake_key
+	cargo test -- --ignored controllers::tx_test::test_match_any_update_fake_key
+	rm -rf *.log
+	cargo test -- --ignored controllers::query_test::test_update_set_post_ok
+	rm -rf *.log
+	cargo test -- --ignored controllers::query_test::test_select_args_id_post_ok
 	rm -rf *.log
 
 release:

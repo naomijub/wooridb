@@ -38,6 +38,10 @@ jobs:
         cargo test -- --ignored controllers::test::test_match_all_update_fake_key
         rm -rf *.log
         cargo test -- --ignored controllers::test::test_match_any_update_fake_key
+        rm -rf *.log
+        cargo test -- --ignored controllers::query_test::test_update_set_post_ok
+        rm -rf *.log
+        cargo test -- --ignored controllers::query_test::test_select_args_id_post_ok
     - name: DB-FMT
       run: cargo fmt -- --check
   

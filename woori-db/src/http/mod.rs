@@ -1,4 +1,4 @@
-use crate::controllers::tx::wql_handler;
+use crate::controllers::{query, tx};
 use crate::{
     actors::wql::Executor,
     repository::local::{LocalContext, UniquenessContext},
@@ -43,7 +43,8 @@ pub fn routes(config: &mut web::ServiceConfig) {
                 .data(unique_context)
                 .data(write_offset)
                 .data(actor)
-                .route("/tx", web::post().to(wql_handler)),
+                .route("/tx", web::post().to(tx::wql_handler))
+                .route("/query", web::post().to(query::wql_handler)),
         )
         .route("", web::get().to(HttpResponse::NotFound));
 }

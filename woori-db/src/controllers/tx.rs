@@ -109,6 +109,7 @@ pub async fn wql_handler(
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
+
 pub async fn create_controller(
     entity: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
