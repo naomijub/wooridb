@@ -20,7 +20,7 @@ pub enum Wql {
     Delete(String, String),
     MatchUpdate(String, Entity, Uuid, MatchCondition),
     Evict(String, Option<Uuid>),
-    Select(String, ToSelect),
+    Select(String, ToSelect, Option<Uuid>),
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

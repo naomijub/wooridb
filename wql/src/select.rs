@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::{logic::read_args, ToSelect, Wql};
 
 pub(crate) fn select_all(chars: &mut std::str::Chars) -> Result<Wql, String> {
@@ -31,11 +33,35 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         return Err(String::from("Entity name is required for SELECT"));
     }
 
-    Ok(Wql::Select(entity_name, arg))
+    let id_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if id_symbol == "ID" {
+        let id = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| c.is_alphanumeric() || c == &'-')
+            .collect::<String>();
+
+        let uuid = uuid::Uuid::from_str(&id);
+        if uuid.is_err() {
+            return Err(String::from("Field ID must be a UUID v4"));
+        }
+        Ok(Wql::Select(entity_name, arg, uuid.ok()))
+    } else if !id_symbol.is_empty() && id_symbol != "ID" {
+        Err(String::from(
+            "ID keyword is required to set an uuid in SELECT",
+        ))
+    } else {
+        Ok(Wql::Select(entity_name, arg, None))
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use uuid::Uuid;
+
     use crate::{ToSelect, Wql};
     use std::str::FromStr;
 
@@ -45,7 +71,7 @@ mod test {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select("my_entity".to_string(), ToSelect::All)
+            Wql::Select("my_entity".to_string(), ToSelect::All, None)
         );
     }
 
@@ -77,7 +103,8 @@ mod test {
             wql.unwrap(),
             Wql::Select(
                 "my_entity".to_string(),
-                ToSelect::Keys(vec!["hello".to_string()])
+                ToSelect::Keys(vec!["hello".to_string()]),
+                None
             )
         );
     }
@@ -94,8 +121,39 @@ mod test {
                     "hello".to_string(),
                     "world".to_string(),
                     "by_me".to_string()
-                ])
+                ]),
+                None
             )
+        );
+    }
+
+    #[test]
+    fn select_all_id() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1");
+        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Select("my_entity".to_string(), ToSelect::All, uuid.ok())
+        );
+    }
+
+    #[test]
+    fn select_all_id_missing() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ID ");
+
+        assert_eq!(wql.err(), Some(String::from("Field ID must be a UUID v4")));
+    }
+
+    #[test]
+    fn select_all_id_key_missing() {
+        let wql = Wql::from_str("SelEct * FROM my_entity 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 ");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from(
+                "ID keyword is required to set an uuid in SELECT"
+            ))
         );
     }
 }
