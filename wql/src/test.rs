@@ -535,3 +535,105 @@ mod evict {
         assert_eq!(wql.err(), Some(String::from("Entity name is required")));
     }
 }
+
+#[cfg(test)]
+mod test_data_sructures {
+    use super::*;
+    #[test]
+    fn insert_vec() {
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 123,
+            b: [12.3, 34, \"hello\",]
+        } INTO my_entity",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Insert("my_entity".to_string(), hashmap())
+        );
+    }
+
+    #[test]
+    fn insert_vec_in_vec() {
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 123,
+            b: [12.3, 34, [\"hello\"]]
+        } INTO my_entity",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Insert("my_entity".to_string(), hashmap2())
+        );
+    }
+
+    #[test]
+    fn insert_vec_err() {
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 123,
+            b: [12.3, 34, \"hello\", nkjsld,]
+        } INTO my_entity",
+        );
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Value Type could not be created from nkjsld"))
+        );
+    }
+
+    #[test]
+    fn insert_vec_with_map() {
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 123,
+            b: { a: 12.3, b: 34, }
+        } INTO my_entity",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Insert("my_entity".to_string(), hashmap3())
+        );
+    }
+
+    fn hashmap() -> HashMap<String, Types> {
+        let mut hm = HashMap::new();
+        hm.insert("a".to_string(), Types::Integer(123));
+        hm.insert(
+            "b".to_string(),
+            Types::Vector(vec![
+                Types::Float(12.3),
+                Types::Integer(34),
+                Types::String("hello".to_string()),
+            ]),
+        );
+        hm
+    }
+
+    fn hashmap2() -> HashMap<String, Types> {
+        let mut hm = HashMap::new();
+        hm.insert("a".to_string(), Types::Integer(123));
+        hm.insert(
+            "b".to_string(),
+            Types::Vector(vec![
+                Types::Float(12.3),
+                Types::Integer(34),
+                Types::Vector(vec![Types::String("hello".to_string())]),
+            ]),
+        );
+        hm
+    }
+
+    fn hashmap3() -> HashMap<String, Types> {
+        let mut inner_map = HashMap::new();
+        inner_map.insert("a".to_string(), Types::Float(12.3));
+        inner_map.insert("b".to_string(), Types::Integer(34));
+        let mut hm = HashMap::new();
+        hm.insert("a".to_string(), Types::Integer(123));
+        hm.insert("b".to_string(), Types::Map(inner_map));
+        hm
+    }
+}

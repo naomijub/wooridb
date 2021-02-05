@@ -1,4 +1,4 @@
-use crate::{actors::scheduler::Scheduler, controllers::wql::wql_handler};
+use crate::controllers::wql::wql_handler;
 use crate::{
     actors::wql::Executor,
     repository::local::{LocalContext, UniquenessContext},
@@ -32,7 +32,8 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let write_offset = AtomicUsize::new(0usize);
     let actor = Executor::new().start();
 
-    Scheduler.start();
+    // Deactivate scheduler for now
+    // Scheduler.start();
 
     config
         .service(

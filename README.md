@@ -38,8 +38,8 @@ WooriDB is an immutable time serial database.
 - [x] Delete last entity event: This is pretty simple, it deletes the last state of an entity. So if you have one update on you entity it will roll back to the `INSERT` event. However, if you have only an `INSERT` event you state will become an empty hashmap. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
   <!-- - [ ] Delete entity at specified time. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name AT <DATE-TIME>'` -->
 
-- [ ] Evict entity: Removes all ocurrences of an entity. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
-- [ ] Evict entity registry: Similar to SQL `DROP TABLE <entity>`.
+- [x] Evict entity: Removes all ocurrences of an entity. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
+- [x] Evict entity registry: Similar to SQL `DROP TABLE <entity>`.
 
 - [ ] Select entities
 
@@ -58,25 +58,10 @@ WooriDB is an immutable time serial database.
 - [ ] Aggregate
 - [ ] Division
 
-## Benchmark
-
-* `create_entity`
-```
-time:  [15.443 ms 15.496 ms 15.547 ms]
-Found 5 outliers among 100 measurements (5.00%)
-  5 (5.00%) high mild
-```
-
-* `insert_entity`
-```
-time:   [15.623 ms 15.661 ms 15.699 ms]
-Found 1 outliers among 100 measurements (1.00%)
-  1 (1.00%) low mild
-```
-
 ### Extra TODOS
-- [ ] Test Actors
+- [ ] Test all Actors
 - [ ] Docs
+- [ ] Read infos from ztsd files
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...)
 - [ ] Clippy
 - [ ] Benchmarks

@@ -32,7 +32,7 @@ pub enum Types {
     Float(f64),
     Boolean(bool),
     Vector(Vec<Types>),
-    Map(HashMap<String, Box<Types>>),
+    Map(HashMap<String, Types>),
     //DateTime
     Nil,
 }
