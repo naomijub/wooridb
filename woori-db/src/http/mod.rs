@@ -1,4 +1,4 @@
-use crate::controllers::wql::wql_handler;
+use crate::controllers::tx::wql_handler;
 use crate::{
     actors::wql::Executor,
     repository::local::{LocalContext, UniquenessContext},

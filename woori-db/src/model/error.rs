@@ -16,6 +16,7 @@ pub enum Error {
     UnkwonCondition,
     FailedMatchCondition,
     DuplicatedUnique(String, String, Types),
+    SelectBadRequest,
 }
 
 impl std::fmt::Display for Error {
@@ -38,6 +39,9 @@ impl std::fmt::Display for Error {
             ),
             Error::UnkwonCondition => write!(f, "UNKNOWN MATCH CONDITION"),
             Error::FailedMatchCondition => write!(f, "One or more MATCH CONDITIONS failed"),
+            Error::SelectBadRequest => {
+                write!(f, "SELECT statements are handled by `/wql/query` endpoint")
+            }
         }
     }
 }
