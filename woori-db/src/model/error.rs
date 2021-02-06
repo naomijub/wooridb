@@ -3,6 +3,8 @@ use std::io;
 use uuid::Uuid;
 use wql::Types;
 
+use crate::schemas::error::ErrorResponse;
+
 #[derive(Debug)]
 pub enum Error {
     Io(io::Error),
@@ -23,30 +25,66 @@ pub enum Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::QueryFormat(s) => write!(f, "{:?}", s),
-            Error::Io(e) => write!(f, "{:?}", e),
-            Error::EntityAlreadyCreated(e) => write!(f, "Entity `{}` already created", e),
-            Error::EntityNotCreated(e) => write!(f, "Entity `{}` not created", e),
-            Error::SerializationError(e) => write!(f, "{:?}", e),
-            Error::UuidNotCreatedForEntity(s, id) => {
-                write!(f, "Uuid {:?} not created for entity {}", id, s)
+            Error::QueryFormat(s) => {
+                ErrorResponse::new(String::from("QueryFormat"), format!("{:?}", s)).write(f)
             }
-            Error::FailedToParseState => write!(f, "Failed to parse state"),
-            Error::FailedToParseRegistry => write!(f, "Failed to parse registry"),
-            Error::DuplicatedUnique(entity, key, t) => write!(
-                f,
-                "key `{}` in entity `{}` already contains value `{:?}`",
-                key, entity, t
-            ),
-            Error::UnkwonCondition => write!(f, "UNKNOWN MATCH CONDITION"),
-            Error::FailedMatchCondition => write!(f, "One or more MATCH CONDITIONS failed"),
-            Error::SelectBadRequest => {
-                write!(f, "SELECT expressions are handled by `/wql/query` endpoint")
+            Error::Io(e) => ErrorResponse::new(String::from("IO"), format!("{:?}", e)).write(f),
+            Error::EntityAlreadyCreated(e) => ErrorResponse::new(
+                String::from("EntityAlreadyCreated"),
+                format!("Entity `{}` already created", e),
+            )
+            .write(f),
+            Error::EntityNotCreated(e) => ErrorResponse::new(
+                String::from("EntityNotCreated"),
+                format!("Entity `{}` not created", e),
+            )
+            .write(f),
+            Error::SerializationError(e) => {
+                ErrorResponse::new(String::from("SerializationError"), format!("{:?}", e)).write(f)
             }
-            Error::NonSelectQuery => write!(
-                f,
-                "Non-SELECT expressions are handled by `/wql/tx` endpoint"
-            ),
+            Error::UuidNotCreatedForEntity(s, id) => ErrorResponse::new(
+                String::from("UuidNotCreatedForEntity"),
+                format!("Uuid {:?} not created for entity {}", id, s),
+            )
+            .write(f),
+            Error::FailedToParseState => ErrorResponse::new(
+                String::from("FailedToParseState"),
+                format!("Failed to parse state"),
+            )
+            .write(f),
+            Error::FailedToParseRegistry => ErrorResponse::new(
+                String::from("FailedToParseRegistry"),
+                format!("Failed to parse registry"),
+            )
+            .write(f),
+            Error::DuplicatedUnique(entity, key, t) => ErrorResponse::new(
+                String::from("DuplicatedUnique"),
+                format!(
+                    "key `{}` in entity `{}` already contains value `{:?}`",
+                    key, entity, t
+                ),
+            )
+            .write(f),
+            Error::UnkwonCondition => ErrorResponse::new(
+                String::from("UnkwonCondition"),
+                format!("UNKNOWN MATCH CONDITION"),
+            )
+            .write(f),
+            Error::FailedMatchCondition => ErrorResponse::new(
+                String::from("FailedMatchCondition"),
+                format!("One or more MATCH CONDITIONS failed"),
+            )
+            .write(f),
+            Error::SelectBadRequest => ErrorResponse::new(
+                String::from("SelectBadRequest"),
+                format!("SELECT expressions are handled by `/wql/query` endpoint"),
+            )
+            .write(f),
+            Error::NonSelectQuery => ErrorResponse::new(
+                String::from("NonSelectQuery"),
+                format!("Non-SELECT expressions are handled by `/wql/tx` endpoint"),
+            )
+            .write(f),
         }
     }
 }

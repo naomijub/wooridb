@@ -120,7 +120,7 @@ async fn test_create_on_query_endpoint() {
     let body = resp.take_body().as_str().to_string();
     assert_eq!(
         body,
-        "Non-SELECT expressions are handled by `/wql/tx` endpoint"
+        "(\n error_type: \"NonSelectQuery\",\n error_message: \"Non-SELECT expressions are handled by `/wql/tx` endpoint\",\n)"
     );
 }
 

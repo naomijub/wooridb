@@ -35,7 +35,7 @@ async fn test_select_post_err() {
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
     assert_eq!(
-        &Body::from("SELECT expressions are handled by `/wql/query` endpoint"),
+        &Body::from("(\n error_type: \"SelectBadRequest\",\n error_message: \"SELECT expressions are handled by `/wql/query` endpoint\",\n)"),
         body
     );
     clear();
@@ -79,7 +79,7 @@ async fn test_create_post_duplicated_err() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity `test_ok` already created"), body);
+    assert_eq!(&Body::from("(\n error_type: \"EntityAlreadyCreated\",\n error_message: \"Entity `test_ok` already created\",\n)"), body);
     clear();
 }
 
@@ -110,7 +110,9 @@ async fn test_unkwon_wql_post() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("\"Symbol `DO` not implemented\""), body);
+    assert_eq!(
+        &Body::from("(\n error_type: \"QueryFormat\",\n error_message: \"\\\"Symbol `DO` not implemented\\\"\",\n)"), 
+        body);
     clear();
 }
 
@@ -172,7 +174,7 @@ async fn test_insert_unique_post_ok() {
     let body = body.as_ref().unwrap();
     assert_eq!(
         &Body::from(
-            "key `id` in entity `test_insert_unique` already contains value `Integer(123)`"
+            "(\n error_type: \"DuplicatedUnique\",\n error_message: \"key `id` in entity `test_insert_unique` already contains value `Integer(123)`\",\n)"
         ),
         body
     );
@@ -203,7 +205,7 @@ async fn test_insert_entity_not_created() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity `missing` not created"), body);
+    assert_eq!(&Body::from("(\n error_type: \"EntityNotCreated\",\n error_message: \"Entity `missing` not created\",\n)"), body);
     clear();
 }
 
@@ -297,7 +299,7 @@ async fn test_update_uniqueness_set_post_ok() {
     let body = body.as_ref().unwrap();
     assert_eq!(
         &Body::from(
-            "key `a` in entity `test_unique_set_update` already contains value `Integer(123)`"
+            "(\n error_type: \"DuplicatedUnique\",\n error_message: \"key `a` in entity `test_unique_set_update` already contains value `Integer(123)`\",\n)"
         ),
         body
     );
@@ -411,7 +413,7 @@ async fn test_update_wrong_entity() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity `test_anything` not created"), body);
+    assert_eq!(&Body::from("(\n error_type: \"EntityNotCreated\",\n error_message: \"Entity `test_anything` not created\",\n)"), body);
     clear();
 }
 
@@ -657,7 +659,7 @@ async fn test_match_any_update_fail() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("One or more MATCH CONDITIONS failed"), body);
+    assert_eq!(&Body::from("(\n error_type: \"FailedMatchCondition\",\n error_message: \"One or more MATCH CONDITIONS failed\",\n)"), body);
     clear();
 }
 
@@ -767,7 +769,7 @@ async fn test_evict_entity_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     assert!(resp_insert.status().is_client_error());
-    assert_eq!("Entity `test_evict` not created", body);
+    assert_eq!("(\n error_type: \"EntityNotCreated\",\n error_message: \"Entity `test_evict` not created\",\n)", body);
     clear();
 }
 
@@ -817,7 +819,7 @@ async fn test_evict_entity_id_post_ok() {
 
     assert_eq!(
         body,
-        format!("Uuid {} not created for entity test_evict_id", uuid)
+        format!("(\n error_type: \"UuidNotCreatedForEntity\",\n error_message: \"Uuid {} not created for entity test_evict_id\",\n)", uuid)
     );
     clear();
 }
