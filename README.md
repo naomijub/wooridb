@@ -7,7 +7,9 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - `make run` at root.
 
 ## Usage
-
+* Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
+* For now only persistent local memory is used. Support for `S3`, `PsotgresDB` and `DynamoDB` will be done later by using features.
+* More info at **TODOS**.
 
 ## Transactions:
 > **Remainder**
@@ -81,8 +83,13 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - [ ] Aggregate
 - [ ] Division
 
-### Extra TODOS
+### TODOS
+- [ ] Refactor output schemas
+  - [ ] tx
+  - [ ] errors
 - [ ] Crash recovery
+- [ ] Autentication
+- [ ] Data Encryption
 - [ ] Read infos from ztsd files
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...)
 - [ ] Precise Floats
@@ -91,11 +98,3 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - [ ] Test all Actors
 - [ ] Clippy
 - [ ] Benchmarks
-- [ ] Transactions endpoints??
-<!-- ### Transactions by Endpoint
-- [ ] Create entity
-- [ ] Insert entity
-- [ ] Update entity
-- [ ] Delete entity
-- [ ] Evict entity
-- [ ] Select entities ???? -->

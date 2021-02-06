@@ -1,5 +1,5 @@
-use crate::http::routes;
 use crate::io::read;
+use crate::{http::routes, schemas::tx::InsertEntityResponse};
 use actix_http::body::ResponseBody;
 use actix_web::{body::Body, test, App};
 
@@ -16,7 +16,10 @@ async fn test_create_post_ok() {
     assert!(resp.status().is_success());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity test_ok created"), body);
+    assert_eq!(
+        &Body::from("(\n entity: \"test_ok\",\n message: \"Entity `test_ok` created\",\n)"),
+        body
+    );
     read::assert_content("CREATE_ENTITY|test_ok;");
     clear();
 }
@@ -35,7 +38,7 @@ async fn test_select_post_err() {
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
     assert_eq!(
-        &Body::from("SELECT expressions are handled by `/wql/query` endpoint"),
+        &Body::from("(\n error_type: \"SelectBadRequest\",\n error_message: \"SELECT expressions are handled by `/wql/query` endpoint\",\n)"),
         body
     );
     clear();
@@ -79,7 +82,7 @@ async fn test_create_post_duplicated_err() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity `test_ok` already created"), body);
+    assert_eq!(&Body::from("(\n error_type: \"EntityAlreadyCreated\",\n error_message: \"Entity `test_ok` already created\",\n)"), body);
     clear();
 }
 
@@ -110,7 +113,9 @@ async fn test_unkwon_wql_post() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("\"Symbol `DO` not implemented\""), body);
+    assert_eq!(
+        &Body::from("(\n error_type: \"QueryFormat\",\n error_message: \"\\\"Symbol `DO` not implemented\\\"\",\n)"), 
+        body);
     clear();
 }
 
@@ -172,7 +177,7 @@ async fn test_insert_unique_post_ok() {
     let body = body.as_ref().unwrap();
     assert_eq!(
         &Body::from(
-            "key `id` in entity `test_insert_unique` already contains value `Integer(123)`"
+            "(\n error_type: \"DuplicatedUnique\",\n error_message: \"key `id` in entity `test_insert_unique` already contains value `Integer(123)`\",\n)"
         ),
         body
     );
@@ -203,7 +208,7 @@ async fn test_insert_entity_not_created() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity `missing` not created"), body);
+    assert_eq!(&Body::from("(\n error_type: \"EntityNotCreated\",\n error_message: \"Entity `missing` not created\",\n)"), body);
     clear();
 }
 
@@ -227,7 +232,8 @@ async fn test_update_set_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("UPDATE test_update SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
@@ -236,13 +242,14 @@ async fn test_update_set_post_ok() {
         .uri("/wql/tx")
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
-
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
     assert!(resp.status().is_success());
+    assert!(body.contains("entity: \"test_update\""));
 
     read::assert_content("UPDATE_SET|");
     read::assert_content("UTC|");
-    read::assert_content(uuid);
+    read::assert_content(&uuid.to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(12),");
     read::assert_content("\"b\": Float(12.3),");
@@ -278,7 +285,8 @@ async fn test_update_uniqueness_set_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "UPDATE test_unique_set_update SET {{a: 123, c: Nil,}} INTO {}",
@@ -297,7 +305,7 @@ async fn test_update_uniqueness_set_post_ok() {
     let body = body.as_ref().unwrap();
     assert_eq!(
         &Body::from(
-            "key `a` in entity `test_unique_set_update` already contains value `Integer(123)`"
+            "(\n error_type: \"DuplicatedUnique\",\n error_message: \"key `a` in entity `test_unique_set_update` already contains value `Integer(123)`\",\n)"
         ),
         body
     );
@@ -333,7 +341,8 @@ async fn test_update_content_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "UPDATE test_update CONTENT {{
@@ -357,7 +366,7 @@ async fn test_update_content_post_ok() {
 
     read::assert_content("UPDATE_CONTENT|");
     read::assert_content("UTC|");
-    read::assert_content(uuid);
+    read::assert_content(&uuid.to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(135),");
     read::assert_content("\"b\": Float(11),");
@@ -393,7 +402,8 @@ async fn test_update_wrong_entity() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "UPDATE test_anything CONTENT {{
@@ -411,7 +421,7 @@ async fn test_update_wrong_entity() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity `test_anything` not created"), body);
+    assert_eq!(&Body::from("(\n error_type: \"EntityNotCreated\",\n error_message: \"Entity `test_anything` not created\",\n)"), body);
     clear();
 }
 
@@ -480,7 +490,8 @@ async fn test_delete_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("UPDATE test_delete SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
@@ -526,7 +537,8 @@ async fn test_delete_withput_update() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("Delete {} FROM test_delete", uuid);
     let req = test::TestRequest::post()
@@ -535,7 +547,9 @@ async fn test_delete_withput_update() {
         .uri("/wql/tx")
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
+    assert_eq!(body, format!("(\n entity: \"test_delete\",\n uuid: \"{}\",\n message: \"Entity test_delete with Uuid {} deleted\",\n)", uuid, uuid));
 
     assert!(resp.status().is_success());
 
@@ -564,7 +578,8 @@ async fn test_match_all_update_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -602,7 +617,8 @@ async fn test_match_any_update_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ANY(a > 100, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -640,7 +656,8 @@ async fn test_match_any_update_fail() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ANY(a > 200, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -657,7 +674,7 @@ async fn test_match_any_update_fail() {
     assert!(resp.status().is_client_error());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("One or more MATCH CONDITIONS failed"), body);
+    assert_eq!(&Body::from("(\n error_type: \"FailedMatchCondition\",\n error_message: \"One or more MATCH CONDITIONS failed\",\n)"), body);
     clear();
 }
 
@@ -681,7 +698,8 @@ async fn test_match_any_update_fake_key() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ANY(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -719,7 +737,8 @@ async fn test_match_all_update_fake_key() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ALL(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -767,7 +786,7 @@ async fn test_evict_entity_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     assert!(resp_insert.status().is_client_error());
-    assert_eq!("Entity `test_evict` not created", body);
+    assert_eq!("(\n error_type: \"EntityNotCreated\",\n error_message: \"Entity `test_evict` not created\",\n)", body);
     clear();
 }
 
@@ -789,7 +808,8 @@ async fn test_evict_entity_id_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
     assert!(resp_insert.status().is_success());
 
     let evict = format!("Evict {} from test_evict_id", uuid);
@@ -817,7 +837,7 @@ async fn test_evict_entity_id_post_ok() {
 
     assert_eq!(
         body,
-        format!("Uuid {} not created for entity test_evict_id", uuid)
+        format!("(\n error_type: \"UuidNotCreatedForEntity\",\n error_message: \"Uuid {} not created for entity test_evict_id\",\n)", uuid)
     );
     clear();
 }

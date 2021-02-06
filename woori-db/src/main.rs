@@ -10,6 +10,7 @@ mod http;
 mod io;
 mod model;
 mod repository;
+mod schemas;
 
 use http::{ping, readiness, routes};
 
@@ -22,7 +23,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .wrap(DefaultHeaders::new().header("x-request-id", uuid::Uuid::new_v4().to_string()))
-            .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%D X-REQUEST-ID:%{x-request-id}o"))
+            .wrap(Logger::new("IP:%a DATETIME:%t REQUEST:\"%r\" STATUS: %s DURATION:%T X-REQUEST-ID:%{x-request-id}o"))
             .service(ping)
             .service(readiness)
             .configure(routes)
