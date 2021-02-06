@@ -41,6 +41,12 @@ pub async fn wql_handler(
         Ok(Wql::Select(entity, ToSelect::Keys(keys), None)) => {
             select_args(entity, keys, data, actor).await
         }
+        Ok(Wql::SelectIds(entity, ToSelect::All, uuids)) => {
+            select_all_with_ids(entity, uuids, data, actor).await
+        }
+        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
+            select_keys_with_ids(entity, keys, uuids, data, actor).await
+        }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
     };
@@ -74,6 +80,47 @@ async fn select_all_with_id(
     Ok(ron::ser::to_string_pretty(&state, pretty_config()).unwrap())
 }
 
+async fn select_all_with_ids(
+    entity: String,
+    uuids: Vec<Uuid>,
+    data: web::Data<Arc<Mutex<LocalContext>>>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    let data = data.lock().unwrap();
+    let registries = if let Some(id_to_registry) = data.get(&entity) {
+        uuids
+            .into_iter()
+            .filter_map(|id| {
+                Some((
+                    id,
+                    id_to_registry
+                        .get(&id)
+                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id.clone()))
+                        .ok(),
+                ))
+                .filter(|(_id, reg)| reg.is_some())
+            })
+            .map(|(uuid, reg)| (uuid, reg.map(|d| d.clone())))
+            .collect::<Vec<(Uuid, Option<DataRegister>)>>()
+    } else {
+        return Err(Error::EntityNotCreated(entity));
+    }
+    .clone();
+
+    let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
+    for (uuid, registry) in registries.into_iter() {
+        if let Some(regs) = registry {
+            let content = actor.send(regs).await.unwrap()?;
+            let state = actor.send(State(content)).await.unwrap()?;
+            states.insert(uuid, Some(state));
+        } else {
+            states.insert(uuid, None);
+        }
+    }
+
+    Ok(ron::ser::to_string_pretty(&states, pretty_config()).unwrap())
+}
+
 async fn select_keys_with_id(
     entity: String,
     uuid: Uuid,
@@ -101,6 +148,52 @@ async fn select_keys_with_id(
         .filter(|(k, _)| keys.contains(k))
         .collect();
     Ok(ron::ser::to_string_pretty(&filtered, pretty_config()).unwrap())
+}
+
+async fn select_keys_with_ids(
+    entity: String,
+    keys: Vec<String>,
+    uuids: Vec<Uuid>,
+    data: web::Data<Arc<Mutex<LocalContext>>>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    let data = data.lock().unwrap();
+    let registries = if let Some(id_to_registry) = data.get(&entity) {
+        uuids
+            .into_iter()
+            .filter_map(|id| {
+                Some((
+                    id,
+                    id_to_registry
+                        .get(&id)
+                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id.clone()))
+                        .ok(),
+                ))
+                .filter(|(_id, reg)| reg.is_some())
+            })
+            .map(|(uuid, reg)| (uuid, reg.map(|d| d.clone())))
+            .collect::<Vec<(Uuid, Option<DataRegister>)>>()
+    } else {
+        return Err(Error::EntityNotCreated(entity));
+    }
+    .clone();
+
+    let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
+    for (uuid, registry) in registries.into_iter() {
+        if let Some(regs) = registry {
+            let content = actor.send(regs).await.unwrap()?;
+            let state = actor.send(State(content)).await.unwrap()?;
+            let filtered: HashMap<String, Types> = state
+                .into_iter()
+                .filter(|(k, _)| keys.contains(k))
+                .collect();
+            states.insert(uuid, Some(filtered));
+        } else {
+            states.insert(uuid, None);
+        }
+    }
+
+    Ok(ron::ser::to_string_pretty(&states, pretty_config()).unwrap())
 }
 
 async fn select_all(

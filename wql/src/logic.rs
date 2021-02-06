@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 use super::{FromStr, HashMap, MatchCondition, Types};
 
 pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCondition>, String> {
@@ -291,4 +293,28 @@ pub(crate) fn read_entities(chars: &mut std::str::Chars) -> Vec<String> {
         .split(',')
         .map(|w| w.trim().to_string())
         .collect::<Vec<String>>()
+}
+
+pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, String> {
+    let mut uuids = Vec::new();
+    let mut uuid = String::new();
+    loop {
+        match chars.next() {
+            Some(' ') | Some('#') | Some('{') => (),
+            Some(l) if l.is_alphanumeric() => uuid.push(l),
+            Some(dash) if dash == '-' => uuid.push(dash),
+            Some(',') => {
+                uuids.push(Uuid::from_str(&uuid).map_err(|e| {
+                    format!("Couldn't creat an Uuid from {:?}. Error {:?}", uuid, e)
+                })?);
+                uuid = String::new();
+            }
+            Some('}') => return Ok(uuids),
+            _ => {
+                return Err(String::from(
+                    "Uuids in `IDS IN` are reuired to be inside a `#{` and `}`",
+                ))
+            }
+        }
+    }
 }

@@ -35,7 +35,7 @@ async fn test_select_post_err() {
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
     assert_eq!(
-        &Body::from("SELECT statements are handled by `/wql/query` endpoint"),
+        &Body::from("SELECT expressions are handled by `/wql/query` endpoint"),
         body
     );
     clear();

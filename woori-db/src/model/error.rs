@@ -41,11 +41,12 @@ impl std::fmt::Display for Error {
             Error::UnkwonCondition => write!(f, "UNKNOWN MATCH CONDITION"),
             Error::FailedMatchCondition => write!(f, "One or more MATCH CONDITIONS failed"),
             Error::SelectBadRequest => {
-                write!(f, "SELECT statements are handled by `/wql/query` endpoint")
+                write!(f, "SELECT expressions are handled by `/wql/query` endpoint")
             }
-            Error::NonSelectQuery => {
-                write!(f, "Non-SELECT statements are handled by `/wql/tx` endpoint")
-            }
+            Error::NonSelectQuery => write!(
+                f,
+                "Non-SELECT expressions are handled by `/wql/tx` endpoint"
+            ),
         }
     }
 }
