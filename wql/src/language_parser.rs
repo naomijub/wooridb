@@ -49,7 +49,7 @@ fn select(chars: &mut std::str::Chars) -> Result<Wql, String> {
             Some(' ') => (),
             Some('*') => return select_all(chars),
             Some('#') => return select_args(chars),
-            _ => return Err(String::from("SELECT statement should be followed by `*` for ALL keys or `#{key_names...}` for some keys"))
+            _ => return Err(String::from("SELECT expression should be followed by `*` for ALL keys or `#{key_names...}` for some keys"))
         }
     }
 }

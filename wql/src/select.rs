@@ -198,7 +198,11 @@ mod test {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::SelectIds("my_entity".to_string(), ToSelect::Keys(vec!["a".to_string(), "b".to_string(), "c". to_string()]), vec![uuid1, uuid2])
+            Wql::SelectIds(
+                "my_entity".to_string(),
+                ToSelect::Keys(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+                vec![uuid1, uuid2]
+            )
         );
     }
 
