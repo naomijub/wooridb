@@ -1,4 +1,3 @@
-use crate::model::{error::Error, DataRegister};
 use crate::repository::local::{LocalContext, UniquenessContext};
 use crate::{
     actors::{
@@ -16,7 +15,11 @@ use crate::{
         uniques::CheckForUnique,
         wql::{CreateEntity, EvictEntity, EvictEntityId},
     },
-    schemas::tx::EntityResponse,
+    schemas::tx::CreateEntityResponse,
+};
+use crate::{
+    model::{error::Error, DataRegister},
+    schemas::tx::InsertEntityResponse,
 };
 
 use actix::Addr;
@@ -137,7 +140,7 @@ pub async fn create_controller(
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-    Ok(EntityResponse::new(entity.clone(), format!("Entity `{}` created", entity)).write())
+    Ok(CreateEntityResponse::new(entity.clone(), format!("Entity `{}` created", entity)).write())
 }
 
 pub async fn evict_controller(
@@ -254,10 +257,12 @@ pub async fn insert_controller(
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
 
-    Ok(format!(
-        "Entity {} inserted with Uuid {}",
-        entity, content_value.1
-    ))
+    Ok(InsertEntityResponse::new(
+        entity.clone(),
+        content_value.1,
+        format!("Entity {} inserted with Uuid {}", entity, content_value.1),
+    )
+    .write())
 }
 
 pub async fn update_set_controller(

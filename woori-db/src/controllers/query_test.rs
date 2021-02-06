@@ -1,4 +1,4 @@
-use crate::http::routes;
+use crate::{http::routes, schemas::tx::InsertEntityResponse};
 use actix_http::body::ResponseBody;
 use actix_web::{body::Body, test, App};
 
@@ -22,7 +22,8 @@ async fn test_select_all_id_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("Select * FROM test_select_all_id ID {}", uuid);
     let req = test::TestRequest::post()
@@ -86,7 +87,8 @@ async fn test_select_args_id_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("Select #{{a, b, e_f,}} FROM test_select_all_id ID {}", uuid);
     let req = test::TestRequest::post()
@@ -254,7 +256,8 @@ async fn test_select_all_ids_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid1 = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid1 = response.uuid;
 
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -264,7 +267,8 @@ async fn test_select_all_ids_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid2 = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid2 = response.uuid;
 
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -274,7 +278,8 @@ async fn test_select_all_ids_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid3 = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid3 = response.uuid;
 
     let payload = format!(
         "Select * FROM test_select_all_id IDS IN #{{ {}, {}, {}, }}",
@@ -293,9 +298,9 @@ async fn test_select_all_ids_post_ok() {
     assert!(body.contains("\"a\": Integer(123)"));
     assert!(body.contains("\"b\": Float(52.3)"));
     assert!(body.contains("\"b\": Float(32.3)"));
-    assert!(body.contains(uuid1));
-    assert!(body.contains(uuid2));
-    assert!(body.contains(uuid3));
+    assert!(body.contains(&uuid1.to_string()));
+    assert!(body.contains(&uuid2.to_string()));
+    assert!(body.contains(&uuid3.to_string()));
 }
 
 #[ignore]
@@ -318,7 +323,8 @@ async fn test_select_keys_ids_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid1 = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid1 = response.uuid;
 
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -328,7 +334,8 @@ async fn test_select_keys_ids_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid2 = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid2 = response.uuid;
 
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -338,7 +345,8 @@ async fn test_select_keys_ids_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid3 = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid3 = response.uuid;
 
     let payload = format!(
         "Select #{{a,}} FROM test_select_all_id IDS IN #{{ {}, {}, {}, }}",
@@ -357,9 +365,9 @@ async fn test_select_keys_ids_post_ok() {
     assert!(body.contains("\"a\": Integer(123)"));
     assert!(!body.contains("\"b\": Float(52.3)"));
     assert!(!body.contains("\"b\": Float(32.3)"));
-    assert!(body.contains(uuid1));
-    assert!(body.contains(uuid2));
-    assert!(body.contains(uuid3));
+    assert!(body.contains(&uuid1.to_string()));
+    assert!(body.contains(&uuid2.to_string()));
+    assert!(body.contains(&uuid3.to_string()));
 }
 
 trait BodyTest {

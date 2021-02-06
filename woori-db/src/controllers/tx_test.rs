@@ -1,5 +1,5 @@
-use crate::http::routes;
 use crate::io::read;
+use crate::{http::routes, schemas::tx::InsertEntityResponse};
 use actix_http::body::ResponseBody;
 use actix_web::{body::Body, test, App};
 
@@ -232,7 +232,8 @@ async fn test_update_set_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("UPDATE test_update SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
@@ -247,7 +248,7 @@ async fn test_update_set_post_ok() {
 
     read::assert_content("UPDATE_SET|");
     read::assert_content("UTC|");
-    read::assert_content(uuid);
+    read::assert_content(&uuid.to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(12),");
     read::assert_content("\"b\": Float(12.3),");
@@ -283,7 +284,8 @@ async fn test_update_uniqueness_set_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "UPDATE test_unique_set_update SET {{a: 123, c: Nil,}} INTO {}",
@@ -338,7 +340,8 @@ async fn test_update_content_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "UPDATE test_update CONTENT {{
@@ -362,7 +365,7 @@ async fn test_update_content_post_ok() {
 
     read::assert_content("UPDATE_CONTENT|");
     read::assert_content("UTC|");
-    read::assert_content(uuid);
+    read::assert_content(&uuid.to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(135),");
     read::assert_content("\"b\": Float(11),");
@@ -398,7 +401,8 @@ async fn test_update_wrong_entity() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "UPDATE test_anything CONTENT {{
@@ -485,7 +489,8 @@ async fn test_delete_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("UPDATE test_delete SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
@@ -531,7 +536,8 @@ async fn test_delete_withput_update() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!("Delete {} FROM test_delete", uuid);
     let req = test::TestRequest::post()
@@ -569,7 +575,8 @@ async fn test_match_all_update_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -607,7 +614,8 @@ async fn test_match_any_update_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ANY(a > 100, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -645,7 +653,8 @@ async fn test_match_any_update_fail() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ANY(a > 200, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -686,7 +695,8 @@ async fn test_match_any_update_fake_key() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ANY(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -724,7 +734,8 @@ async fn test_match_all_update_fake_key() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
 
     let payload = format!(
         "MATCH ALL(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
@@ -794,7 +805,8 @@ async fn test_evict_entity_id_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let uuid = &body[(body.len() - 36)..];
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
     assert!(resp_insert.status().is_success());
 
     let evict = format!("Evict {} from test_evict_id", uuid);
