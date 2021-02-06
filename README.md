@@ -1,6 +1,6 @@
 # WooriDB
 
-WooriDB is an immutable time serial database.
+WooriDB is an (EXPERIMENTAL) immutable time serial database.
 
 ## Installation
 - if you don't have Rust and Cargo installed run `make setup` at root.
