@@ -21,7 +21,7 @@ impl Handler<State> for Executor {
         if fractions[0].eq("INSERT") {
             let state = fractions
                 .last()
-                .ok_or(Error::FailedToParseState)?
+                .ok_or_else(|| Error::FailedToParseState)?
                 .to_owned();
             let state = &state[..(state.len() - 1)];
 
@@ -33,7 +33,7 @@ impl Handler<State> for Executor {
         } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
             let state = fractions
                 .get(fractions.len() - 2)
-                .ok_or(Error::FailedToParseState)?
+                .ok_or_else(|| Error::FailedToParseState)?
                 .to_owned();
 
             let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
@@ -65,7 +65,7 @@ impl Handler<PreviousRegistry> for Executor {
         } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
             let state = fractions
                 .last()
-                .ok_or(Error::FailedToParseRegistry)?
+                .ok_or_else(|| Error::FailedToParseRegistry)?
                 .to_owned();
             let state = &state[..(state.len() - 1)];
 
