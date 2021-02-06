@@ -37,6 +37,33 @@ async fn test_select_all_id_post_ok() {
     let body = resp.take_body().as_str().to_string();
     assert!(body.contains("\"a\": Integer(123)"));
     assert!(body.contains("\"b\": Float(12.3)"));
+
+    let payload = format!(
+        "UPDATE test_select_all_id SET {{a: 12, c: Nil,}} INTO {}",
+        uuid
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let payload = format!("Select * FROM test_select_all_id ID {}", uuid);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    assert!(body.contains("\"a\": Integer(12)"));
+    assert!(body.contains("\"b\": Float(12.3)"));
+    assert!(body.contains("\"c\": Nil"));
 }
 
 #[ignore]
