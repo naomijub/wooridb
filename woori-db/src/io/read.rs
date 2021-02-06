@@ -28,10 +28,7 @@ pub fn assert_uniques(pat: &str) {
 }
 
 pub fn read_log(registry: DataRegister) -> Result<String, Error> {
-    let mut file = OpenOptions::new()
-        .read(true)
-        .open(registry.file_name)
-        .unwrap();
+    let mut file = OpenOptions::new().read(true).open(registry.file_name)?;
     file.seek(SeekFrom::Start(registry.offset as u64))?;
     let mut res = String::with_capacity(registry.bytes_length);
     file.take(registry.bytes_length as u64)
