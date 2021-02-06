@@ -19,7 +19,10 @@ impl Handler<State> for Executor {
 
         let fractions = msg.0.split('|').collect::<Vec<&str>>();
         if fractions[0].eq("INSERT") {
-            let state = fractions.last().unwrap().to_owned();
+            let state = fractions
+                .last()
+                .ok_or(Error::FailedToParseState)?
+                .to_owned();
             let state = &state[..(state.len() - 1)];
 
             let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
@@ -28,7 +31,10 @@ impl Handler<State> for Executor {
             };
             resp
         } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
-            let state = fractions[fractions.len() - 2];
+            let state = fractions
+                .get(fractions.len() - 2)
+                .ok_or(Error::FailedToParseState)?
+                .to_owned();
 
             let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
                 Ok(x) => Ok(x),
@@ -57,7 +63,10 @@ impl Handler<PreviousRegistry> for Executor {
         if fractions[0].eq("INSERT") {
             Ok(None)
         } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
-            let state = fractions.last().unwrap().to_owned();
+            let state = fractions
+                .last()
+                .ok_or(Error::FailedToParseRegistry)?
+                .to_owned();
             let state = &state[..(state.len() - 1)];
 
             let resp: Result<DataRegister, Error> = match from_str(state) {

@@ -16,7 +16,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 > At the end of every data structure representation a `,` (comma) is required. `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. No need for `;` at the end of each expression.
 
 ### Parser
-- [ ] Woori Query language parser **[DOING]**
+- [x] Woori Query language parser
 
 ### Transactions by type
 - [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires a rntity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name'`. 
@@ -67,6 +67,8 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
   - [x] Select a few entities from entity, knowing their IDs. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
   - [ ] Select ID WHEN
   - [ ] Selects with WHERE?
+
+- [ ] Multiple queries/tx.
   
   ### SELECT = Functions that could be implemented from Relation Algebra:
 - [x] Select
@@ -85,8 +87,10 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 
 ### TODOS
 - [ ] Refactor output schemas
-  - [ ] tx
+  - [x] tx
   - [ ] errors
+    - [x] Schemas
+    - [ ] remove unwraps 
 - [ ] Crash recovery
 - [ ] Autentication
 - [ ] Data Encryption

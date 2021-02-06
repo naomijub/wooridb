@@ -45,7 +45,12 @@ impl Handler<CreateUniques> for Executor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: CreateUniques, _: &mut Self::Context) -> Self::Result {
-        let mut uniqueness_data = msg.data.lock().unwrap();
+        let mut uniqueness_data = if let Ok(guard) = msg.data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+
         if !uniqueness_data.contains_key(&msg.entity) {
             let hm = msg
                 .uniques
@@ -78,10 +83,16 @@ impl Handler<CheckForUnique> for Executor {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, msg: CheckForUnique, _: &mut Self::Context) -> Self::Result {
-        let mut uniqueness_data = msg.uniqueness.lock().unwrap();
+        let mut uniqueness_data = if let Ok(guard) = msg.uniqueness.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
 
         if !uniqueness_data.is_empty() {
-            let uniques_for_entity = uniqueness_data.get_mut(&msg.entity).unwrap();
+            let uniques_for_entity = uniqueness_data
+                .get_mut(&msg.entity)
+                .ok_or(Error::EntityNotCreated(msg.entity.clone()))?;
             msg.content.iter().try_for_each(|(k, v)| {
                 if uniques_for_entity.contains_key(k) {
                     let val = uniques_for_entity.get_mut(k).unwrap();

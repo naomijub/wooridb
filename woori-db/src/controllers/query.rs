@@ -63,7 +63,11 @@ async fn select_all_with_id(
     data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = data.lock().unwrap();
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     let registry = if let Some(id_to_registry) = data.get(&entity) {
         if let Some(reg) = id_to_registry.get(&uuid) {
             reg
@@ -75,9 +79,9 @@ async fn select_all_with_id(
     }
     .clone();
 
-    let content = actor.send(registry).await.unwrap()?;
-    let state = actor.send(State(content)).await.unwrap()?;
-    Ok(ron::ser::to_string_pretty(&state, pretty_config()).unwrap())
+    let content = actor.send(registry).await??;
+    let state = actor.send(State(content)).await??;
+    Ok(ron::ser::to_string_pretty(&state, pretty_config())?)
 }
 
 async fn select_all_with_ids(
@@ -86,7 +90,11 @@ async fn select_all_with_ids(
     data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = data.lock().unwrap();
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     let registries = if let Some(id_to_registry) = data.get(&entity) {
         uuids
             .into_iter()
@@ -110,15 +118,15 @@ async fn select_all_with_ids(
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries.into_iter() {
         if let Some(regs) = registry {
-            let content = actor.send(regs).await.unwrap()?;
-            let state = actor.send(State(content)).await.unwrap()?;
+            let content = actor.send(regs).await??;
+            let state = actor.send(State(content)).await??;
             states.insert(uuid, Some(state));
         } else {
             states.insert(uuid, None);
         }
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config()).unwrap())
+    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
 }
 
 async fn select_keys_with_id(
@@ -129,7 +137,11 @@ async fn select_keys_with_id(
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let keys = keys.into_iter().collect::<HashSet<String>>();
-    let data = data.lock().unwrap();
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     let registry = if let Some(id_to_registry) = data.get(&entity) {
         if let Some(reg) = id_to_registry.get(&uuid) {
             reg
@@ -141,13 +153,13 @@ async fn select_keys_with_id(
     }
     .clone();
 
-    let content = actor.send(registry).await.unwrap()?;
-    let state = actor.send(State(content)).await.unwrap()?;
+    let content = actor.send(registry).await??;
+    let state = actor.send(State(content)).await??;
     let filtered: HashMap<String, Types> = state
         .into_iter()
         .filter(|(k, _)| keys.contains(k))
         .collect();
-    Ok(ron::ser::to_string_pretty(&filtered, pretty_config()).unwrap())
+    Ok(ron::ser::to_string_pretty(&filtered, pretty_config())?)
 }
 
 async fn select_keys_with_ids(
@@ -157,7 +169,11 @@ async fn select_keys_with_ids(
     data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = data.lock().unwrap();
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     let registries = if let Some(id_to_registry) = data.get(&entity) {
         uuids
             .into_iter()
@@ -181,8 +197,8 @@ async fn select_keys_with_ids(
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries.into_iter() {
         if let Some(regs) = registry {
-            let content = actor.send(regs).await.unwrap()?;
-            let state = actor.send(State(content)).await.unwrap()?;
+            let content = actor.send(regs).await??;
+            let state = actor.send(State(content)).await??;
             let filtered: HashMap<String, Types> = state
                 .into_iter()
                 .filter(|(k, _)| keys.contains(k))
@@ -193,7 +209,7 @@ async fn select_keys_with_ids(
         }
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config()).unwrap())
+    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
 }
 
 async fn select_all(
@@ -201,7 +217,11 @@ async fn select_all(
     data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = data.lock().unwrap();
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     let registries = if let Some(id_to_registries) = data.get(&entity) {
         id_to_registries
     } else {
@@ -216,12 +236,12 @@ async fn select_all(
 
     let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
     for (uuid, regs) in kvs.into_iter() {
-        let content = actor.send(regs).await.unwrap()?;
-        let state = actor.send(State(content)).await.unwrap()?;
+        let content = actor.send(regs).await??;
+        let state = actor.send(State(content)).await??;
         states.insert(uuid, state);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config()).unwrap())
+    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
 }
 
 async fn select_args(
@@ -231,7 +251,11 @@ async fn select_args(
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let keys = keys.into_iter().collect::<HashSet<String>>();
-    let data = data.lock().unwrap();
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     let registries = if let Some(id_to_registries) = data.get(&entity) {
         id_to_registries
     } else {
@@ -246,8 +270,8 @@ async fn select_args(
 
     let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
     for (uuid, regs) in kvs.into_iter() {
-        let content = actor.send(regs).await.unwrap()?;
-        let state = actor.send(State(content)).await.unwrap()?;
+        let content = actor.send(regs).await??;
+        let state = actor.send(State(content)).await??;
         let filtered: HashMap<String, Types> = state
             .into_iter()
             .filter(|(k, _)| keys.contains(k))
@@ -255,5 +279,5 @@ async fn select_args(
         states.insert(uuid, filtered);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config()).unwrap())
+    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
 }

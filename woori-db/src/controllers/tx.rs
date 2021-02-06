@@ -126,7 +126,11 @@ pub async fn create_controller(
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     {
-        let mut data = data.lock().unwrap();
+        let mut data = if let Ok(guard) = data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
         if !data.contains_key(&entity) {
             data.insert(entity.clone(), BTreeMap::new());
         } else {
@@ -138,8 +142,7 @@ pub async fn create_controller(
         .send(CreateEntity {
             name: entity.clone(),
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
@@ -158,11 +161,14 @@ pub async fn evict_controller(
             .send(EvictEntity {
                 name: entity.clone(),
             })
-            .await
-            .unwrap()?;
+            .await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-        let mut data = data.lock().unwrap();
+        let mut data = if let Ok(guard) = data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
         data.remove(&entity);
         Ok(format!("Entity {} evicted", entity))
     } else {
@@ -172,11 +178,14 @@ pub async fn evict_controller(
                 name: entity.clone(),
                 id: id.clone(),
             })
-            .await
-            .unwrap()?;
+            .await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-        let mut data = data.lock().unwrap();
+        let mut data = if let Ok(guard) = data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
         if let Some(d) = data.get_mut(&entity) {
             d.remove(&id);
         }
@@ -205,16 +214,14 @@ pub async fn create_unique_controller(
                 entity: entity.to_string(),
                 uniques: uniques.clone(),
             })
-            .await
-            .unwrap()?;
+            .await??;
         actor
             .send(CreateUniques {
                 entity: entity.to_string(),
                 uniques,
                 data,
             })
-            .await
-            .unwrap()?;
+            .await??;
         Ok(())
     }
 }
@@ -231,7 +238,11 @@ pub async fn insert_controller(
     let content_log =
         to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
-    let mut data = data.lock().unwrap();
+    let mut data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     if !data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
     }
@@ -243,16 +254,14 @@ pub async fn insert_controller(
             content,
             uniqueness,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let content_value = actor
         .send(InsertEntityContent {
             name: entity.clone(),
             content: content_log,
         })
-        .await
-        .unwrap()?;
+        .await??;
     let data_register = DataRegister {
         offset,
         bytes_length: content_value.2,
@@ -286,7 +295,11 @@ pub async fn update_set_controller(
     let content_log =
         to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
-    let mut data = data.lock().unwrap();
+    let mut data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     if !data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
@@ -300,15 +313,11 @@ pub async fn update_set_controller(
             content: content.clone(),
             uniqueness,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
-    let mut previous_state = actor
-        .send(State(previous_state_str.clone()))
-        .await
-        .unwrap()?;
+    let previous_state_str = actor.send(previous_entry.clone()).await??;
+    let mut previous_state = actor.send(State(previous_state_str.clone())).await??;
 
     content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
@@ -327,8 +336,7 @@ pub async fn update_set_controller(
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
                 .map_err(Error::SerializationError)?,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let data_register = DataRegister {
         offset,
@@ -365,7 +373,11 @@ pub async fn update_content_controller(
     let content_log =
         to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
-    let mut data = data.lock().unwrap();
+    let mut data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     if !data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
@@ -379,15 +391,11 @@ pub async fn update_content_controller(
             content: content.clone(),
             uniqueness,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
-    let mut previous_state = actor
-        .send(State(previous_state_str.clone()))
-        .await
-        .unwrap()?;
+    let previous_state_str = actor.send(previous_entry.clone()).await??;
+    let mut previous_state = actor.send(State(previous_state_str.clone())).await??;
 
     content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state
@@ -453,8 +461,7 @@ pub async fn update_content_controller(
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
                 .map_err(Error::SerializationError)?,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let data_register = DataRegister {
         offset,
@@ -489,7 +496,11 @@ pub async fn delete_controller(
     let uuid = Uuid::from_str(&id).unwrap();
     let offset = bytes_counter.load(Ordering::SeqCst);
 
-    let mut data = data.lock().unwrap();
+    let mut data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     if !data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
     } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&uuid) {
@@ -497,19 +508,13 @@ pub async fn delete_controller(
     }
 
     let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
-    let two_registries_ago = actor
-        .send(PreviousRegistry(previous_state_str))
-        .await
-        .unwrap()?;
+    let previous_state_str = actor.send(previous_entry.clone()).await??;
+    let two_registries_ago = actor.send(PreviousRegistry(previous_state_str)).await??;
 
     let state_to_be = match two_registries_ago {
         Some(reg) => {
-            let state_str = actor.send(reg.clone()).await.unwrap()?;
-            (
-                actor.send(State(state_str.clone())).await.unwrap()?,
-                reg.to_owned(),
-            )
+            let state_str = actor.send(reg.clone()).await??;
+            (actor.send(State(state_str.clone())).await??, reg.to_owned())
         }
         None => {
             let insert_reg = data.get(&entity).unwrap().get(&uuid).unwrap();
@@ -529,8 +534,7 @@ pub async fn delete_controller(
             uuid,
             previous_registry: previous_register_log,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let data_register = DataRegister {
         offset,
@@ -561,7 +565,11 @@ pub async fn match_update_set_controller(
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let mut data = data.lock().unwrap();
+    let mut data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
     if !data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
     } else if data.contains_key(&args.entity)
@@ -571,19 +579,15 @@ pub async fn match_update_set_controller(
     }
 
     let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await.unwrap()?;
-    let mut previous_state = actor
-        .send(State(previous_state_str.clone()))
-        .await
-        .unwrap()?;
+    let previous_state_str = actor.send(previous_entry.clone()).await??;
+    let mut previous_state = actor.send(State(previous_state_str.clone())).await??;
 
     actor
         .send(MatchUpdate {
             conditions: args.conditions,
             previous_state: previous_state.clone(),
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let offset = bytes_counter.load(Ordering::SeqCst);
     let content_log =
@@ -596,8 +600,7 @@ pub async fn match_update_set_controller(
             content: args.content.clone(),
             uniqueness,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     args.content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
@@ -616,8 +619,7 @@ pub async fn match_update_set_controller(
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
                 .map_err(Error::SerializationError)?,
         })
-        .await
-        .unwrap()?;
+        .await??;
 
     let data_register = DataRegister {
         offset,
