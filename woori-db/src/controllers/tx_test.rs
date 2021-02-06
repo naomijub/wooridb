@@ -242,9 +242,10 @@ async fn test_update_set_post_ok() {
         .uri("/wql/tx")
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
-
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
     assert!(resp.status().is_success());
+    assert!(body.contains("entity: \"test_update\""));
 
     read::assert_content("UPDATE_SET|");
     read::assert_content("UTC|");
@@ -546,7 +547,9 @@ async fn test_delete_withput_update() {
         .uri("/wql/tx")
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
+    assert_eq!(body, format!("(\n entity: \"test_delete\",\n uuid: \"{}\",\n message: \"Entity test_delete with Uuid {} deleted\",\n)", uuid, uuid));
 
     assert!(resp.status().is_success());
 

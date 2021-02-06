@@ -1,4 +1,3 @@
-use crate::repository::local::{LocalContext, UniquenessContext};
 use crate::{
     actors::{
         state::{MatchUpdate, PreviousRegistry, State},
@@ -20,6 +19,10 @@ use crate::{
 use crate::{
     model::{error::Error, DataRegister},
     schemas::tx::InsertEntityResponse,
+};
+use crate::{
+    repository::local::{LocalContext, UniquenessContext},
+    schemas::tx::{DeleteOrEvictEntityResponse, UpdateEntityResponse},
 };
 
 use actix::Addr;
@@ -178,7 +181,12 @@ pub async fn evict_controller(
             d.remove(&id);
         }
 
-        Ok(format!("Entity {} with id {} evicted", entity, id))
+        Ok(DeleteOrEvictEntityResponse::new(
+            entity.clone(),
+            id,
+            format!("Entity {} with id {} evicted", entity, id),
+        )
+        .write())
     }
 }
 
@@ -313,7 +321,7 @@ pub async fn update_set_controller(
     let content_value = actor
         .send(UpdateSetEntityContent {
             name: entity.clone(),
-            current_state: state_log,
+            current_state: state_log.clone(),
             content_log,
             id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
@@ -335,8 +343,13 @@ pub async fn update_set_controller(
     }
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-
-    Ok(format!("Entity {} with Uuid {} updated", entity, id))
+    Ok(UpdateEntityResponse::new(
+        entity.clone(),
+        id,
+        state_log,
+        format!("Entity {} with Uuid {} updated", entity, id),
+    )
+    .write())
 }
 
 pub async fn update_content_controller(
@@ -434,7 +447,7 @@ pub async fn update_content_controller(
     let content_value = actor
         .send(UpdateContentEntityContent {
             name: entity.clone(),
-            current_state: state_log,
+            current_state: state_log.clone(),
             content_log,
             id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
@@ -457,7 +470,13 @@ pub async fn update_content_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(format!("Entity {} with Uuid {} updated", entity, id))
+    Ok(UpdateEntityResponse::new(
+        entity.clone(),
+        id,
+        state_log,
+        format!("Entity {} with Uuid {} updated", entity, id),
+    )
+    .write())
 }
 
 pub async fn delete_controller(
@@ -527,7 +546,12 @@ pub async fn delete_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(format!("Entity {} with Uuid {} deleted", entity, id))
+    Ok(DeleteOrEvictEntityResponse::new(
+        entity.clone(),
+        uuid,
+        format!("Entity {} with Uuid {} deleted", entity, id),
+    )
+    .write())
 }
 
 pub async fn match_update_set_controller(
@@ -586,7 +610,7 @@ pub async fn match_update_set_controller(
     let content_value = actor
         .send(UpdateSetEntityContent {
             name: args.entity.clone(),
-            current_state: state_log,
+            current_state: state_log.clone(),
             content_log,
             id: args.id,
             previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
@@ -609,8 +633,11 @@ pub async fn match_update_set_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(format!(
-        "Entity {} with Uuid {} updated",
-        args.entity, args.id
-    ))
+    Ok(UpdateEntityResponse::new(
+        args.entity.clone(),
+        args.id,
+        state_log,
+        format!("Entity {} with Uuid {} updated", args.entity, args.id),
+    )
+    .write())
 }
