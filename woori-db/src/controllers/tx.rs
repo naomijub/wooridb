@@ -1,7 +1,3 @@
-use crate::actors::{
-    uniques::CheckForUnique,
-    wql::{CreateEntity, EvictEntity, EvictEntityId},
-};
 use crate::model::{error::Error, DataRegister};
 use crate::repository::local::{LocalContext, UniquenessContext};
 use crate::{
@@ -14,6 +10,13 @@ use crate::{
         },
     },
     model::wql::MatchUpdateArgs,
+};
+use crate::{
+    actors::{
+        uniques::CheckForUnique,
+        wql::{CreateEntity, EvictEntity, EvictEntityId},
+    },
+    schemas::tx::EntityResponse,
 };
 
 use actix::Addr;
@@ -134,7 +137,7 @@ pub async fn create_controller(
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-    Ok(format!("Entity {} created", entity))
+    Ok(EntityResponse::new(entity.clone(), format!("Entity `{}` created", entity)).write())
 }
 
 pub async fn evict_controller(

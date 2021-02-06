@@ -16,7 +16,10 @@ async fn test_create_post_ok() {
     assert!(resp.status().is_success());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
-    assert_eq!(&Body::from("Entity test_ok created"), body);
+    assert_eq!(
+        &Body::from("(\n entity: \"test_ok\",\n message: \"Entity `test_ok` created\",\n)"),
+        body
+    );
     read::assert_content("CREATE_ENTITY|test_ok;");
     clear();
 }

@@ -1,8 +1,8 @@
 use crate::schemas::pretty_config;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::fmt;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ErrorResponse {
     error_type: String,
     error_message: String,
