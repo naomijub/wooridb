@@ -1,3 +1,4 @@
+use actix::MailboxError;
 use std::io;
 
 use uuid::Uuid;
@@ -11,6 +12,7 @@ pub enum Error {
     QueryFormat(String),
     EntityAlreadyCreated(String),
     EntityNotCreated(String),
+    EntityNotCreatedWithUniqueness(String),
     SerializationError(ron::Error),
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
@@ -20,6 +22,10 @@ pub enum Error {
     DuplicatedUnique(String, String, Types),
     SelectBadRequest,
     NonSelectQuery,
+    MailboxError(MailboxError),
+    LockData,
+    RonSerdeError(ron::Error),
+    InvalidUuidError(uuid::Error),
 }
 
 impl std::fmt::Display for Error {
@@ -36,6 +42,11 @@ impl std::fmt::Display for Error {
             .write(f),
             Error::EntityNotCreated(e) => ErrorResponse::new(
                 String::from("EntityNotCreated"),
+                format!("Entity `{}` not created", e),
+            )
+            .write(f),
+            Error::EntityNotCreatedWithUniqueness(e) => ErrorResponse::new(
+                String::from("EntityNotCreatedWithUniqueness"),
                 format!("Entity `{}` not created", e),
             )
             .write(f),
@@ -85,6 +96,20 @@ impl std::fmt::Display for Error {
                 format!("Non-SELECT expressions are handled by `/wql/tx` endpoint"),
             )
             .write(f),
+            Error::MailboxError(r) => {
+                ErrorResponse::new(String::from("MailboxError"), format!("{:?}", r)).write(f)
+            }
+            Error::LockData => ErrorResponse::new(
+                String::from("LockData"),
+                format!("System was not able to get a lock on data"),
+            )
+            .write(f),
+            Error::RonSerdeError(e) => {
+                ErrorResponse::new(String::from("RonSerdeError"), format!("{:?}", e)).write(f)
+            }
+            Error::InvalidUuidError(e) => {
+                ErrorResponse::new(String::from("InvalidUuidError"), format!("{:?}", e)).write(f)
+            }
         }
     }
 }
@@ -92,5 +117,23 @@ impl std::fmt::Display for Error {
 impl From<io::Error> for Error {
     fn from(error: io::Error) -> Self {
         Error::Io(error)
+    }
+}
+
+impl From<MailboxError> for Error {
+    fn from(error: MailboxError) -> Self {
+        Error::MailboxError(error)
+    }
+}
+
+impl From<ron::Error> for Error {
+    fn from(error: ron::Error) -> Self {
+        Error::RonSerdeError(error)
+    }
+}
+
+impl From<uuid::Error> for Error {
+    fn from(error: uuid::Error) -> Self {
+        Error::InvalidUuidError(error)
     }
 }
