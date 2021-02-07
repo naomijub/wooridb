@@ -77,7 +77,7 @@ async fn select_all_with_id(
     } else {
         return Err(Error::EntityNotCreated(entity));
     }
-    .clone();
+    .to_owned();
 
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
@@ -108,12 +108,12 @@ async fn select_all_with_ids(
                 ))
                 .filter(|(_id, reg)| reg.is_some())
             })
-            .map(|(uuid, reg)| (uuid, reg.map(|d| d.clone())))
+            .map(|(uuid, reg)| (uuid, reg.map(|d| d.to_owned())))
             .collect::<Vec<(Uuid, Option<DataRegister>)>>()
     } else {
         return Err(Error::EntityNotCreated(entity));
     }
-    .clone();
+    .to_owned();
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries.into_iter() {
@@ -151,7 +151,7 @@ async fn select_keys_with_id(
     } else {
         return Err(Error::EntityNotCreated(entity));
     }
-    .clone();
+    .to_owned();
 
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
@@ -187,12 +187,12 @@ async fn select_keys_with_ids(
                 ))
                 .filter(|(_id, reg)| reg.is_some())
             })
-            .map(|(uuid, reg)| (uuid, reg.map(|d| d.clone())))
+            .map(|(uuid, reg)| (uuid, reg.map(|d| d.to_owned())))
             .collect::<Vec<(Uuid, Option<DataRegister>)>>()
     } else {
         return Err(Error::EntityNotCreated(entity));
     }
-    .clone();
+    .to_owned();
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries.into_iter() {
@@ -227,7 +227,7 @@ async fn select_all(
     } else {
         return Err(Error::EntityNotCreated(entity));
     }
-    .clone();
+    .to_owned();
 
     let kvs = registries
         .into_iter()
@@ -261,7 +261,7 @@ async fn select_args(
     } else {
         return Err(Error::EntityNotCreated(entity));
     }
-    .clone();
+    .to_owned();
 
     let kvs = registries
         .into_iter()

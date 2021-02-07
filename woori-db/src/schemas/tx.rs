@@ -14,7 +14,8 @@ impl CreateEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config()).unwrap_or("SERVER ERROR".to_string())
+        ron::ser::to_string_pretty(self, pretty_config())
+            .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
 
@@ -35,7 +36,8 @@ impl InsertEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config()).unwrap_or("SERVER ERROR".to_string())
+        ron::ser::to_string_pretty(self, pretty_config())
+            .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
 
@@ -56,7 +58,8 @@ impl DeleteOrEvictEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config()).unwrap_or("SERVER ERROR".to_string())
+        ron::ser::to_string_pretty(self, pretty_config())
+            .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
 
@@ -79,6 +82,7 @@ impl UpdateEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config()).unwrap_or("SERVER ERROR".to_string())
+        ron::ser::to_string_pretty(self, pretty_config())
+            .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
