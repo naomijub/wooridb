@@ -21,7 +21,15 @@ impl Executor {
 }
 
 pub struct CreateEntity {
-    pub name: String,
+    name: String,
+}
+
+impl CreateEntity {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+        }
+    }
 }
 
 impl Message for CreateEntity {
@@ -41,6 +49,15 @@ impl Handler<CreateEntity> for Executor {
 pub struct InsertEntityContent {
     pub name: String,
     pub content: String,
+}
+
+impl InsertEntityContent {
+    pub fn new(name: &str, content: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            content: content.to_owned(),
+        }
+    }
 }
 
 impl Message for InsertEntityContent {
@@ -65,6 +82,24 @@ pub struct UpdateSetEntityContent {
     pub previous_registry: String,
 }
 
+impl UpdateSetEntityContent {
+    pub fn new(
+        name: &str,
+        current_state: &str,
+        content_log: &str,
+        id: Uuid,
+        previous_registry: &str,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            content_log: content_log.to_owned(),
+            current_state: current_state.to_owned(),
+            id,
+            previous_registry: previous_registry.to_owned(),
+        }
+    }
+}
+
 impl Message for UpdateSetEntityContent {
     type Result = Result<(DateTime<Utc>, usize), Error>;
 }
@@ -86,6 +121,24 @@ pub struct UpdateContentEntityContent {
     pub content_log: String,
     pub id: Uuid,
     pub previous_registry: String,
+}
+
+impl UpdateContentEntityContent {
+    pub fn new(
+        name: &str,
+        current_state: &str,
+        content_log: &str,
+        id: Uuid,
+        previous_registry: &str,
+    ) -> Self {
+        Self {
+            name: name.to_owned(),
+            content_log: content_log.to_owned(),
+            current_state: current_state.to_owned(),
+            id,
+            previous_registry: previous_registry.to_owned(),
+        }
+    }
 }
 
 impl Message for UpdateContentEntityContent {

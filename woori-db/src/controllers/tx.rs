@@ -139,11 +139,7 @@ pub async fn create_controller(
     }
 
     let message = format!("Entity `{}` created", &entity);
-    let offset = actor
-        .send(CreateEntity {
-            name: entity.clone(),
-        })
-        .await??;
+    let offset = actor.send(CreateEntity::new(&entity)).await??;
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
@@ -255,10 +251,7 @@ pub async fn insert_controller(
         .await??;
 
     let content_value = actor
-        .send(InsertEntityContent {
-            name: entity.clone(),
-            content: content_log,
-        })
+        .send(InsertEntityContent::new(&entity, &content_log))
         .await??;
     let data_register = DataRegister {
         offset,
@@ -322,14 +315,14 @@ pub async fn update_set_controller(
         to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
-        .send(UpdateSetEntityContent {
-            name: entity.clone(),
-            current_state: state_log.clone(),
-            content_log,
+        .send(UpdateSetEntityContent::new(
+            &entity,
+            &state_log,
+            &content_log,
             id,
-            previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
+            &to_string_pretty(&previous_entry.clone(), pretty_config())
                 .map_err(Error::SerializationError)?,
-        })
+        ))
         .await??;
 
     let data_register = DataRegister {
@@ -442,14 +435,14 @@ pub async fn update_content_controller(
         to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
-        .send(UpdateContentEntityContent {
-            name: entity.clone(),
-            current_state: state_log.clone(),
-            content_log,
+        .send(UpdateContentEntityContent::new(
+            &entity,
+            &state_log,
+            &content_log,
             id,
-            previous_registry: to_string_pretty(&previous_entry, pretty_config())
+            &to_string_pretty(&previous_entry, pretty_config())
                 .map_err(Error::SerializationError)?,
-        })
+        ))
         .await??;
 
     let data_register = DataRegister {
