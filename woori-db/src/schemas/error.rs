@@ -18,7 +18,7 @@ impl ErrorResponse {
 
     pub fn write(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let output = ron::ser::to_string_pretty(self, pretty_config())
-            .unwrap_or_else(|_| "SERVER ERROR".to_string());
+            .unwrap_or_else(|_| "SERVER ERROR".to_owned());
         write!(f, "{}", output)
     }
 }

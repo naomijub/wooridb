@@ -147,7 +147,6 @@ pub async fn create_controller(
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-    
     Ok(CreateEntityResponse::new(entity, message).write())
 }
 
@@ -193,12 +192,8 @@ pub async fn evict_controller(
             d.remove(&id);
         }
 
-        Ok(DeleteOrEvictEntityResponse::new(
-            entity.clone(),
-            uuid,
-            format!("Entity {} with id {} evicted", entity, id),
-        )
-        .write())
+        let message = format!("Entity {} with id {} evicted", &entity, &id);
+        Ok(DeleteOrEvictEntityResponse::new(entity, uuid, message).write())
     }
 }
 
@@ -214,13 +209,13 @@ pub async fn create_unique_controller(
         let data = uniqueness.into_inner();
         actor
             .send(WriteUniques {
-                entity: entity.to_string(),
+                entity: entity.to_owned(),
                 uniques: uniques.clone(),
             })
             .await??;
         actor
             .send(CreateUniques {
-                entity: entity.to_string(),
+                entity: entity.to_owned(),
                 uniques,
                 data,
             })
@@ -277,12 +272,8 @@ pub async fn insert_controller(
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
 
-    Ok(InsertEntityResponse::new(
-        entity.clone(),
-        content_value.1,
-        format!("Entity {} inserted with Uuid {}", entity, content_value.1),
-    )
-    .write())
+    let message = format!("Entity {} inserted with Uuid {}", &entity, &content_value.1);
+    Ok(InsertEntityResponse::new(entity, content_value.1, message).write())
 }
 
 pub async fn update_set_controller(
@@ -319,8 +310,8 @@ pub async fn update_set_controller(
         .await??;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await??;
-    let mut previous_state = actor.send(State(previous_state_str.clone())).await??;
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let mut previous_state = actor.send(State(previous_state_str)).await??;
 
     content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
@@ -354,13 +345,8 @@ pub async fn update_set_controller(
     }
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-    Ok(UpdateEntityResponse::new(
-        entity.clone(),
-        id,
-        state_log,
-        format!("Entity {} with Uuid {} updated", entity, id),
-    )
-    .write())
+    let message = format!("Entity {} with Uuid {} updated", &entity, &id);
+    Ok(UpdateEntityResponse::new(entity, id, state_log, message).write())
 }
 
 pub async fn update_content_controller(
@@ -397,8 +383,8 @@ pub async fn update_content_controller(
         .await??;
 
     let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await??;
-    let mut previous_state = actor.send(State(previous_state_str.clone())).await??;
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let mut previous_state = actor.send(State(previous_state_str)).await??;
 
     content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state
@@ -415,7 +401,7 @@ pub async fn update_content_controller(
             }
             Types::String(s) => {
                 if let Types::String(local) = local_state {
-                    *local_state = Types::String(local.to_string() + &s);
+                    *local_state = Types::String(local.to_owned() + &s);
                 }
             }
             Types::Uuid(uuid) => {
@@ -439,7 +425,7 @@ pub async fn update_content_controller(
                 if let Types::Map(local) = local_state {
                     m.iter().for_each(|(key, value)| {
                         local
-                            .entry(key.to_string())
+                            .entry(key.to_owned())
                             .and_modify(|v| *v = value.to_owned())
                             .or_insert_with(|| value.to_owned());
                     });
@@ -461,7 +447,7 @@ pub async fn update_content_controller(
             current_state: state_log.clone(),
             content_log,
             id,
-            previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
+            previous_registry: to_string_pretty(&previous_entry, pretty_config())
                 .map_err(Error::SerializationError)?,
         })
         .await??;
@@ -480,13 +466,8 @@ pub async fn update_content_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(UpdateEntityResponse::new(
-        entity.clone(),
-        id,
-        state_log,
-        format!("Entity {} with Uuid {} updated", entity, id),
-    )
-    .write())
+    let message = format!("Entity {} with Uuid {} updated", &entity, &id);
+    Ok(UpdateEntityResponse::new(entity, id, state_log, message).write())
 }
 
 pub async fn delete_controller(
@@ -512,13 +493,13 @@ pub async fn delete_controller(
     }
 
     let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await??;
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let two_registries_ago = actor.send(PreviousRegistry(previous_state_str)).await??;
 
     let state_to_be = match two_registries_ago {
         Some(reg) => {
-            let state_str = actor.send(reg.clone()).await??;
-            (actor.send(State(state_str.clone())).await??, reg.to_owned())
+            let state_str = actor.send(reg.to_owned()).await??;
+            (actor.send(State(state_str)).await??, reg.to_owned())
         }
         None => {
             let insert_reg = data.get(&entity).unwrap().get(&uuid).unwrap();
@@ -554,12 +535,7 @@ pub async fn delete_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(DeleteOrEvictEntityResponse::new(
-        entity.clone(),
-        Some(uuid),
-        message,
-    )
-    .write())
+    Ok(DeleteOrEvictEntityResponse::new(entity, Some(uuid), message).write())
 }
 
 pub async fn match_update_set_controller(
@@ -583,8 +559,8 @@ pub async fn match_update_set_controller(
     }
 
     let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
-    let previous_state_str = actor.send(previous_entry.clone()).await??;
-    let mut previous_state = actor.send(State(previous_state_str.clone())).await??;
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let mut previous_state = actor.send(State(previous_state_str)).await??;
 
     actor
         .send(MatchUpdate {
@@ -620,7 +596,7 @@ pub async fn match_update_set_controller(
             current_state: state_log.clone(),
             content_log,
             id: args.id,
-            previous_registry: to_string_pretty(&previous_entry.clone(), pretty_config())
+            previous_registry: to_string_pretty(&previous_entry, pretty_config())
                 .map_err(Error::SerializationError)?,
         })
         .await??;
@@ -639,11 +615,6 @@ pub async fn match_update_set_controller(
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    Ok(UpdateEntityResponse::new(
-        args.entity.clone(),
-        args.id,
-        state_log,
-        format!("Entity {} with Uuid {} updated", args.entity, args.id),
-    )
-    .write())
+    let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
+    Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
 }

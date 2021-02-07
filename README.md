@@ -86,11 +86,6 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - [ ] Division
 
 ### TODOS
-- [x] Refactor output schemas
-  - [x] tx
-  - [x] errors
-    - [x] Schemas
-    - [x] remove unwraps 
 - [ ] Crash recovery
 - [ ] Autentication
 - [ ] Data Encryption

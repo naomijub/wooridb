@@ -57,7 +57,7 @@ impl Handler<CreateUniques> for Executor {
                 .into_iter()
                 .map(|name| (name, HashSet::new()))
                 .collect::<HashMap<String, HashSet<String>>>();
-            uniqueness_data.insert(msg.entity.to_string(), hm);
+            uniqueness_data.insert(msg.entity.to_owned(), hm);
         } else {
             msg.uniques.iter().for_each(|name| {
                 let mut hm = HashMap::new();
@@ -95,13 +95,13 @@ impl Handler<CheckForUnique> for Executor {
                 .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned()))?;
             msg.content.iter().try_for_each(|(k, v)| {
                 if uniques_for_entity.contains_key(k) {
-                    let val = uniques_for_entity
-                        .get_mut(k)
-                        .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned()))?;
+                    let val = uniques_for_entity.get_mut(k).ok_or_else(|| {
+                        Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned())
+                    })?;
                     if val.contains(&format!("{:?}", v)) {
                         Err(Error::DuplicatedUnique(
                             msg.entity.to_owned(),
-                            k.to_string(),
+                            k.to_owned(),
                             v.to_owned(),
                         ))
                     } else {
