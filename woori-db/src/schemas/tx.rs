@@ -44,12 +44,12 @@ impl InsertEntityResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeleteOrEvictEntityResponse {
     entity: String,
-    uuid: Uuid,
+    uuid: Option<Uuid>,
     message: String,
 }
 
 impl DeleteOrEvictEntityResponse {
-    pub fn new(entity: String, uuid: Uuid, message: String) -> Self {
+    pub fn new(entity: String, uuid: Option<Uuid>, message: String) -> Self {
         Self {
             entity,
             uuid,

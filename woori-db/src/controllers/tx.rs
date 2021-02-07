@@ -138,6 +138,7 @@ pub async fn create_controller(
         }
     }
 
+    let message = format!("Entity `{}` created", &entity);
     let offset = actor
         .send(CreateEntity {
             name: entity.clone(),
@@ -146,7 +147,8 @@ pub async fn create_controller(
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-    Ok(CreateEntityResponse::new(entity.clone(), format!("Entity `{}` created", entity)).write())
+    
+    Ok(CreateEntityResponse::new(entity, message).write())
 }
 
 pub async fn evict_controller(
@@ -157,6 +159,7 @@ pub async fn evict_controller(
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     if uuid.is_none() {
+        let message = format!("Entity {} evicted", &entity);
         let offset = actor
             .send(EvictEntity {
                 name: entity.clone(),
@@ -170,7 +173,7 @@ pub async fn evict_controller(
             return Err(Error::LockData);
         };
         data.remove(&entity);
-        Ok(format!("Entity {} evicted", entity))
+        Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
     } else {
         let id = uuid.unwrap();
         let offset = actor
@@ -192,7 +195,7 @@ pub async fn evict_controller(
 
         Ok(DeleteOrEvictEntityResponse::new(
             entity.clone(),
-            id,
+            uuid,
             format!("Entity {} with id {} evicted", entity, id),
         )
         .write())
@@ -494,6 +497,7 @@ pub async fn delete_controller(
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let uuid = Uuid::from_str(&id)?;
+    let message = format!("Entity {} with Uuid {} deleted", &entity, id);
     let offset = bytes_counter.load(Ordering::SeqCst);
 
     let mut data = if let Ok(guard) = data.lock() {
@@ -552,8 +556,8 @@ pub async fn delete_controller(
 
     Ok(DeleteOrEvictEntityResponse::new(
         entity.clone(),
-        uuid,
-        format!("Entity {} with Uuid {} deleted", entity, id),
+        Some(uuid),
+        message,
     )
     .write())
 }
