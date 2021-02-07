@@ -493,7 +493,7 @@ pub async fn delete_controller(
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let uuid = Uuid::from_str(&id).unwrap();
+    let uuid = Uuid::from_str(&id)?;
     let offset = bytes_counter.load(Ordering::SeqCst);
 
     let mut data = if let Ok(guard) = data.lock() {

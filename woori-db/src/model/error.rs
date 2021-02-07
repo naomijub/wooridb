@@ -25,6 +25,7 @@ pub enum Error {
     MailboxError(MailboxError),
     LockData,
     RonSerdeError(ron::Error),
+    InvalidUuidError(uuid::Error),
 }
 
 impl std::fmt::Display for Error {
@@ -106,6 +107,9 @@ impl std::fmt::Display for Error {
             Error::RonSerdeError(e) => {
                 ErrorResponse::new(String::from("RonSerdeError"), format!("{:?}", e)).write(f)
             }
+            Error::InvalidUuidError(e) => {
+                ErrorResponse::new(String::from("InvalidUuidError"), format!("{:?}", e)).write(f)
+            }
         }
     }
 }
@@ -125,5 +129,11 @@ impl From<MailboxError> for Error {
 impl From<ron::Error> for Error {
     fn from(error: ron::Error) -> Self {
         Error::RonSerdeError(error)
+    }
+}
+
+impl From<uuid::Error> for Error {
+    fn from(error: uuid::Error) -> Self {
+        Error::InvalidUuidError(error)
     }
 }
