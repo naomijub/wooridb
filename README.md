@@ -65,7 +65,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
   - [x] Select one entity from Entity with all key_values. This operation selects one entity defined by its `ID`. It is equivalent to `Select * From table WHERE id = <uuid>`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
   - [x] Select one entity from Entity with a set of key_values. This operation selects one entity defined by its `ID` with restricted keys in the output. It is equivalent to `SELECT a, b, c FROM table WHERE id = <uuid>`.  Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\",}`
   - [x] Select a few entities from entity, knowing their IDs. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
-  - [ ] Select ID WHEN
+  - [ ] Select ID WHEN (Depends on issue 28)
   - [ ] Selects with WHERE?
 
 - [ ] Multiple queries/tx.
