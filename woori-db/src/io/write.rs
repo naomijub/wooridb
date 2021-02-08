@@ -26,6 +26,17 @@ pub fn write_to_uniques(log: &str) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn write_to_encrypts(log: &str) -> Result<(), Error> {
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("encrypt.log")?;
+
+    let _ = file.write(log.as_bytes())?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

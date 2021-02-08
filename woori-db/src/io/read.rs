@@ -27,6 +27,15 @@ pub fn assert_uniques(pat: &str) {
     assert!(s.contains(pat));
 }
 
+#[cfg(test)]
+pub fn assert_encrypt(pat: &str) {
+    let mut file = OpenOptions::new().read(true).open("encrypt.log").unwrap();
+    let mut s = String::new();
+    file.read_to_string(&mut s).unwrap();
+
+    assert!(s.contains(pat));
+}
+
 pub fn read_log(registry: DataRegister) -> Result<String, Error> {
     let mut file = OpenOptions::new().read(true).open(registry.file_name)?;
     file.seek(SeekFrom::Start(registry.offset as u64))?;

@@ -1,5 +1,6 @@
 use crate::{
     actors::{
+        encrypts::{CreateEncrypts, WriteEncrypts},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateUniques, WriteUniques},
         wql::{
@@ -8,6 +9,7 @@ use crate::{
         },
     },
     model::wql::MatchUpdateArgs,
+    repository::local::EncryptContext,
 };
 use crate::{
     actors::{
@@ -49,13 +51,15 @@ pub async fn wql_handler(
     body: String,
     data: web::Data<Arc<Mutex<LocalContext>>>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = wql::Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::CreateEntity(entity, uniques)) => {
+        Ok(Wql::CreateEntity(entity, uniques, encrypts)) => {
             let _ = create_unique_controller(&entity, uniques, uniqueness, &actor).await;
+            let _ = create_encrypts_controller(&entity, encrypts, encryption, &actor).await;
             create_controller(entity, data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Delete(entity, uuid)) => {
@@ -204,6 +208,33 @@ pub async fn create_unique_controller(
             .send(CreateUniques {
                 entity: entity.to_owned(),
                 uniques,
+                data,
+            })
+            .await??;
+        Ok(())
+    }
+}
+
+pub async fn create_encrypts_controller(
+    entity: &str,
+    encrypts: Vec<String>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
+    actor: &web::Data<Addr<Executor>>,
+) -> Result<(), Error> {
+    if encrypts.is_empty() {
+        Ok(())
+    } else {
+        let data = encryption.into_inner();
+        actor
+            .send(WriteEncrypts {
+                entity: entity.to_owned(),
+                encrypts: encrypts.clone(),
+            })
+            .await??;
+        actor
+            .send(CreateEncrypts {
+                entity: entity.to_owned(),
+                encrypts,
                 data,
             })
             .await??;

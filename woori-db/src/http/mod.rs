@@ -1,7 +1,10 @@
-use crate::controllers::{query, tx};
 use crate::{
     actors::wql::Executor,
     repository::local::{LocalContext, UniquenessContext},
+};
+use crate::{
+    controllers::{query, tx},
+    repository::local::EncryptContext,
 };
 use actix::Actor;
 use actix_web::{get, guard, web, HttpResponse, Responder};
@@ -29,6 +32,7 @@ pub async fn readiness() -> impl Responder {
 pub fn routes(config: &mut web::ServiceConfig) {
     let wql_context = Arc::new(Mutex::new(LocalContext::new()));
     let unique_context = Arc::new(Mutex::new(UniquenessContext::new()));
+    let encrypt_context = Arc::new(Mutex::new(EncryptContext::new()));
     let write_offset = AtomicUsize::new(0usize);
     let actor = Executor::new().start();
 
@@ -41,6 +45,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
                 .guard(guard::Header("Content-Type", "application/wql"))
                 .data(wql_context)
                 .data(unique_context)
+                .data(encrypt_context)
                 .data(write_offset)
                 .data(actor)
                 .route("/tx", web::post().to(tx::wql_handler))
