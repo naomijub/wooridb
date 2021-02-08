@@ -98,8 +98,9 @@ impl Handler<EncryptContent> for Executor {
                 let mut new_content = HashMap::new();
                 msg.content.iter().for_each(|(k, v)| {
                     if encrypts_for_entity.contains(k) {
-                        // hashing function for v
-                        let hashed_v = v.to_owned();
+                        // fix unwrap
+                        // Maybe https://docs.rs/bcrypt/0.9.0/bcrypt/fn.hash_with_salt.html
+                        let hashed_v = v.to_hash(Some(14u32)).unwrap();
                         new_content.insert(k.to_owned(), hashed_v);
                     } else {
                         new_content.insert(k.to_owned(), v.to_owned());

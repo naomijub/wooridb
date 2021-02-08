@@ -859,6 +859,34 @@ async fn test_evict_entity_id_post_ok() {
     clear();
 }
 
+#[actix_rt::test]
+async fn test_insert_encrypt_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_ok ENCRYPT #{pswd,}")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, pswd: \"my_password\",} INTO test_ok")
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+
+    read::assert_content("INSERT|");
+    read::assert_content("UTC|");
+    read::assert_content("|test_ok|");
+    read::assert_content("\"a\": Integer(123)");
+    read::assert_not_content("my_password");
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

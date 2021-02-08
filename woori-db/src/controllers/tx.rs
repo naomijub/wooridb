@@ -439,6 +439,7 @@ pub async fn update_content_controller(
             Types::Boolean(b) => {
                 *local_state = Types::Boolean(b);
             }
+            Types::Hash(_) => {}
             Types::Vector(mut v) => {
                 if let Types::Vector(local) = local_state {
                     local.append(&mut v);

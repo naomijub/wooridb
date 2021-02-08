@@ -42,6 +42,7 @@ pub enum Types {
     Boolean(bool),
     Vector(Vec<Types>),
     Map(HashMap<String, Types>),
+    Hash(String),
     //DateTime
     Nil,
 }
@@ -57,7 +58,35 @@ impl Types {
             Types::Boolean(_) => Types::Boolean(false),
             Types::Vector(_) => Types::Vector(Vec::new()),
             Types::Map(_) => Types::Map(HashMap::new()),
+            Types::Hash(_) => Types::Hash(String::new()),
             Types::Nil => Types::Nil,
+        }
+    }
+
+    pub fn to_hash(&self, cost: Option<u32>) -> Result<Types, String> {
+        use bcrypt::{hash, DEFAULT_COST};
+        let value = match self {
+            Types::Char(c) => format!("{}", c),
+            Types::Integer(i) => format!("{}", i),
+            Types::String(s) => format!("{}", s),
+            Types::Uuid(id) => format!("{}", id),
+            Types::Float(f) => format!("{}", f),
+            Types::Boolean(b) => format!("{}", b),
+            Types::Vector(vec) => format!("{:?}", vec),
+            Types::Map(map) => format!("{:?}", map),
+            Types::Hash(_) => return Err(String::from("Hash cannot be hashed")),
+            Types::Nil => return Err(String::from("Nil cannot be hashed")),
+        };
+        match hash(
+            &value,
+            if cost.is_some() {
+                cost.unwrap()
+            } else {
+                DEFAULT_COST
+            },
+        ) {
+            Ok(s) => Ok(Types::Hash(s)),
+            Err(e) => Err(format!("{:?}", e)),
         }
     }
 }

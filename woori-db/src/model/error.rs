@@ -26,6 +26,7 @@ pub enum Error {
     LockData,
     RonSerdeError(ron::Error),
     InvalidUuidError(uuid::Error),
+    // EncryptionError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -110,6 +111,9 @@ impl std::fmt::Display for Error {
             Error::InvalidUuidError(e) => {
                 ErrorResponse::new(String::from("InvalidUuidError"), format!("{:?}", e)).write(f)
             }
+            // Error::EncryptionError(e) => {
+            //     ErrorResponse::new(String::from("EncryptionError"), format!("{}", e)).write(f)
+            // }
         }
     }
 }
