@@ -98,3 +98,4 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - [ ] Test all Actors
 - [ ] Clippy
 - [ ] Benchmarks
+- [ ] Numbers larger than i128 or f64 [issue 24](https://github.com/naomijub/wooridb/issues/24)
