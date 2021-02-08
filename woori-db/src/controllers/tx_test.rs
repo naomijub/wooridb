@@ -549,7 +549,7 @@ async fn test_delete_withput_update() {
 
     let mut resp = test::call_service(&mut app, req).await;
     let body = resp.take_body().as_str().to_string();
-    assert_eq!(body, format!("(\n entity: \"test_delete\",\n uuid: \"{}\",\n message: \"Entity test_delete with Uuid {} deleted\",\n)", uuid, uuid));
+    assert_eq!(body, format!("(\n entity: \"test_delete\",\n uuid: Some(\"{}\"),\n message: \"Entity test_delete with Uuid {} deleted\",\n)", uuid, uuid));
 
     assert!(resp.status().is_success());
 

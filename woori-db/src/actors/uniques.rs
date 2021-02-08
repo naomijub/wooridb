@@ -57,12 +57,12 @@ impl Handler<CreateUniques> for Executor {
                 .into_iter()
                 .map(|name| (name, HashSet::new()))
                 .collect::<HashMap<String, HashSet<String>>>();
-            uniqueness_data.insert(msg.entity.to_string(), hm);
+            uniqueness_data.insert(msg.entity.to_owned(), hm);
         } else {
             msg.uniques.iter().for_each(|name| {
                 let mut hm = HashMap::new();
-                hm.insert(name.clone(), HashSet::new());
-                uniqueness_data.entry(msg.entity.clone()).or_insert(hm);
+                hm.insert(name.to_owned(), HashSet::new());
+                uniqueness_data.entry(msg.entity.to_owned()).or_insert(hm);
             });
         }
         Ok(())
@@ -92,16 +92,16 @@ impl Handler<CheckForUnique> for Executor {
         if !uniqueness_data.is_empty() {
             let uniques_for_entity = uniqueness_data
                 .get_mut(&msg.entity)
-                .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.clone()))?;
+                .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned()))?;
             msg.content.iter().try_for_each(|(k, v)| {
                 if uniques_for_entity.contains_key(k) {
-                    let val = uniques_for_entity
-                        .get_mut(k)
-                        .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.clone()))?;
+                    let val = uniques_for_entity.get_mut(k).ok_or_else(|| {
+                        Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned())
+                    })?;
                     if val.contains(&format!("{:?}", v)) {
                         Err(Error::DuplicatedUnique(
-                            msg.entity.clone(),
-                            k.to_string(),
+                            msg.entity.to_owned(),
+                            k.to_owned(),
                             v.to_owned(),
                         ))
                     } else {
