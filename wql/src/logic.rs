@@ -82,6 +82,7 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
     let mut key: Option<String> = None;
     let mut val: Option<Types> = None;
 
+    // TODO: Skip empty chars
     if chars.next() != Some('{') {
         return Err(String::from(
             "Entity map should start with `{` and end with `}`",

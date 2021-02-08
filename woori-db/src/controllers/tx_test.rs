@@ -49,7 +49,7 @@ async fn test_create_uniques_post_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
-        .set_payload("CREATE ENTITY test_uniques UNIQUES name, ssn, id")
+        .set_payload("CREATE ENTITY test_uniques UNIQUES #{name, ssn, id,}")
         .uri("/wql/tx")
         .to_request();
 
@@ -58,6 +58,23 @@ async fn test_create_uniques_post_ok() {
     read::assert_content("CREATE_ENTITY|test_uniques;");
     read::assert_uniques("test_uniques");
     read::assert_uniques("uniques: [\"name\",\"ssn\",\"id\",]");
+    clear();
+}
+
+#[actix_rt::test]
+async fn test_create_encrypts_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_encrypt ENCRYPT #{name, ssn, id,}")
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+    read::assert_content("CREATE_ENTITY|test_encrypt;");
+    read::assert_encrypt("test_encrypt");
+    read::assert_encrypt("encrypts: [\"name\",\"ssn\",\"id\",]");
     clear();
 }
 
@@ -150,7 +167,7 @@ async fn test_insert_unique_post_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
-        .set_payload("CREATE ENTITY test_insert_unique UNIQUES id")
+        .set_payload("CREATE ENTITY test_insert_unique UNIQUES #{id,}")
         .uri("/wql/tx")
         .to_request();
 
@@ -263,7 +280,7 @@ async fn test_update_uniqueness_set_post_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
-        .set_payload("CREATE ENTITY test_unique_set_update UNIQUES a")
+        .set_payload("CREATE ENTITY test_unique_set_update UNIQUES #{a,}")
         .uri("/wql/tx")
         .to_request();
 

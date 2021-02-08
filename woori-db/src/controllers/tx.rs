@@ -1,6 +1,6 @@
 use crate::{
     actors::{
-        encrypts::{CreateEncrypts, WriteEncrypts},
+        encrypts::{CreateEncrypts, EncryptContent, WriteEncrypts},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateUniques, WriteUniques},
         wql::{
@@ -72,6 +72,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -248,11 +249,19 @@ pub async fn insert_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
+    let encrypted_content = actor
+        .send(EncryptContent::new(
+            &entity,
+            content,
+            encryption.into_inner(),
+        ))
+        .await??;
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = if let Ok(guard) = data.lock() {
         guard
@@ -267,7 +276,7 @@ pub async fn insert_controller(
     actor
         .send(CheckForUnique {
             entity: entity.to_owned(),
-            content,
+            content: encrypted_content,
             uniqueness,
         })
         .await??;

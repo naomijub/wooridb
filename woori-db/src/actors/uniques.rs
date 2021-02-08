@@ -90,28 +90,27 @@ impl Handler<CheckForUnique> for Executor {
         };
 
         if !uniqueness_data.is_empty() {
-            let uniques_for_entity = uniqueness_data
-                .get_mut(&msg.entity)
-                .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned()))?;
-            msg.content.iter().try_for_each(|(k, v)| {
-                if uniques_for_entity.contains_key(k) {
-                    let val = uniques_for_entity.get_mut(k).ok_or_else(|| {
-                        Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned())
-                    })?;
-                    if val.contains(&format!("{:?}", v)) {
-                        Err(Error::DuplicatedUnique(
-                            msg.entity.to_owned(),
-                            k.to_owned(),
-                            v.to_owned(),
-                        ))
+            if let Some(uniques_for_entity) = uniqueness_data.get_mut(&msg.entity) {
+                msg.content.iter().try_for_each(|(k, v)| {
+                    if uniques_for_entity.contains_key(k) {
+                        let val = uniques_for_entity.get_mut(k).ok_or_else(|| {
+                            Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned())
+                        })?;
+                        if val.contains(&format!("{:?}", v)) {
+                            Err(Error::DuplicatedUnique(
+                                msg.entity.to_owned(),
+                                k.to_owned(),
+                                v.to_owned(),
+                            ))
+                        } else {
+                            val.insert(format!("{:?}", v));
+                            Ok(())
+                        }
                     } else {
-                        val.insert(format!("{:?}", v));
                         Ok(())
                     }
-                } else {
-                    Ok(())
-                }
-            })?;
+                })?;
+            }
         }
 
         Ok(())

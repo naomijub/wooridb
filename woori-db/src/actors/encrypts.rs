@@ -6,7 +6,7 @@ use std::{
 use actix::prelude::*;
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::Serialize;
-// use wql::Types;
+use wql::Types;
 
 use crate::{actors::wql::Executor, model::error::Error, repository::local::EncryptContext};
 
@@ -52,71 +52,69 @@ impl Handler<CreateEncrypts> for Executor {
         };
 
         if !encrypt_data.contains_key(&msg.entity) {
-            let hm = msg
-                .encrypts
-                .into_iter()
-                .map(|name| (name, HashSet::new()))
-                .collect::<HashMap<String, HashSet<String>>>();
+            let hm = msg.encrypts.into_iter().collect::<HashSet<String>>();
             encrypt_data.insert(msg.entity.to_owned(), hm);
-        } else {
-            msg.encrypts.iter().for_each(|name| {
-                let mut hm = HashMap::new();
-                hm.insert(name.to_owned(), HashSet::new());
-                encrypt_data.entry(msg.entity.to_owned()).or_insert(hm);
-            });
         }
         Ok(())
     }
 }
 
-// pub struct CheckForEncrypts {
-//     pub entity: String,
-//     pub content: HashMap<String, Types>,
-//     pub encrypts: Arc<Arc<Mutex<EncryptContext>>>,
-// }
+pub struct EncryptContent {
+    pub entity: String,
+    pub content: HashMap<String, Types>,
+    pub encrypts: Arc<Arc<Mutex<EncryptContext>>>,
+}
 
-// impl Message for CheckForEncrypts {
-//     type Result = Result<(), Error>;
-// }
+impl EncryptContent {
+    pub fn new(
+        entity: &str,
+        content: HashMap<String, Types>,
+        encrypts: Arc<Arc<Mutex<EncryptContext>>>,
+    ) -> Self {
+        Self {
+            entity: entity.to_owned(),
+            content,
+            encrypts,
+        }
+    }
+}
 
-// impl Handler<CheckForEncrypts> for Executor {
-//     type Result = Result<(), Error>;
+impl Message for EncryptContent {
+    type Result = Result<HashMap<String, Types>, Error>;
+}
 
-//     fn handle(&mut self, msg: CheckForEncrypts, _: &mut Self::Context) -> Self::Result {
-//         let mut encrypts_data = if let Ok(guard) = msg.encrypts.lock() {
-//             guard
-//         } else {
-//             return Err(Error::LockData);
-//         };
+impl Handler<EncryptContent> for Executor {
+    type Result = Result<HashMap<String, Types>, Error>;
 
-//         if !encrypts_data.is_empty() {
-//             let uniques_for_entity = encrypts_data
-//                 .get_mut(&msg.entity)
-//                 .ok_or_else(|| Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned()))?;
-//             msg.content.iter().try_for_each(|(k, v)| {
-//                 if uniques_for_entity.contains_key(k) {
-//                     let val = uniques_for_entity.get_mut(k).ok_or_else(|| {
-//                         Error::EntityNotCreatedWithUniqueness(msg.entity.to_owned())
-//                     })?;
-//                     if val.contains(&format!("{:?}", v)) {
-//                         Err(Error::DuplicatedUnique(
-//                             msg.entity.to_owned(),
-//                             k.to_owned(),
-//                             v.to_owned(),
-//                         ))
-//                     } else {
-//                         val.insert(format!("{:?}", v));
-//                         Ok(())
-//                     }
-//                 } else {
-//                     Ok(())
-//                 }
-//             })?;
-//         }
+    fn handle(&mut self, msg: EncryptContent, _: &mut Self::Context) -> Self::Result {
+        let mut encrypts_data = if let Ok(guard) = msg.encrypts.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
 
-//         Ok(())
-//     }
-// }
+        if !encrypts_data.is_empty() {
+            if let Some(encrypts_for_entity) = encrypts_data.get_mut(&msg.entity) {
+                let mut new_content = HashMap::new();
+                msg.content.iter().for_each(|(k, v)| {
+                    if encrypts_for_entity.contains(k) {
+                        // hashing function for v
+                        let hashed_v = v.to_owned();
+                        new_content.insert(k.to_owned(), hashed_v);
+                    } else {
+                        new_content.insert(k.to_owned(), v.to_owned());
+                    }
+                });
+
+                Ok(new_content)
+            } else {
+                Ok(msg.content)
+            }
+        } else {
+            Ok(msg.content)
+        }
+    }
+}
 
 fn pretty_config() -> PrettyConfig {
     PrettyConfig::new()
