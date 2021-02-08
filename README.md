@@ -86,13 +86,13 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - [ ] Division
 
 ### TODOS
-- [ ] Crash recovery
-- [ ] Autentication
-- [ ] Data Encryption
-- [ ] Read infos from ztsd files
-- [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...)
-- [ ] Precise Floats
-- [ ] Docs
+- [ ] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
+- [ ] Autentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
+- [ ] Data Encryption [issue 27](https://github.com/naomijub/wooridb/issues/27)
+- [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
+- [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
+- [ ] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)
+- [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
 - [ ] Add Float values to an Integer [issue 23](https://github.com/naomijub/wooridb/issues/23)
 - [ ] Docker
 - [ ] Test all Actors
