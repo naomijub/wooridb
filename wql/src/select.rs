@@ -3,7 +3,7 @@ use std::str::FromStr;
 use uuid::Uuid;
 
 use super::{
-    logic::{read_args, read_uuids},
+    logic::{read_select_args, read_uuids},
     ToSelect, Wql,
 };
 
@@ -13,7 +13,7 @@ pub(crate) fn select_all(chars: &mut std::str::Chars) -> Result<Wql, String> {
 }
 
 pub(crate) fn select_args(chars: &mut std::str::Chars) -> Result<Wql, String> {
-    let args: Vec<String> = read_args(chars)?;
+    let args: Vec<String> = read_select_args(chars)?;
     let arg = ToSelect::Keys(args);
 
     select_body(arg, chars)

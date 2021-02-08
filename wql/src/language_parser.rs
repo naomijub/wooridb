@@ -1,5 +1,5 @@
 use crate::{
-    logic::read_entities,
+    logic::{read_args, read_map_as_str},
     select::{select_all, select_args},
 };
 
@@ -16,6 +16,7 @@ pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, S
         ('m', "ATCH") | ('M', "ATCH") => match_update(chars),
         ('e', "VICT") | ('E', "VICT") => evict(chars),
         ('s', "ELECT") | ('S', "ELECT") => select(chars),
+        ('c', "HECK") | ('C', "HECK") => check(chars),
         _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }
@@ -35,11 +36,51 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     let next_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
     if next_symbol.to_uppercase() == "UNIQUES" {
-        let unique_vec = read_entities(chars);
+        let mut encrypts = Vec::new();
+        if chars.next() != Some('#') {
+            return Err(String::from(
+                "Arguments set should start with `#{` and end with `}`",
+            ));
+        }
+        let unique_vec = read_args(chars)?;
+        let encrypt_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>();
+        if encrypt_symbol.to_uppercase() == "ENCRYPT" {
+            if chars.next() != Some('#') {
+                return Err(String::from(
+                    "Arguments set should start with `#{` and end with `}`",
+                ));
+            }
+            encrypts = read_args(chars)?;
+        }
 
-        Ok(Wql::CreateEntity(entity_name, unique_vec))
+        Ok(Wql::CreateEntity(entity_name, unique_vec, encrypts))
+    } else if next_symbol.to_uppercase() == "ENCRYPT" {
+        let mut unique_vec = Vec::new();
+        if chars.next() != Some('#') {
+            return Err(String::from(
+                "Arguments set should start with `#{` and end with `}`",
+            ));
+        }
+        let encrypt_vec = read_args(chars)?;
+        let unique_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>();
+        if unique_symbol.to_uppercase() == "UNIQUES" {
+            if chars.next() != Some('#') {
+                return Err(String::from(
+                    "Arguments set should start with `#{` and end with `}`",
+                ));
+            }
+            unique_vec = read_args(chars)?;
+        }
+
+        Ok(Wql::CreateEntity(entity_name, unique_vec, encrypt_vec))
     } else {
-        Ok(Wql::CreateEntity(entity_name, Vec::new()))
+        Ok(Wql::CreateEntity(entity_name, Vec::new(), Vec::new()))
     }
 }
 
@@ -109,6 +150,45 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
     }
 
     Ok(Wql::Insert(entity_name, entity_map))
+}
+
+fn check(chars: &mut std::str::Chars) -> Result<Wql, String> {
+    let entity_map = read_map_as_str(chars)?;
+    let entity_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if entity_symbol.to_uppercase() != "FROM" {
+        return Err(String::from("Keyword FROM is required for CHECK"));
+    }
+
+    let entity_name = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'_')
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    if entity_name.is_empty() {
+        return Err(String::from("Entity name is required after FROM"));
+    }
+
+    let id_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if id_symbol.to_uppercase() != "ID" {
+        return Err(String::from("Keyword FROM is required for CHECK"));
+    }
+    let entity_id = chars
+        .take_while(|c| c.is_alphanumeric() || c == &'-')
+        .collect::<String>()
+        .trim()
+        .to_owned();
+    let id = Uuid::from_str(&entity_id).or_else(|e| Err(format!("{:?}", e)))?;
+
+    Ok(Wql::CheckValue(entity_name, id, entity_map))
 }
 
 fn update(chars: &mut std::str::Chars) -> Result<Wql, String> {

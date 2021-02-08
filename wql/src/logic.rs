@@ -82,6 +82,7 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
     let mut key: Option<String> = None;
     let mut val: Option<Types> = None;
 
+    // TODO: Skip empty chars
     if chars.next() != Some('{') {
         return Err(String::from(
             "Entity map should start with `{` and end with `}`",
@@ -108,6 +109,42 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
             Some(c) if !c.is_whitespace() && c != ',' => {
                 if key.is_some() {
                     val = Some(parse_value(c, chars)?);
+                } else {
+                    key = Some(parse_key(c, chars));
+                }
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            _ => return Err(String::from("Entity HashMap could not be created")),
+        }
+
+        if key.is_some() && val.is_some() {
+            res.insert(key.unwrap().to_string(), val.unwrap());
+            key = None;
+            val = None;
+        }
+    }
+}
+
+pub(crate) fn read_map_as_str(
+    chars: &mut std::str::Chars,
+) -> Result<HashMap<String, String>, String> {
+    let mut res: HashMap<String, String> = HashMap::new();
+    let mut key: Option<String> = None;
+    let mut val: Option<String> = None;
+
+    // TODO: Skip empty chars
+    if chars.next() != Some('{') {
+        return Err(String::from(
+            "Entity map should start with `{` and end with `}`",
+        ));
+    }
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                if key.is_some() {
+                    val = Some(parse_str_value(c, chars));
                 } else {
                     key = Some(parse_key(c, chars));
                 }
@@ -183,7 +220,7 @@ fn read_vec(chars: &mut std::str::Chars) -> Result<Vec<Types>, String> {
     }
 }
 
-pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
+pub(crate) fn read_select_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
     let mut res = Vec::new();
     if chars.next() != Some('{') {
         return Err(String::from(
@@ -198,6 +235,34 @@ pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, Stri
                 let key_rest = chars
                     .take_while(|c| c.is_alphanumeric() || c == &'_')
                     .collect::<String>();
+
+                let key = format!("{}{}", c, key_rest);
+                res.push(key);
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            err => return Err(format!("{:?} could not be parsed at char", err)),
+        }
+    }
+}
+
+pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
+    let mut res = Vec::new();
+    if chars.next() != Some('{') {
+        return Err(String::from(
+            "Arguments set should start with `#{` and end with `}`",
+        ));
+    }
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                let key_rest = chars
+                    .skip_while(|c| c.is_whitespace())
+                    .take_while(|c| c.is_alphanumeric() || c == &'_')
+                    .collect::<String>()
+                    .trim()
+                    .to_owned();
 
                 let key = format!("{}{}", c, key_rest);
                 res.push(key);
@@ -245,6 +310,18 @@ pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types,
     }
 }
 
+pub(crate) fn parse_str_value(c: char, chars: &mut std::str::Chars) -> String {
+    let value = format!(
+        "{}{}",
+        c,
+        chars
+            .take_while(|c| !c.is_whitespace() && c != &',')
+            .collect::<String>()
+    )
+    .replace('\"', "");
+    value
+}
+
 pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
     let result = chars.try_fold((false, String::new()), |(last_was_escape, mut s), c| {
         if last_was_escape {
@@ -277,22 +354,6 @@ pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
         Err(Err(e)) => Err(e),
         Err(Ok(string)) => Ok(Types::String(string)),
     }
-}
-
-pub(crate) fn read_entities(chars: &mut std::str::Chars) -> Vec<String> {
-    let names = chars
-        .skip_while(|c| c.is_whitespace())
-        .take_while(|c| {
-            c.is_alphanumeric() || c == &'_' || c == &',' || c.is_whitespace() || c != &';'
-        })
-        .collect::<String>()
-        .trim()
-        .to_string();
-
-    names
-        .split(',')
-        .map(|w| w.trim().to_string())
-        .collect::<Vec<String>>()
 }
 
 pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, String> {

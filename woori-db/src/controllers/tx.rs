@@ -1,5 +1,6 @@
 use crate::{
     actors::{
+        encrypts::{CreateEncrypts, EncryptContent, VerifyEncryption, WriteEncrypts},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateUniques, WriteUniques},
         wql::{
@@ -8,6 +9,7 @@ use crate::{
         },
     },
     model::wql::MatchUpdateArgs,
+    repository::local::EncryptContext,
 };
 use crate::{
     actors::{
@@ -29,7 +31,7 @@ use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet},
     str::FromStr,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -49,13 +51,15 @@ pub async fn wql_handler(
     body: String,
     data: web::Data<Arc<Mutex<LocalContext>>>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = wql::Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::CreateEntity(entity, uniques)) => {
+        Ok(Wql::CreateEntity(entity, uniques, encrypts)) => {
             let _ = create_unique_controller(&entity, uniques, uniqueness, &actor).await;
+            let _ = create_encrypts_controller(&entity, encrypts, encryption, &actor).await;
             create_controller(entity, data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Delete(entity, uuid)) => {
@@ -68,6 +72,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -80,6 +85,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -92,6 +98,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -102,12 +109,16 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
         }
         Ok(Wql::Evict(entity, uuid)) => {
             evict_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
+        }
+        Ok(Wql::CheckValue(entity, uuid, content)) => {
+            check_value_controller(entity, uuid, content, data, encryption, actor).await
         }
         Ok(_) => Err(Error::SelectBadRequest),
         Err(e) => Err(Error::QueryFormat(e)),
@@ -117,6 +128,55 @@ pub async fn wql_handler(
         Err(e) => HttpResponse::BadRequest().body(e.to_string()),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
+}
+
+pub async fn check_value_controller(
+    entity: String,
+    uuid: Uuid,
+    content: HashMap<String, String>,
+    data: web::Data<Arc<Mutex<BTreeMap<String, BTreeMap<Uuid, DataRegister>>>>>,
+    encryption: web::Data<Arc<Mutex<BTreeMap<String, std::collections::HashSet<String>>>>>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    if let Ok(guard) = encryption.lock() {
+        if guard.contains_key(&entity) {
+            let encrypts = guard.get(&entity).unwrap();
+            let non_encrypt_keys = content
+                .iter()
+                .filter(|(k, _)| !encrypts.contains(&k.to_string()))
+                .map(|(_, v)| v.to_owned())
+                .collect::<Vec<String>>();
+
+            if !non_encrypt_keys.is_empty() {
+                return Err(Error::CheckNonEncryptedKeys(non_encrypt_keys));
+            }
+        }
+    };
+
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
+    if !data.contains_key(&entity) {
+        return Err(Error::EntityNotCreated(entity));
+    }
+
+    let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let state = actor.send(State(previous_state_str)).await??;
+    let keys = content
+        .keys()
+        .map(|k| k.to_owned())
+        .collect::<HashSet<String>>();
+    let filtered_state: HashMap<String, Types> = state
+        .into_iter()
+        .filter(|(k, _)| keys.contains(k))
+        .collect();
+    let results = actor
+        .send(VerifyEncryption::new(filtered_state, content))
+        .await??;
+    Ok(results)
 }
 
 pub async fn create_controller(
@@ -211,17 +271,52 @@ pub async fn create_unique_controller(
     }
 }
 
+pub async fn create_encrypts_controller(
+    entity: &str,
+    encrypts: Vec<String>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
+    actor: &web::Data<Addr<Executor>>,
+) -> Result<(), Error> {
+    if encrypts.is_empty() {
+        Ok(())
+    } else {
+        let data = encryption.into_inner();
+        actor
+            .send(WriteEncrypts {
+                entity: entity.to_owned(),
+                encrypts: encrypts.clone(),
+            })
+            .await??;
+        actor
+            .send(CreateEncrypts {
+                entity: entity.to_owned(),
+                encrypts,
+                data,
+            })
+            .await??;
+        Ok(())
+    }
+}
+
 pub async fn insert_controller(
     entity: String,
     content: HashMap<String, Types>,
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
+    let encrypted_content = actor
+        .send(EncryptContent::new(
+            &entity,
+            content,
+            encryption.into_inner(),
+        ))
+        .await??;
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = if let Ok(guard) = data.lock() {
         guard
@@ -236,7 +331,7 @@ pub async fn insert_controller(
     actor
         .send(CheckForUnique {
             entity: entity.to_owned(),
-            content,
+            content: encrypted_content,
             uniqueness,
         })
         .await??;
@@ -267,11 +362,19 @@ pub async fn update_set_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
+    let encrypted_content = actor
+        .send(EncryptContent::new(
+            &entity,
+            content,
+            encryption.into_inner(),
+        ))
+        .await??;
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = if let Ok(guard) = data.lock() {
         guard
@@ -288,7 +391,7 @@ pub async fn update_set_controller(
     actor
         .send(CheckForUnique {
             entity: entity.to_owned(),
-            content: content.to_owned(),
+            content: encrypted_content.to_owned(),
             uniqueness,
         })
         .await??;
@@ -297,7 +400,7 @@ pub async fn update_set_controller(
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
-    content.into_iter().for_each(|(k, v)| {
+    encrypted_content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         *local_state = v;
     });
@@ -340,9 +443,22 @@ pub async fn update_content_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
+    if let Ok(guard) = encryption.lock() {
+        if guard.contains_key(&entity) {
+            let keys = content
+                .iter()
+                .filter(|(k, _)| guard.get(&entity).unwrap().contains(k.to_owned()))
+                .map(|(k, _)| k.to_owned())
+                .collect::<Vec<String>>();
+            return Err(Error::UpdateContentEncryptKeys(keys));
+        }
+    } else {
+        return Err(Error::LockData);
+    };
     let content_log =
         to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
@@ -399,6 +515,7 @@ pub async fn update_content_controller(
             Types::Boolean(b) => {
                 *local_state = Types::Boolean(b);
             }
+            Types::Hash(_) => {}
             Types::Vector(mut v) => {
                 if let Types::Vector(local) = local_state {
                     local.append(&mut v);
@@ -527,6 +644,7 @@ pub async fn match_update_set_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let mut data = if let Ok(guard) = data.lock() {
@@ -554,8 +672,16 @@ pub async fn match_update_set_controller(
         .await??;
 
     let offset = bytes_counter.load(Ordering::SeqCst);
+
+    let encrypted_content = actor
+        .send(EncryptContent::new(
+            &args.entity,
+            args.content.clone(),
+            encryption.into_inner(),
+        ))
+        .await??;
     let content_log =
-        to_string_pretty(&args.content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
 
     let uniqueness = uniqueness.into_inner();
     actor

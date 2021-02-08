@@ -81,7 +81,11 @@ async fn select_all_with_id(
 
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
-    Ok(ron::ser::to_string_pretty(&state, pretty_config())?)
+    let filterd_state = state
+        .into_iter()
+        .filter(|(_, v)| !v.is_hash())
+        .collect::<HashMap<String, Types>>();
+    Ok(ron::ser::to_string_pretty(&filterd_state, pretty_config())?)
 }
 
 async fn select_all_with_ids(
@@ -120,7 +124,11 @@ async fn select_all_with_ids(
         if let Some(regs) = registry {
             let content = actor.send(regs).await??;
             let state = actor.send(State(content)).await??;
-            states.insert(uuid, Some(state));
+            let filtered = state
+                .into_iter()
+                .filter(|(_, v)| !v.is_hash())
+                .collect::<HashMap<String, Types>>();
+            states.insert(uuid, Some(filtered));
         } else {
             states.insert(uuid, None);
         }
@@ -158,6 +166,7 @@ async fn select_keys_with_id(
     let filtered: HashMap<String, Types> = state
         .into_iter()
         .filter(|(k, _)| keys.contains(k))
+        .filter(|(_, v)| !v.is_hash())
         .collect();
     Ok(ron::ser::to_string_pretty(&filtered, pretty_config())?)
 }
@@ -202,6 +211,7 @@ async fn select_keys_with_ids(
             let filtered: HashMap<String, Types> = state
                 .into_iter()
                 .filter(|(k, _)| keys.contains(k))
+                .filter(|(_, v)| !v.is_hash())
                 .collect();
             states.insert(uuid, Some(filtered));
         } else {
@@ -238,7 +248,12 @@ async fn select_all(
     for (uuid, regs) in kvs.into_iter() {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
-        states.insert(uuid, state);
+        let filtered = state
+            .into_iter()
+            .filter(|(_, v)| !v.is_hash())
+            .collect::<HashMap<String, Types>>();
+
+        states.insert(uuid, filtered);
     }
 
     Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
@@ -275,6 +290,7 @@ async fn select_args(
         let filtered: HashMap<String, Types> = state
             .into_iter()
             .filter(|(k, _)| keys.contains(k))
+            .filter(|(_, v)| !v.is_hash())
             .collect();
         states.insert(uuid, filtered);
     }

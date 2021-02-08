@@ -26,6 +26,10 @@ pub enum Error {
     LockData,
     RonSerdeError(ron::Error),
     InvalidUuidError(uuid::Error),
+    UpdateContentEncryptKeys(Vec<String>),
+    CheckNonEncryptedKeys(Vec<String>),
+    // InvalidKey(String),
+    // EncryptionError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -110,6 +114,27 @@ impl std::fmt::Display for Error {
             Error::InvalidUuidError(e) => {
                 ErrorResponse::new(String::from("InvalidUuidError"), format!("{:?}", e)).write(f)
             }
+            Error::UpdateContentEncryptKeys(keys) => ErrorResponse::new(
+                String::from("UpdateContentEncryptKeys"),
+                format!(
+                    "Encrypted keys cannont be updated with UPDATE CONTENT: {:?}",
+                    keys
+                ),
+            )
+            .write(f),
+            Error::CheckNonEncryptedKeys(keys) => ErrorResponse::new(
+                String::from("CheckNonEncryptedKeys"),
+                format!("CHECK can only verify encrypted keys: {:?}", keys),
+            )
+            .write(f),
+            //     Error::InvalidKey(key) => ErrorResponse::new(
+            //         String::from("InvalidKey"),
+            //         format!(
+            //             "Invalid encrypted key: {}",
+            //             key
+            //         ),
+            //     )
+            //     .write(f),
         }
     }
 }

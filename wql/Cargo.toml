@@ -15,3 +15,4 @@ edition = "2018"
 [dependencies]
 uuid = { version = "0.8", features = ["serde", "v4"] }
 serde = { version = "1.0.121", features = ["derive"] }
+bcrypt = "0.8"
