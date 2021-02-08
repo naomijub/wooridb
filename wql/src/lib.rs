@@ -13,7 +13,7 @@ use logic::{read_map, read_match_args};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Wql {
-    CreateEntity(String, Vec<String>),
+    CreateEntity(String, Vec<String>, Vec<String>),
     Insert(String, Entity),
     UpdateContent(String, Entity, Uuid),
     UpdateSet(String, Entity, Uuid),

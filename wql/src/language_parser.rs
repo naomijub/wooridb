@@ -1,5 +1,5 @@
 use crate::{
-    logic::read_entities,
+    logic::read_args,
     select::{select_all, select_args},
 };
 
@@ -35,11 +35,51 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     let next_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
     if next_symbol.to_uppercase() == "UNIQUES" {
-        let unique_vec = read_entities(chars);
+        let mut encrypts = Vec::new();
+        if chars.next() != Some('#') {
+            return Err(String::from(
+                "Arguments set should start with `#{` and end with `}`",
+            ));
+        }
+        let unique_vec = read_args(chars)?;
+        let encrypt_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>();
+        if encrypt_symbol.to_uppercase() == "ENCRYPT" {
+            if chars.next() != Some('#') {
+                return Err(String::from(
+                    "Arguments set should start with `#{` and end with `}`",
+                ));
+            }
+            encrypts = read_args(chars)?;
+        }
 
-        Ok(Wql::CreateEntity(entity_name, unique_vec))
+        Ok(Wql::CreateEntity(entity_name, unique_vec, encrypts))
+    } else if next_symbol.to_uppercase() == "ENCRYPT" {
+        let mut unique_vec = Vec::new();
+        if chars.next() != Some('#') {
+            return Err(String::from(
+                "Arguments set should start with `#{` and end with `}`",
+            ));
+        }
+        let encrypt_vec = read_args(chars)?;
+        let unique_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>();
+        if unique_symbol.to_uppercase() == "UNIQUES" {
+            if chars.next() != Some('#') {
+                return Err(String::from(
+                    "Arguments set should start with `#{` and end with `}`",
+                ));
+            }
+            unique_vec = read_args(chars)?;
+        }
+
+        Ok(Wql::CreateEntity(entity_name, unique_vec, encrypt_vec))
     } else {
-        Ok(Wql::CreateEntity(entity_name, Vec::new()))
+        Ok(Wql::CreateEntity(entity_name, Vec::new(), Vec::new()))
     }
 }
 

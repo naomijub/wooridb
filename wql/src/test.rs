@@ -41,13 +41,13 @@ mod test_create {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::CreateEntity(String::from("entity"), Vec::new())
+            Wql::CreateEntity(String::from("entity"), Vec::new(), Vec::new())
         );
     }
 
     #[test]
     fn create_entity_with_uniques() {
-        let wql = Wql::from_str("CREATE ENTITY entity UNIQUES name, ssn, something");
+        let wql = Wql::from_str("CREATE ENTITY entity UNIQUES #{name, ssn,something,}");
 
         assert_eq!(
             wql.unwrap(),
@@ -58,6 +58,57 @@ mod test_create {
                     "ssn".to_string(),
                     "something".to_string()
                 ],
+                Vec::new()
+            )
+        );
+    }
+
+    #[test]
+    fn create_entity_with_encrypt() {
+        let wql = Wql::from_str("CREATE ENTITY entity ENCRYPT #{name, ssn,something,}");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::CreateEntity(
+                String::from("entity"),
+                Vec::new(),
+                vec![
+                    "name".to_string(),
+                    "ssn".to_string(),
+                    "something".to_string()
+                ],
+            )
+        );
+    }
+
+    #[test]
+    fn create_entity_with_encrypt_and_uniques() {
+        let wql = Wql::from_str(
+            "CREATE ENTITY entity ENCRYPT #{password,something,} UNIQUES #{name, ssn,}",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::CreateEntity(
+                String::from("entity"),
+                vec!["name".to_string(), "ssn".to_string(),],
+                vec!["password".to_string(), "something".to_string()],
+            )
+        );
+    }
+
+    #[test]
+    fn create_entity_with_uniques_and_encrypt() {
+        let wql = Wql::from_str(
+            "CREATE ENTITY entity UNIQUES #{name, ssn,} ENCRYPT #{password,something,}",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::CreateEntity(
+                String::from("entity"),
+                vec!["name".to_string(), "ssn".to_string(),],
+                vec!["password".to_string(), "something".to_string()],
             )
         );
     }

@@ -183,7 +183,7 @@ fn read_vec(chars: &mut std::str::Chars) -> Result<Vec<Types>, String> {
     }
 }
 
-pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
+pub(crate) fn read_select_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
     let mut res = Vec::new();
     if chars.next() != Some('{') {
         return Err(String::from(
@@ -198,6 +198,34 @@ pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, Stri
                 let key_rest = chars
                     .take_while(|c| c.is_alphanumeric() || c == &'_')
                     .collect::<String>();
+
+                let key = format!("{}{}", c, key_rest);
+                res.push(key);
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            err => return Err(format!("{:?} could not be parsed at char", err)),
+        }
+    }
+}
+
+pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
+    let mut res = Vec::new();
+    if chars.next() != Some('{') {
+        return Err(String::from(
+            "Arguments set should start with `#{` and end with `}`",
+        ));
+    }
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                let key_rest = chars
+                    .skip_while(|c| c.is_whitespace())
+                    .take_while(|c| c.is_alphanumeric() || c == &'_')
+                    .collect::<String>()
+                    .trim()
+                    .to_owned();
 
                 let key = format!("{}{}", c, key_rest);
                 res.push(key);
@@ -277,22 +305,6 @@ pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
         Err(Err(e)) => Err(e),
         Err(Ok(string)) => Ok(Types::String(string)),
     }
-}
-
-pub(crate) fn read_entities(chars: &mut std::str::Chars) -> Vec<String> {
-    let names = chars
-        .skip_while(|c| c.is_whitespace())
-        .take_while(|c| {
-            c.is_alphanumeric() || c == &'_' || c == &',' || c.is_whitespace() || c != &';'
-        })
-        .collect::<String>()
-        .trim()
-        .to_string();
-
-    names
-        .split(',')
-        .map(|w| w.trim().to_string())
-        .collect::<Vec<String>>()
 }
 
 pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, String> {
