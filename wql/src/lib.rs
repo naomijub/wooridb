@@ -22,6 +22,7 @@ pub enum Wql {
     Evict(String, Option<Uuid>),
     Select(String, ToSelect, Option<Uuid>),
     SelectIds(String, ToSelect, Vec<Uuid>),
+    CheckValue(String, Uuid, HashMap<String, String>),
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

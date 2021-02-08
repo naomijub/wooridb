@@ -1,6 +1,6 @@
 use crate::{
     actors::{
-        encrypts::{CreateEncrypts, EncryptContent, WriteEncrypts},
+        encrypts::{CreateEncrypts, EncryptContent, VerifyEncryption, WriteEncrypts},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateUniques, WriteUniques},
         wql::{
@@ -31,7 +31,7 @@ use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet},
     str::FromStr,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -117,6 +117,9 @@ pub async fn wql_handler(
         Ok(Wql::Evict(entity, uuid)) => {
             evict_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
         }
+        Ok(Wql::CheckValue(entity, uuid, content)) => {
+            check_value_controller(entity, uuid, content, data, encryption, actor).await
+        }
         Ok(_) => Err(Error::SelectBadRequest),
         Err(e) => Err(Error::QueryFormat(e)),
     };
@@ -125,6 +128,55 @@ pub async fn wql_handler(
         Err(e) => HttpResponse::BadRequest().body(e.to_string()),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
+}
+
+pub async fn check_value_controller(
+    entity: String,
+    uuid: Uuid,
+    content: HashMap<String, String>,
+    data: web::Data<Arc<Mutex<BTreeMap<String, BTreeMap<Uuid, DataRegister>>>>>,
+    encryption: web::Data<Arc<Mutex<BTreeMap<String, std::collections::HashSet<String>>>>>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    if let Ok(guard) = encryption.lock() {
+        if guard.contains_key(&entity) {
+            let encrypts = guard.get(&entity).unwrap();
+            let non_encrypt_keys = content
+                .iter()
+                .filter(|(k, _)| !encrypts.contains(&k.to_string()))
+                .map(|(_, v)| v.to_owned())
+                .collect::<Vec<String>>();
+
+            if !non_encrypt_keys.is_empty() {
+                return Err(Error::CheckNonEncryptedKeys(non_encrypt_keys));
+            }
+        }
+    };
+
+    let data = if let Ok(guard) = data.lock() {
+        guard
+    } else {
+        return Err(Error::LockData);
+    };
+    if !data.contains_key(&entity) {
+        return Err(Error::EntityNotCreated(entity));
+    }
+
+    let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let state = actor.send(State(previous_state_str)).await??;
+    let keys = content
+        .keys()
+        .map(|k| k.to_owned())
+        .collect::<HashSet<String>>();
+    let filtered_state: HashMap<String, Types> = state
+        .into_iter()
+        .filter(|(k, _)| keys.contains(k))
+        .collect();
+    let results = actor
+        .send(VerifyEncryption::new(filtered_state, content))
+        .await??;
+    Ok(results)
 }
 
 pub async fn create_controller(

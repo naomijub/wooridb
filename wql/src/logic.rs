@@ -125,6 +125,42 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
     }
 }
 
+pub(crate) fn read_map_as_str(
+    chars: &mut std::str::Chars,
+) -> Result<HashMap<String, String>, String> {
+    let mut res: HashMap<String, String> = HashMap::new();
+    let mut key: Option<String> = None;
+    let mut val: Option<String> = None;
+
+    // TODO: Skip empty chars
+    if chars.next() != Some('{') {
+        return Err(String::from(
+            "Entity map should start with `{` and end with `}`",
+        ));
+    }
+
+    loop {
+        match chars.next() {
+            Some('}') => return Ok(res),
+            Some(c) if !c.is_whitespace() && c != ',' => {
+                if key.is_some() {
+                    val = Some(parse_str_value(c, chars));
+                } else {
+                    key = Some(parse_key(c, chars));
+                }
+            }
+            Some(c) if c.is_whitespace() || c == ',' => (),
+            _ => return Err(String::from("Entity HashMap could not be created")),
+        }
+
+        if key.is_some() && val.is_some() {
+            res.insert(key.unwrap().to_string(), val.unwrap());
+            key = None;
+            val = None;
+        }
+    }
+}
+
 pub(crate) fn read_inner_map(
     chars: &mut std::str::Chars,
 ) -> Result<HashMap<String, Types>, String> {
@@ -272,6 +308,18 @@ pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types,
     } else {
         Err(format!("Value Type could not be created from {}", value))
     }
+}
+
+pub(crate) fn parse_str_value(c: char, chars: &mut std::str::Chars) -> String {
+    let value = format!(
+        "{}{}",
+        c,
+        chars
+            .take_while(|c| !c.is_whitespace() && c != &',')
+            .collect::<String>()
+    )
+    .replace('\"', "");
+    value
 }
 
 pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {

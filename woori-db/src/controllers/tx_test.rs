@@ -978,6 +978,48 @@ async fn test_update_content_encrypt_post_err() {
     clear();
 }
 
+#[actix_rt::test]
+async fn test_check_encrypt_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_check_ok ENCRYPT #{pswd, ssn,}")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, pswd: \"my_password\", ssn: 63432,} INTO test_check_ok")
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp_insert = test::call_service(&mut app, req).await;
+    let body = resp_insert.take_body().as_str().to_string();
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
+
+    let payload = format!(
+        "CHECK {{pswd: \"my_password\", ssn: 63434,}} FROM test_check_ok ID {}",
+        uuid
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(resp.status().is_success());
+    assert!(body.contains("\"pswd\": true"));
+    assert!(body.contains("\"ssn\": false"));
+
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

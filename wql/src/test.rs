@@ -688,3 +688,35 @@ mod test_data_sructures {
         hm
     }
 }
+
+#[cfg(test)]
+mod check {
+    use std::collections::HashMap;
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn check_encrypt_values() {
+        let wql = Wql::from_str(
+            "CHECK {
+            ssn: 123,
+            pswd: \"my-password\"
+        } FROM my_entity ID d6ca73c0-41ff-4975-8a60-fc4a061ce536",
+        );
+
+        let uuid = Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap();
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::CheckValue("my_entity".to_string(), uuid, hashmap())
+        );
+    }
+
+    fn hashmap() -> HashMap<String, String> {
+        let mut hm = HashMap::new();
+        hm.insert("ssn".to_string(), "123".to_string());
+        hm.insert("pswd".to_string(), "my-password".to_string());
+        hm
+    }
+}

@@ -120,6 +120,47 @@ impl Handler<EncryptContent> for Executor {
     }
 }
 
+pub struct VerifyEncryption {
+    filtered: HashMap<String, Types>,
+    content: HashMap<String, String>,
+}
+
+impl VerifyEncryption {
+    pub fn new(filtered: HashMap<String, Types>, content: HashMap<String, String>) -> Self {
+        Self { filtered, content }
+    }
+}
+
+impl Message for VerifyEncryption {
+    type Result = Result<String, Error>;
+}
+
+impl Handler<VerifyEncryption> for Executor {
+    type Result = Result<String, Error>;
+
+    fn handle(&mut self, msg: VerifyEncryption, _: &mut Self::Context) -> Self::Result {
+        let results = msg
+            .content
+            .clone()
+            .into_iter()
+            .map(|(k, v)| {
+                let original = msg.filtered.clone();
+                let original_hash = original.get(&k).unwrap();
+                let result = if let Types::Hash(hash) = original_hash {
+                    bcrypt::verify(v, hash).unwrap()
+                } else {
+                    false
+                };
+                (k, result)
+            })
+            .collect::<HashMap<String, bool>>();
+        let encrypt_log =
+            to_string_pretty(&results, pretty_config()).map_err(Error::SerializationError)?;
+
+        Ok(encrypt_log)
+    }
+}
+
 fn pretty_config() -> PrettyConfig {
     PrettyConfig::new()
         .with_indentor("".to_string())
