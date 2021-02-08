@@ -2376,6 +2376,7 @@ dependencies = [
  "actix-service",
  "actix-web",
  "bastion",
+ "bcrypt",
  "bytes 1.0.1",
  "chrono",
  "cron",

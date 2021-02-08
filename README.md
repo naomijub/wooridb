@@ -21,8 +21,16 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 ### Transactions by type
 - [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires a rntity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name'`. 
   - [x] Create entity with Unique identifier. This prevents duplciated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`
-  - [ ] Encrypt entities keys. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
+  - [x] Encrypt entities keys. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
   - It is possible to create entities with uniques and encryption. `CREATE ENTITY my_entity_name ENCRYPT #{password,} UNIQUES #{name, ssn,}`
+  - When the system has encrypted keys, the requests take longer due to hashing function and the verify function. This is determined by the hashing cost:
+  ```
+  bench_cost_10      ... bench:  51,474,665 ns/iter (+/- 16,006,581)
+  bench_cost_14      ... bench: 839,109,086 ns/iter (+/- 274,507,463)
+  bench_cost_4       ... bench:     795,814 ns/iter (+/- 42,838)
+  bench_cost_default ... bench: 195,344,338 ns/iter (+/- 8,329,675)
+  * Note that I don't go above 14 as it takes too long. But is way safer, it is a trade-off. 
+  ```
 
 - [x] Insert entity: it inserts a HashMap into the entity created (`my_entity_name`). This request returns a `Uuid`. Ecample request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'insert {a: 123,  c: \"hello\", d: \"world\",} INTO my_entity_name'`. This will insert an entity as follows:
 ```
@@ -69,6 +77,8 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
   - [ ] Select ID WHEN (Depends on issue 28)
   - [ ] Selects with WHERE?
 
+- [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
+
 - [ ] Multiple queries/tx.
   
   ### SELECT = Functions that could be implemented from Relation Algebra:
@@ -89,7 +99,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 ### TODOS
 - [ ] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
 - [ ] Autentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
-- [ ] Data Encryption [issue 27](https://github.com/naomijub/wooridb/issues/27)
+- [x] Data Encryption [issue 27](https://github.com/naomijub/wooridb/issues/27)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
 - [ ] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)

@@ -978,6 +978,7 @@ async fn test_update_content_encrypt_post_err() {
     clear();
 }
 
+#[ignore]
 #[actix_rt::test]
 async fn test_check_encrypt_post_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;

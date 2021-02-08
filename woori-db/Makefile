@@ -53,6 +53,8 @@ test:
 	rm -rf *.log
 	cargo test -- --ignored controllers::tx_test::test_update_content_encrypt_post_err
 	rm -rf *.log
+	cargo test -- --ignored controllers::tx_test::test_check_encrypt_post_ok
+	rm -rf *.log
 
 release:
 	cargo run --release
