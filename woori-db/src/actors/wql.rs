@@ -162,6 +162,17 @@ pub struct DeleteId {
     pub previous_registry: String,
 }
 
+impl DeleteId {
+    pub fn new(name: &str, content_log: &str, uuid: Uuid, previous_registry: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+            content_log: content_log.to_owned(),
+            uuid,
+            previous_registry: previous_registry.to_owned(),
+        }
+    }
+}
+
 impl Message for DeleteId {
     type Result = Result<(DateTime<Utc>, usize), Error>;
 }
@@ -178,6 +189,14 @@ impl Handler<DeleteId> for Executor {
 
 pub struct EvictEntity {
     pub name: String,
+}
+
+impl EvictEntity {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_owned(),
+        }
+    }
 }
 
 impl Message for EvictEntity {
@@ -197,6 +216,15 @@ impl Handler<EvictEntity> for Executor {
 pub struct EvictEntityId {
     pub name: String,
     pub id: Uuid,
+}
+
+impl EvictEntityId {
+    pub fn new(name: &str, id: Uuid) -> Self {
+        Self {
+            name: name.to_owned(),
+            id,
+        }
+    }
 }
 
 impl Message for EvictEntityId {

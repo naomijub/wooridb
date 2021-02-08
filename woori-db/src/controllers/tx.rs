@@ -155,11 +155,7 @@ pub async fn evict_controller(
 ) -> Result<String, Error> {
     if uuid.is_none() {
         let message = format!("Entity {} evicted", &entity);
-        let offset = actor
-            .send(EvictEntity {
-                name: entity.clone(),
-            })
-            .await??;
+        let offset = actor.send(EvictEntity::new(&entity)).await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
         let mut data = if let Ok(guard) = data.lock() {
@@ -171,12 +167,7 @@ pub async fn evict_controller(
         Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
     } else {
         let id = uuid.unwrap();
-        let offset = actor
-            .send(EvictEntityId {
-                name: entity.clone(),
-                id: id.clone(),
-            })
-            .await??;
+        let offset = actor.send(EvictEntityId::new(&entity, id)).await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
         let mut data = if let Ok(guard) = data.lock() {
@@ -244,7 +235,7 @@ pub async fn insert_controller(
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.clone(),
+            entity: entity.to_owned(),
             content,
             uniqueness,
         })
@@ -296,8 +287,8 @@ pub async fn update_set_controller(
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.clone(),
-            content: content.clone(),
+            entity: entity.to_owned(),
+            content: content.to_owned(),
             uniqueness,
         })
         .await??;
@@ -369,8 +360,8 @@ pub async fn update_content_controller(
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.clone(),
-            content: content.clone(),
+            entity: entity.to_owned(),
+            content: content.to_owned(),
             uniqueness,
         })
         .await??;
@@ -506,12 +497,12 @@ pub async fn delete_controller(
         to_string_pretty(&state_to_be.1, pretty_config()).map_err(Error::SerializationError)?;
 
     let content_value = actor
-        .send(DeleteId {
-            name: entity.clone(),
-            content_log,
+        .send(DeleteId::new(
+            &entity,
+            &content_log,
             uuid,
-            previous_registry: previous_register_log,
-        })
+            &previous_register_log,
+        ))
         .await??;
 
     let data_register = DataRegister {
@@ -569,8 +560,8 @@ pub async fn match_update_set_controller(
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: args.entity.clone(),
-            content: args.content.clone(),
+            entity: args.entity.to_owned(),
+            content: args.content.to_owned(),
             uniqueness,
         })
         .await??;
