@@ -6,12 +6,12 @@ use std::{
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
-use ron::ser::PrettyConfig;
+use ron::ser::{to_string_pretty, PrettyConfig};
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
 
 use crate::{
-    actors::{state::State, wql::Executor},
+    actors::{state::State, when::ReadEntitiesAt, wql::Executor},
     model::{error::Error, DataRegister},
     repository::local::LocalContext,
 };
@@ -47,6 +47,18 @@ pub async fn wql_handler(
         Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
             select_keys_with_ids(entity, keys, uuids, data, actor).await
         }
+        Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
+            select_all_when_controller(entity, date, actor).await
+        }
+        Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), None, date)) => {
+            select_keys_when_controller(entity, date, keys, actor).await
+        }
+        Ok(Wql::SelectWhen(entity, ToSelect::All, Some(uuid), date)) => {
+            select_all_id_when_controller(entity, date, uuid, data, actor).await
+        }
+        Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(uuid), date)) => {
+            select_keys_id_when_controller(entity, date, keys, uuid, data, actor).await
+        }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
     };
@@ -55,6 +67,48 @@ pub async fn wql_handler(
         Err(e) => HttpResponse::BadRequest().body(e.to_string()),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
+}
+
+async fn select_all_when_controller(
+    entity: String,
+    date: String,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    use chrono::{DateTime, Utc};
+    let date = date
+        .parse::<DateTime<Utc>>()
+        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
+
+    Ok(to_string_pretty(&result, pretty_config())?)
+}
+
+async fn select_keys_when_controller(
+    entity: String,
+    date: String,
+    keys: Vec<String>,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    use chrono::{DateTime, Utc};
+    let date = date
+        .parse::<DateTime<Utc>>()
+        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
+    let result = result
+        .into_iter()
+        .map(|(id, hm)| {
+            (
+                id,
+                hm.into_iter()
+                    .filter(|(k, _)| keys.contains(k))
+                    .collect::<HashMap<String, Types>>(),
+            )
+        })
+        .collect::<HashMap<String, HashMap<String, Types>>>();
+
+    Ok(to_string_pretty(&result, pretty_config())?)
 }
 
 async fn select_all_with_id(

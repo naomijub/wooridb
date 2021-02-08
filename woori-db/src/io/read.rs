@@ -59,6 +59,15 @@ pub fn read_log(registry: DataRegister) -> Result<String, Error> {
     Ok(res)
 }
 
+pub fn read_date_log(date_log: String) -> Result<String, Error> {
+    let mut file = OpenOptions::new().read(true).open(date_log)?;
+    file.seek(SeekFrom::Start(0))?;
+    let mut res = String::new();
+    file.read_to_string(&mut res)?;
+
+    Ok(res)
+}
+
 #[cfg(test)]
 mod test {
     use std::{fs::OpenOptions, io::Write};
