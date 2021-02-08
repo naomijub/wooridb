@@ -93,6 +93,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...)
 - [ ] Precise Floats
 - [ ] Docs
+- [ ] Add Float values to an Integer https://github.com/naomijub/wooridb/issues/23
 - [ ] Docker
 - [ ] Test all Actors
 - [ ] Clippy
