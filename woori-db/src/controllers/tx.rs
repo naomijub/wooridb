@@ -85,6 +85,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -97,6 +98,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -107,6 +109,7 @@ pub async fn wql_handler(
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
+                encryption,
                 actor,
             )
             .await
@@ -307,11 +310,19 @@ pub async fn update_set_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
+    let encrypted_content = actor
+        .send(EncryptContent::new(
+            &entity,
+            content,
+            encryption.into_inner(),
+        ))
+        .await??;
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = if let Ok(guard) = data.lock() {
         guard
@@ -328,7 +339,7 @@ pub async fn update_set_controller(
     actor
         .send(CheckForUnique {
             entity: entity.to_owned(),
-            content: content.to_owned(),
+            content: encrypted_content.to_owned(),
             uniqueness,
         })
         .await??;
@@ -337,7 +348,7 @@ pub async fn update_set_controller(
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
-    content.into_iter().for_each(|(k, v)| {
+    encrypted_content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         *local_state = v;
     });
@@ -380,9 +391,22 @@ pub async fn update_content_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
+    if let Ok(guard) = encryption.lock() {
+        if guard.contains_key(&entity) {
+            let keys = content
+                .iter()
+                .filter(|(k, _)| guard.get(&entity).unwrap().contains(k.to_owned()))
+                .map(|(k, _)| k.to_owned())
+                .collect::<Vec<String>>();
+            return Err(Error::UpdateContentEncryptKeys(keys));
+        }
+    } else {
+        return Err(Error::LockData);
+    };
     let content_log =
         to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
 
@@ -568,6 +592,7 @@ pub async fn match_update_set_controller(
     data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
+    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let mut data = if let Ok(guard) = data.lock() {
@@ -595,8 +620,16 @@ pub async fn match_update_set_controller(
         .await??;
 
     let offset = bytes_counter.load(Ordering::SeqCst);
+
+    let encrypted_content = actor
+        .send(EncryptContent::new(
+            &args.entity,
+            args.content.clone(),
+            encryption.into_inner(),
+        ))
+        .await??;
     let content_log =
-        to_string_pretty(&args.content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
 
     let uniqueness = uniqueness.into_inner();
     actor

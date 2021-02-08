@@ -887,6 +887,97 @@ async fn test_insert_encrypt_post_ok() {
     clear();
 }
 
+#[ignore]
+#[actix_rt::test]
+async fn test_update_set_encrypt_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_ok_encrypt ENCRYPT #{pswd,}")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, pswd: \"my_password\",} INTO test_ok_encrypt")
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp_insert = test::call_service(&mut app, req).await;
+    let body = resp_insert.take_body().as_str().to_string();
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
+
+    let payload = format!(
+        "UPDATE test_ok_encrypt SET {{a: 12, c: Nil, pswd: \"Nil-password\",}} INTO {}",
+        uuid
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+
+    read::assert_content("INSERT|");
+    read::assert_content("UPDATE_SET|");
+    read::assert_content("UTC|");
+    read::assert_content("|test_ok_encrypt|");
+    read::assert_content("\"a\": Integer(123)");
+    read::assert_content("\"c\": Nil");
+    read::assert_not_content("my_password");
+    read::assert_not_content("Nil-password");
+    clear();
+}
+
+#[ignore]
+#[actix_rt::test]
+async fn test_update_content_encrypt_post_err() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_ok_encrypt ENCRYPT #{pswd,}")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, pswd: \"my_password\",} INTO test_ok_encrypt")
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp_insert = test::call_service(&mut app, req).await;
+    let body = resp_insert.take_body().as_str().to_string();
+    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid;
+
+    let payload = format!(
+        "UPDATE test_ok_encrypt CONTENT {{a: 12, c: Nil, pswd: \"Nil-password\",}} INTO {}",
+        uuid
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_client_error());
+    let body = resp.take_body().as_str().to_string();
+
+    assert_eq!(body, "(\n error_type: \"UpdateContentEncryptKeys\",\n error_message: \"Encrypted keys cannont be updated with UPDATE CONTENT: [\\\"pswd\\\"]\",\n)");
+
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

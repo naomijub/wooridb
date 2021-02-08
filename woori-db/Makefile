@@ -49,6 +49,10 @@ test:
 	rm -rf *.log
 	cargo test -- --ignored controllers::query_test::test_select_all_without_encrypts_post_ok
 	rm -rf *.log
+	cargo test -- --ignored controllers::tx_test::test_update_set_encrypt_post_ok
+	rm -rf *.log
+	cargo test -- --ignored controllers::tx_test::test_update_content_encrypt_post_err
+	rm -rf *.log
 
 release:
 	cargo run --release
