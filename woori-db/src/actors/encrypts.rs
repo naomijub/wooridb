@@ -100,6 +100,9 @@ impl Handler<EncryptContent> for Executor {
                     if encrypts_for_entity.contains(k) {
                         // fix unwrap
                         // Maybe https://docs.rs/bcrypt/0.9.0/bcrypt/fn.hash_with_salt.html
+                        #[cfg(test)]
+                        let hashed_v = v.to_hash(Some(4)).unwrap();
+                        #[cfg(not(test))]
                         let hashed_v = v.to_hash(Some(14u32)).unwrap();
                         new_content.insert(k.to_owned(), hashed_v);
                     } else {

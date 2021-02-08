@@ -89,6 +89,13 @@ impl Types {
             Err(e) => Err(format!("{:?}", e)),
         }
     }
+
+    pub fn is_hash(&self) -> bool {
+        match self {
+            Types::Hash(_) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
