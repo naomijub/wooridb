@@ -17,7 +17,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 
 ## Usage
 * Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
-* For now only persistent local memory is used. Support for `S3`, `PsotgresDB` and `DynamoDB` will be done later by using features.
+* For now only persistent local memory is used. Support for `S3`, `PostgreSQL` and `DynamoDB` will be done later by using features.
 * More info at **TODOS**.
 
 ## Transactions:
