@@ -1,6 +1,13 @@
 # WooriDB
 
-WooriDB is an (EXPERIMENTAL) immutable time serial database.
+WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hugely inspired by:
+- [Crux](https://github.com/juxt/crux); 
+- [Datomic](https://www.datomic.com/); 
+- [Prometheus](https://github.com/prometheus/prometheus) 
+- [SparkQL](https://en.wikipedia.org/wiki/SPARQL).
+- [Database Internals](https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Database+Internals%3A&qid=1612831621&sr=8-1)
+- [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
+- Professor Andy Pavlo Database classes. 
 
 ## Installation
 - if you don't have Rust and Cargo installed run `make setup` at root.
@@ -55,7 +62,6 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
   - `<` means lesser, so if `a < 100`, this means that the entity key `a` must lesser than `100`. 
 
 - [x] Delete last entity event: This is pretty simple, it deletes the last state of an entity. So if you have one update on you entity it will roll back to the `INSERT` event. However, if you have only an `INSERT` event you state will become an empty hashmap. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
-  <!-- - [ ] Delete entity at specified time. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name AT <DATE-TIME>'` -->
 
 - [x] Evict entity: Removes all ocurrences of an entity. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
 - [x] Evict entity registry: Similar to SQL `DROP TABLE <entity>`.
@@ -74,7 +80,8 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
   - [x] Select one entity from Entity with all key_values. This operation selects one entity defined by its `ID`. It is equivalent to `Select * From table WHERE id = <uuid>`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
   - [x] Select one entity from Entity with a set of key_values. This operation selects one entity defined by its `ID` with restricted keys in the output. It is equivalent to `SELECT a, b, c FROM table WHERE id = <uuid>`.  Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\",}`
   - [x] Select a few entities from entity, knowing their IDs. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
-  - [ ] Select ID WHEN (Depends on issue 28)
+  - [x] Select an entity at past a day. `ID` field can be used before `WHEN` to define and specific entity. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00'` or something like `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
+  - [ ] `SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. 
   - [ ] Selects with WHERE?
 
 - [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
@@ -99,7 +106,6 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database.
 ### TODOS
 - [ ] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
 - [ ] Autentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
-- [x] Data Encryption [issue 27](https://github.com/naomijub/wooridb/issues/27)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
 - [ ] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)

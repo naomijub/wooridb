@@ -28,6 +28,7 @@ pub enum Error {
     InvalidUuidError(uuid::Error),
     UpdateContentEncryptKeys(Vec<String>),
     CheckNonEncryptedKeys(Vec<String>),
+    DateTimeParseError(chrono::ParseError),
     // InvalidKey(String),
     // EncryptionError(String),
 }
@@ -125,6 +126,11 @@ impl std::fmt::Display for Error {
             Error::CheckNonEncryptedKeys(keys) => ErrorResponse::new(
                 String::from("CheckNonEncryptedKeys"),
                 format!("CHECK can only verify encrypted keys: {:?}", keys),
+            )
+            .write(f),
+            Error::DateTimeParseError(e) => ErrorResponse::new(
+                String::from("DateTimeParseError"),
+                format!("Date parse error: {:?}", e),
             )
             .write(f),
             //     Error::InvalidKey(key) => ErrorResponse::new(
