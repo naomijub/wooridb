@@ -113,6 +113,9 @@ fn when_selector(
         .collect::<String>()
         .to_uppercase();
 
+    if arg == ToSelect::All && uuid.is_some() && next_symbol.to_uppercase() == "START" {
+        return when_time_range(entity_name, uuid.unwrap(), chars);
+    }
     if next_symbol.to_uppercase() != "AT" {
         return Err(String::from("AT is required after WHEN"));
     };
@@ -123,6 +126,46 @@ fn when_selector(
         .collect::<String>();
 
     Ok(Wql::SelectWhen(entity_name, arg, uuid, date))
+}
+
+fn when_time_range(
+    entity_name: String,
+    uuid: Uuid,
+    chars: &mut std::str::Chars,
+) -> Result<Wql, String> {
+    let start_date = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    let next_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_uppercase();
+    if next_symbol.to_uppercase() != "END" {
+        return Err(String::from(
+            "END is required after START date for SELECT WHEN",
+        ));
+    };
+
+    let end_date = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if !end_date.starts_with(&start_date[0..10]) {
+        return Err(String::from(
+            "START date and END date should be the same date.",
+        ));
+    }
+
+    Ok(Wql::SelectWhenRange(
+        entity_name,
+        uuid,
+        start_date,
+        end_date,
+    ))
 }
 
 #[cfg(test)]
@@ -260,6 +303,78 @@ mod test {
             wql.err(),
             Some(String::from(
                 "IN keyword is required after IDS to define a set of uuids"
+            ))
+        );
+    }
+
+    #[test]
+    fn when_at() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN AT 2020-01-01T00:00:00Z");
+        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhen(
+                "my_entity".to_string(),
+                ToSelect::All,
+                Some(uuid),
+                "2020-01-01T00:00:00Z".to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn when_at_args() {
+        let wql = Wql::from_str("SelEct #{a,b,c,} FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN AT 2020-01-01T00:00:00Z");
+        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhen(
+                "my_entity".to_string(),
+                ToSelect::Keys(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+                Some(uuid),
+                "2020-01-01T00:00:00Z".to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn when_at_args_no_id() {
+        let wql = Wql::from_str("SelEct #{a,b,c,} FROM my_entity WHEN AT 2020-01-01T00:00:00Z");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhen(
+                "my_entity".to_string(),
+                ToSelect::Keys(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
+                None,
+                "2020-01-01T00:00:00Z".to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn when_range_all() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN START 2020-01-01T00:00:00Z END 2020-01-01T03:00:00Z");
+        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhenRange(
+                "my_entity".to_string(),
+                uuid,
+                "2020-01-01T00:00:00Z".to_string(),
+                "2020-01-01T03:00:00Z".to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn when_range_args_err() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN START 2020-01-01T00:00:00Z 2020-01-01T03:00:00Z");
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from(
+                "END is required after START date for SELECT WHEN"
             ))
         );
     }
