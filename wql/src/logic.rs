@@ -312,15 +312,14 @@ pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types,
 }
 
 pub(crate) fn parse_str_value(c: char, chars: &mut std::str::Chars) -> String {
-    let value = format!(
+    format!(
         "{}{}",
         c,
         chars
             .take_while(|c| !c.is_whitespace() && c != &',')
             .collect::<String>()
     )
-    .replace('\"', "");
-    value
+    .replace('\"', "")
 }
 
 pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {

@@ -88,7 +88,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             Ok(Wql::SelectIds(entity_name, arg, uuids))
         }
     } else if id_symbol.to_uppercase() == "WHEN" {
-        return when_selector(entity_name, arg, None, chars);
+        when_selector(entity_name, arg, None, chars)
     } else if !id_symbol.is_empty()
         && (id_symbol.to_uppercase() != "ID" || id_symbol.to_uppercase() != "IDS")
     {
@@ -113,8 +113,9 @@ fn when_selector(
         .collect::<String>()
         .to_uppercase();
 
-    if arg == ToSelect::All && uuid.is_some() && next_symbol.to_uppercase() == "START" {
-        return when_time_range(entity_name, uuid.unwrap(), chars);
+    if let (&ToSelect::All, Some(uuid), "START") = (&arg, uuid, next_symbol.to_uppercase().as_str())
+    {
+        return when_time_range(entity_name, uuid, chars);
     }
     if next_symbol.to_uppercase() != "AT" {
         return Err(String::from("AT is required after WHEN"));
