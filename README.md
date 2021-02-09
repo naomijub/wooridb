@@ -1,6 +1,13 @@
 # WooriDB
 
-WooriDB is an (EXPERIMENTAL) immutable time serial database.
+WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hugely inspired by:
+- [Crux](https://github.com/juxt/crux); 
+- [Datomic](https://www.datomic.com/); 
+- [Prometheus](https://github.com/prometheus/prometheus) 
+- [SparkQL](https://en.wikipedia.org/wiki/SPARQL).
+- [Database Internals](https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Database+Internals%3A&qid=1612831621&sr=8-1)
+- [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
+- Professor Andy Pavlo Database classes. 
 
 ## Installation
 - if you don't have Rust and Cargo installed run `make setup` at root.
