@@ -21,6 +21,11 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 * For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will be done later by using features.
 * Precise floats or number larger than f64::MAX/i128::MAX can be defined with an UPPERCASE `P` at the end. This type cannot be updated with `UPDATE CONTENT`. Example `INSERT {a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P, } INTO my_entity`.
 * `BLOB` will not be supported. Checkout *To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem*, Russel Sears, Catherine van Ingen, Jim Gray, MSR-TR-2006-45.
+* To configure hashing cost and port define it at a `.env` file:
+```
+HASHING_COST=16
+PORT=1438
+```
 * More info at **TODOS**.
 
 ## Transactions:
