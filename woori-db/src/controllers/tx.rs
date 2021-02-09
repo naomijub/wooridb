@@ -506,6 +506,10 @@ pub async fn update_content_controller(
                 if let Types::Integer(local) = *local_state {
                     *local_state = Types::Integer(local + i);
                 }
+
+                if let Types::Float(local) = *local_state {
+                    *local_state = Types::Float(local + i as f64);
+                }
             }
             Types::String(s) => {
                 if let Types::String(local) = local_state {
@@ -518,6 +522,10 @@ pub async fn update_content_controller(
             Types::Float(f) => {
                 if let Types::Float(local) = *local_state {
                     *local_state = Types::Float(local + f);
+                }
+
+                if let Types::Integer(local) = *local_state {
+                    *local_state = Types::Float(local as f64 + f);
                 }
             }
             Types::Boolean(b) => {

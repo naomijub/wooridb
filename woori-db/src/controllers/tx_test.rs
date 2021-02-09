@@ -348,9 +348,10 @@ async fn test_update_content_post_ok() {
             b: 12.3,
             c: 'd' ,
             d: true ,
-            e: 4321,
+            e: 43.21,
             f: \"hello\",
-            g: NiL,} 
+            g: NiL,
+            h: 7,} 
         INTO test_update",
         )
         .uri("/wql/tx")
@@ -369,7 +370,8 @@ async fn test_update_content_post_ok() {
         d: false ,
         e: 4,
         f: \"world\",
-        g: true,}} INTO {}",
+        g: true,
+        h: 3.6,}} INTO {}",
         uuid
     );
     let req = test::TestRequest::post()
@@ -389,9 +391,10 @@ async fn test_update_content_post_ok() {
     read::assert_content("\"b\": Float(11),");
     read::assert_content("\"c\": Char('d'),");
     read::assert_content("\"d\": Boolean(false),");
-    read::assert_content("\"e\": Integer(4325)");
+    read::assert_content("\"e\": Float(47.21)");
     read::assert_content("\"f\": String(\"helloworld\"),");
     read::assert_content("\"g\": Boolean(true),");
+    read::assert_content("\"h\": Float(10.6)");
     clear();
 }
 
