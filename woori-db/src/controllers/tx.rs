@@ -5,6 +5,7 @@ use crate::{
         uniques::{CreateWithUniqueKeys, WriteWithUniqueKeys},
         wql::{DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
     },
+    core::wql::update_content_state,
     model::{
         wql::{InsertArgs, MatchUpdateArgs, UpdateArgs},
         DataAtomicUsize, DataEncryptContext, DataExecutor, DataLocalContext, DataU32,
@@ -138,7 +139,7 @@ pub async fn check_value_controller(
             let encrypts = guard.get(&entity).unwrap();
             let non_encrypt_keys = content
                 .iter()
-                .filter(|(k, _)| !encrypts.contains(&k.to_string()))
+                .filter(|(k, _)| !encrypts.contains(&(*k).to_string()))
                 .map(|(_, v)| v.to_owned())
                 .collect::<Vec<String>>();
 
@@ -162,7 +163,7 @@ pub async fn check_value_controller(
     let state = actor.send(State(previous_state_str)).await??;
     let keys = content
         .keys()
-        .map(|k| k.to_owned())
+        .map(ToOwned::to_owned)
         .collect::<HashSet<String>>();
     let filtered_state: HashMap<String, Types> = state
         .into_iter()
@@ -187,7 +188,7 @@ pub async fn create_controller(
             return Err(Error::LockData);
         };
         if local_data.contains_key(&entity) {
-            return Err(Error::EntityAlreadyCreated(entity)); 
+            return Err(Error::EntityAlreadyCreated(entity));
         } else {
             local_data.insert(entity.clone(), BTreeMap::new());
         }
@@ -488,69 +489,9 @@ pub async fn update_content_controller(
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
-    args.content.into_iter().for_each(|(k, v)| {
-        let local_state = previous_state
-            .entry(k)
-            .or_insert_with(|| v.default_values());
-        match v {
-            Types::Char(c) => {
-                *local_state = Types::Char(c);
-            }
-            Types::Integer(i) => {
-                if let Types::Integer(local) = *local_state {
-                    *local_state = Types::Integer(local + i);
-                }
-
-                if let Types::Float(local) = *local_state {
-                    *local_state = Types::Float(local + i as f64);
-                }
-            }
-            Types::String(s) => {
-                if let Types::String(local) = local_state {
-                    *local_state = Types::String(local.to_owned() + &s);
-                }
-            }
-            Types::Uuid(uuid) => {
-                *local_state = Types::Uuid(uuid);
-            }
-            Types::Float(f) => {
-                if let Types::Float(local) = *local_state {
-                    *local_state = Types::Float(local + f);
-                }
-
-                if let Types::Integer(local) = *local_state {
-                    *local_state = Types::Float(local as f64 + f);
-                }
-            }
-            Types::Boolean(b) => {
-                *local_state = Types::Boolean(b);
-            }
-            Types::Hash(_) => {}
-            Types::Vector(mut v) => {
-                if let Types::Vector(local) = local_state {
-                    local.append(&mut v);
-                    *local_state = Types::Vector(local.to_owned());
-                }
-            }
-            Types::Map(m) => {
-                if let Types::Map(local) = local_state {
-                    m.iter().for_each(|(key, value)| {
-                        local
-                            .entry(key.to_owned())
-                            .and_modify(|v| *v = value.to_owned())
-                            .or_insert_with(|| value.to_owned());
-                    });
-                    *local_state = Types::Map(local.to_owned());
-                }
-            }
-            Types::Nil => {
-                *local_state = Types::Nil;
-            }
-            Types::Precise(p) => {
-                *local_state = Types::Precise(p);
-            }
-        }
-    });
+    args.content
+        .into_iter()
+        .for_each(|(k, v)| update_content_state(&mut previous_state, k, v));
 
     let state_log =
         to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
@@ -561,8 +502,7 @@ pub async fn update_content_controller(
             &state_log,
             &content_log,
             args.id,
-            &to_string_pretty(&previous_entry, pretty_config())
-                .map_err(Error::Serialization)?,
+            &to_string_pretty(&previous_entry, pretty_config()).map_err(Error::Serialization)?,
         ))
         .await??;
 
@@ -602,7 +542,9 @@ pub async fn delete_controller(
     };
     if !local_data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
-    } else if local_data.contains_key(&entity) && !local_data.get(&entity).unwrap().contains_key(&uuid) {
+    } else if local_data.contains_key(&entity)
+        && !local_data.get(&entity).unwrap().contains_key(&uuid)
+    {
         return Err(Error::UuidNotCreatedForEntity(entity, uuid));
     }
 
@@ -610,16 +552,14 @@ pub async fn delete_controller(
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let two_registries_ago = actor.send(PreviousRegistry(previous_state_str)).await??;
 
-    let state_to_be = match two_registries_ago {
-        Some(reg) => {
-            let state_str = actor.send(reg.to_owned()).await??;
-            (actor.send(State(state_str)).await??, reg.to_owned())
-        }
-        None => {
-            let insert_reg = local_data.get(&entity).unwrap().get(&uuid).unwrap();
-            (HashMap::new(), insert_reg.to_owned())
-        }
+    let state_to_be = if let Some(reg) = two_registries_ago {
+        let state_str = actor.send(reg.to_owned()).await??;
+        (actor.send(State(state_str)).await??, reg.to_owned())
+    } else {
+        let insert_reg = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+        (HashMap::new(), insert_reg.to_owned())
     };
+
     let content_log =
         to_string_pretty(&state_to_be.0, pretty_config()).map_err(Error::Serialization)?;
 

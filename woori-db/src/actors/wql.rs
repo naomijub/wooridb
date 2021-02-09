@@ -69,7 +69,7 @@ impl Handler<InsertEntityContent> for Executor {
 
     fn handle(&mut self, msg: InsertEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
-        let (date, uuid, content) = insert_entity_content(msg);
+        let (date, uuid, content) = insert_entity_content(&msg);
         Ok((date, uuid, write_to_log(&content)?))
     }
 }
@@ -109,7 +109,7 @@ impl Handler<UpdateSetEntityContent> for Executor {
 
     fn handle(&mut self, msg: UpdateSetEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
-        let (date, content) = update_set_entity_content(msg);
+        let (date, content) = update_set_entity_content(&msg);
         Ok((date, write_to_log(&content)?))
     }
 }
@@ -150,7 +150,7 @@ impl Handler<UpdateContentEntityContent> for Executor {
 
     fn handle(&mut self, msg: UpdateContentEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
-        let (date, content) = update_content_entity_content(msg);
+        let (date, content) = update_content_entity_content(&msg);
         Ok((date, write_to_log(&content)?))
     }
 }
@@ -182,7 +182,7 @@ impl Handler<DeleteId> for Executor {
 
     fn handle(&mut self, msg: DeleteId, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
-        let (date, content) = delete_entity_content(msg);
+        let (date, content) = delete_entity_content(&msg);
         Ok((date, write_to_log(&content)?))
     }
 }
@@ -236,7 +236,7 @@ impl Handler<EvictEntityId> for Executor {
 
     fn handle(&mut self, msg: EvictEntityId, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
-        let content = evict_entity_id_content(msg);
+        let content = evict_entity_id_content(&msg);
         Ok(write_to_log(&content)?)
     }
 }

@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
+use wql::Types;
 
 use crate::{
     actors::wql::{
@@ -21,7 +24,7 @@ pub fn evict_entity_content(entity: &str) -> String {
     format!("{}|{}|{};", Action::EvictEntity, date, entity)
 }
 
-pub fn evict_entity_id_content(entity: EvictEntityId) -> String {
+pub fn evict_entity_id_content(entity: &EvictEntityId) -> String {
     let date: DateTime<Utc> = Utc::now();
     let date = to_string_pretty(&date, pretty_config_inner()).unwrap();
     format!(
@@ -33,7 +36,7 @@ pub fn evict_entity_id_content(entity: EvictEntityId) -> String {
     )
 }
 
-pub fn insert_entity_content(content: InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
+pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
     let uuid = Uuid::new_v4();
     let date: DateTime<Utc> = Utc::now();
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
@@ -48,7 +51,7 @@ pub fn insert_entity_content(content: InsertEntityContent) -> (DateTime<Utc>, Uu
     (date, uuid, log)
 }
 
-pub fn update_set_entity_content(content: UpdateSetEntityContent) -> (DateTime<Utc>, String) {
+pub fn update_set_entity_content(content: &UpdateSetEntityContent) -> (DateTime<Utc>, String) {
     let uuid = content.id;
     let date: DateTime<Utc> = Utc::now();
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
@@ -66,7 +69,7 @@ pub fn update_set_entity_content(content: UpdateSetEntityContent) -> (DateTime<U
 }
 
 pub fn update_content_entity_content(
-    content: UpdateContentEntityContent,
+    content: &UpdateContentEntityContent,
 ) -> (DateTime<Utc>, String) {
     let uuid = content.id;
     let date: DateTime<Utc> = Utc::now();
@@ -84,7 +87,7 @@ pub fn update_content_entity_content(
     (date, log)
 }
 
-pub fn delete_entity_content(content: DeleteId) -> (DateTime<Utc>, String) {
+pub fn delete_entity_content(content: &DeleteId) -> (DateTime<Utc>, String) {
     let date: DateTime<Utc> = Utc::now();
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
 
@@ -98,6 +101,70 @@ pub fn delete_entity_content(content: DeleteId) -> (DateTime<Utc>, String) {
         content.previous_registry
     );
     (date, log)
+}
+
+pub fn update_content_state(previous_state: &mut HashMap<String, Types>, k: String, v: Types) {
+    let local_state = previous_state
+        .entry(k)
+        .or_insert_with(|| v.default_values());
+    match v {
+        Types::Char(c) => {
+            *local_state = Types::Char(c);
+        }
+        Types::Integer(i) => {
+            if let Types::Integer(local) = *local_state {
+                *local_state = Types::Integer(local + i);
+            }
+
+            if let Types::Float(local) = *local_state {
+                *local_state = Types::Float(local + i as f64);
+            }
+        }
+        Types::String(s) => {
+            if let Types::String(local) = local_state {
+                *local_state = Types::String(local.to_owned() + &s);
+            }
+        }
+        Types::Uuid(uuid) => {
+            *local_state = Types::Uuid(uuid);
+        }
+        Types::Float(f) => {
+            if let Types::Float(local) = *local_state {
+                *local_state = Types::Float(local + f);
+            }
+
+            if let Types::Integer(local) = *local_state {
+                *local_state = Types::Float(local as f64 + f);
+            }
+        }
+        Types::Boolean(b) => {
+            *local_state = Types::Boolean(b);
+        }
+        Types::Hash(_) => {}
+        Types::Vector(mut v) => {
+            if let Types::Vector(local) = local_state {
+                local.append(&mut v);
+                *local_state = Types::Vector(local.to_owned());
+            }
+        }
+        Types::Map(m) => {
+            if let Types::Map(local) = local_state {
+                m.iter().for_each(|(key, value)| {
+                    local
+                        .entry(key.to_owned())
+                        .and_modify(|v| *v = value.to_owned())
+                        .or_insert_with(|| value.to_owned());
+                });
+                *local_state = Types::Map(local.to_owned());
+            }
+        }
+        Types::Nil => {
+            *local_state = Types::Nil;
+        }
+        Types::Precise(p) => {
+            *local_state = Types::Precise(p);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -119,7 +186,7 @@ mod test {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
         };
-        let (_, _, s) = insert_entity_content(entity);
+        let (_, _, s) = insert_entity_content(&entity);
 
         assert!(s.contains("INSERT"));
         assert!(s.contains("my_entity"));
@@ -137,7 +204,7 @@ mod test {
             previous_registry: "reg".to_string(),
         };
 
-        let (_, s) = update_set_entity_content(entity);
+        let (_, s) = update_set_entity_content(&entity);
         assert!(s.contains("UPDATE_SET"));
         assert!(s.contains("my-entity"));
         assert!(s.contains("state"));
@@ -156,7 +223,7 @@ mod test {
             previous_registry: "reg".to_string(),
         };
 
-        let (_, s) = update_content_entity_content(entity);
+        let (_, s) = update_content_entity_content(&entity);
         assert!(s.contains("UPDATE_CONTENT"));
         assert!(s.contains("my-entity"));
         assert!(s.contains("state"));
@@ -174,7 +241,7 @@ mod test {
             previous_registry: "reg".to_string(),
         };
 
-        let (_, s) = delete_entity_content(entity);
+        let (_, s) = delete_entity_content(&entity);
         assert!(s.contains("DELETE"));
         assert!(s.contains("my-entity"));
         assert!(s.contains("log"));
@@ -185,7 +252,7 @@ mod test {
     fn evict_entity_test() {
         let entity = "hello";
 
-        let actual = evict_entity_content(entity);
+        let actual = evict_entity_content(&entity);
 
         assert!(actual.starts_with("EVICT_ENTITY"));
         assert!(actual.contains("hello"))
@@ -199,7 +266,7 @@ mod test {
             id: uuid,
         };
 
-        let actual = evict_entity_id_content(entity);
+        let actual = evict_entity_id_content(&entity);
 
         assert!(actual.starts_with("EVICT_ENTITY_ID"));
         assert!(actual.contains("hello"));

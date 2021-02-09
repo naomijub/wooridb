@@ -94,117 +94,128 @@ impl Handler<MatchUpdate> for Executor {
 
     fn handle(&mut self, msg: MatchUpdate, _: &mut Self::Context) -> Self::Result {
         match msg.conditions.clone() {
-            MatchCondition::All(all) => {
-                let conds = all
-                    .iter()
-                    .map(|cond| match cond.clone() {
-                        MatchCondition::Eq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                msg.previous_state[&key] == val
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::NotEq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                msg.previous_state[&key] != val
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::GEq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                ge_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::LEq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                le_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::G(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                g_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::L(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                l_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        _ => false,
-                    })
-                    .all(|c| c);
-                match conds {
-                    true => Ok(()),
-                    false => Err(Error::FailedMatchCondition),
-                }
-            }
-            MatchCondition::Any(any) => {
-                let conds = any
-                    .iter()
-                    .map(|cond| match cond.clone() {
-                        MatchCondition::Eq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                msg.previous_state[&key] == val
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::NotEq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                msg.previous_state[&key] != val
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::GEq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                ge_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::LEq(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                le_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::G(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                g_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        MatchCondition::L(key, val) => {
-                            if msg.previous_state.get(&key).is_some() {
-                                l_match_types(val, msg.previous_state[&key].clone())
-                            } else {
-                                false
-                            }
-                        }
-                        _ => false,
-                    })
-                    .any(|c| c);
-                match conds {
-                    true => Ok(()),
-                    false => Err(Error::FailedMatchCondition),
-                }
-            }
+            MatchCondition::All(all) => match_all(all, msg.previous_state),
+            MatchCondition::Any(any) => match_any(any, msg.previous_state),
             _ => Err(Error::UnkwonCondition),
         }?;
         Ok(())
+    }
+}
+fn match_all(
+    all: Vec<MatchCondition>,
+    previous_state: HashMap<String, Types>,
+) -> Result<(), Error> {
+    let conds = all
+        .iter()
+        .map(|cond| match cond.clone() {
+            MatchCondition::Eq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    previous_state[&key] == val
+                } else {
+                    false
+                }
+            }
+            MatchCondition::NotEq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    previous_state[&key] != val
+                } else {
+                    false
+                }
+            }
+            MatchCondition::GEq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    ge_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            MatchCondition::LEq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    le_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            MatchCondition::G(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    g_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            MatchCondition::L(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    l_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        })
+        .all(|c| c);
+    if conds {
+        Ok(())
+    } else {
+        Err(Error::FailedMatchCondition)
+    }
+}
+
+fn match_any(
+    any: Vec<MatchCondition>,
+    previous_state: HashMap<String, Types>,
+) -> Result<(), Error> {
+    let conds = any
+        .iter()
+        .map(|cond| match cond.clone() {
+            MatchCondition::Eq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    previous_state[&key] == val
+                } else {
+                    false
+                }
+            }
+            MatchCondition::NotEq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    previous_state[&key] != val
+                } else {
+                    false
+                }
+            }
+            MatchCondition::GEq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    ge_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            MatchCondition::LEq(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    le_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            MatchCondition::G(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    g_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            MatchCondition::L(key, val) => {
+                if previous_state.get(&key).is_some() {
+                    l_match_types(val, previous_state[&key].clone())
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        })
+        .any(|c| c);
+    if conds {
+        Ok(())
+    } else {
+        Err(Error::FailedMatchCondition)
     }
 }
 

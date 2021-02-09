@@ -3,12 +3,12 @@ use serde::Serialize;
 use std::fmt;
 
 #[derive(Debug, Clone, Serialize)]
-pub struct ErrorResponse {
+pub struct Response {
     error_type: String,
     error_message: String,
 }
 
-impl ErrorResponse {
+impl Response {
     pub fn new(error_type: String, error_message: String) -> Self {
         Self {
             error_type,

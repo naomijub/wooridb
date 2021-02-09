@@ -4,11 +4,14 @@ use std::{
 };
 
 use actix::prelude::*;
-use ron::ser::{to_string_pretty};
+use ron::ser::to_string_pretty;
 use serde::Serialize;
 use wql::Types;
 
-use crate::{actors::wql::Executor, core::pretty_config_inner, model::error::Error, repository::local::UniquenessContext};
+use crate::{
+    actors::wql::Executor, core::pretty_config_inner, model::error::Error,
+    repository::local::UniquenessContext,
+};
 
 #[derive(Serialize)]
 pub struct WriteWithUniqueKeys {

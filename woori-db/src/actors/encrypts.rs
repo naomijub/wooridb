@@ -25,8 +25,7 @@ impl Handler<WriteWithEncryption> for Executor {
 
     fn handle(&mut self, msg: WriteWithEncryption, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_encrypts;
-        let encrypt_log =
-            to_string_pretty(&msg, pretty_config()).map_err(Error::Serialization)?;
+        let encrypt_log = to_string_pretty(&msg, pretty_config()).map_err(Error::Serialization)?;
         Ok(write_to_encrypts(&encrypt_log)?)
     }
 }
@@ -99,26 +98,25 @@ impl Handler<EncryptContent> for Executor {
         if encrypts_data.is_empty() {
             Ok(msg.content)
         } else {
-            if let Some(encrypts_for_entity) = encrypts_data.get_mut(&msg.entity) {
-                let mut new_content = HashMap::new();
-                msg.content.iter().for_each(|(k, v)| {
-                    if encrypts_for_entity.contains(k) {
-                        // fix unwrap
-                        // Maybe https://docs.rs/bcrypt/0.9.0/bcrypt/fn.hash_with_salt.html
-                        #[cfg(test)]
-                        let hashed_v = v.to_hash(Some(4)).unwrap();
-                        #[cfg(not(test))]
-                        let hashed_v = v.to_hash(Some(msg.hashing_cost)).unwrap();
-                        new_content.insert(k.to_owned(), hashed_v);
-                    } else {
-                        new_content.insert(k.to_owned(), v.to_owned());
-                    }
-                });
+            encrypts_data.get_mut(&msg.entity).map_or(
+                Ok(msg.content.clone()),
+                |encrypts_for_entity| {
+                    let mut new_content = HashMap::new();
+                    msg.content.iter().for_each(|(k, v)| {
+                        if encrypts_for_entity.contains(k) {
+                            #[cfg(test)]
+                            let hashed_v = v.to_hash(Some(4)).unwrap();
+                            #[cfg(not(test))]
+                            let hashed_v = v.to_hash(Some(msg.hashing_cost)).unwrap();
+                            new_content.insert(k.to_owned(), hashed_v);
+                        } else {
+                            new_content.insert(k.to_owned(), v.to_owned());
+                        }
+                    });
 
-                Ok(new_content)
-            } else {
-                Ok(msg.content)
-            }
+                    Ok(new_content)
+                },
+            )
         }
     }
 }
