@@ -23,26 +23,26 @@ use crate::{
 
 pub async fn wql_handler(
     body: String,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = Wql::from_str(&body);
     let response = match query {
         Ok(Wql::Select(entity, ToSelect::All, Some(uuid))) => {
-            select_all_with_id(entity, uuid, data, actor).await
+            select_all_with_id(entity, uuid, local_data, actor).await
         }
         Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid))) => {
-            select_keys_with_id(entity, uuid, keys, data, actor).await
+            select_keys_with_id(entity, uuid, keys, local_data, actor).await
         }
-        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, data, actor).await,
+        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, local_data, actor).await,
         Ok(Wql::Select(entity, ToSelect::Keys(keys), None)) => {
-            select_args(entity, keys, data, actor).await
+            select_args(entity, keys, local_data, actor).await
         }
         Ok(Wql::SelectIds(entity, ToSelect::All, uuids)) => {
-            select_all_with_ids(entity, uuids, data, actor).await
+            select_all_with_ids(entity, uuids, local_data, actor).await
         }
         Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
-            select_keys_with_ids(entity, keys, uuids, data, actor).await
+            select_keys_with_ids(entity, keys, uuids, local_data, actor).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
             select_all_when_controller(entity, date, actor).await
@@ -195,15 +195,15 @@ async fn select_keys_when_controller(
 async fn select_all_with_id(
     entity: String,
     uuid: Uuid,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    let registry = if let Some(id_to_registry) = data.get(&entity) {
+    let registry = if let Some(id_to_registry) = local_data.get(&entity) {
         if let Some(reg) = id_to_registry.get(&uuid) {
             reg
         } else {
@@ -229,15 +229,15 @@ async fn select_all_with_id(
 async fn select_all_with_ids(
     entity: String,
     uuids: Vec<Uuid>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    let registries = if let Some(id_to_registry) = data.get(&entity) {
+    let registries = if let Some(id_to_registry) = local_data.get(&entity) {
         uuids
             .into_iter()
             .filter_map(|id| {
@@ -278,16 +278,16 @@ async fn select_keys_with_id(
     entity: String,
     uuid: Uuid,
     keys: Vec<String>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let keys = keys.into_iter().collect::<HashSet<String>>();
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    let registry = if let Some(id_to_registry) = data.get(&entity) {
+    let registry = if let Some(id_to_registry) = local_data.get(&entity) {
         if let Some(reg) = id_to_registry.get(&uuid) {
             reg
         } else {
@@ -315,15 +315,15 @@ async fn select_keys_with_ids(
     entity: String,
     keys: Vec<String>,
     uuids: Vec<Uuid>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    let registries = if let Some(id_to_registry) = data.get(&entity) {
+    let registries = if let Some(id_to_registry) = local_data.get(&entity) {
         uuids
             .into_iter()
             .filter_map(|id| {
@@ -363,15 +363,15 @@ async fn select_keys_with_ids(
 
 async fn select_all(
     entity: String,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    let registries = if let Some(id_to_registries) = data.get(&entity) {
+    let registries = if let Some(id_to_registries) = local_data.get(&entity) {
         id_to_registries
     } else {
         return Err(Error::EntityNotCreated(entity));
@@ -396,16 +396,16 @@ async fn select_all(
 async fn select_args(
     entity: String,
     keys: Vec<String>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
+    local_data: web::Data<Arc<Mutex<LocalContext>>>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let keys = keys.into_iter().collect::<HashSet<String>>();
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    let registries = if let Some(id_to_registries) = data.get(&entity) {
+    let registries = if let Some(id_to_registries) = local_data.get(&entity) {
         id_to_registries
     } else {
         return Err(Error::EntityNotCreated(entity));

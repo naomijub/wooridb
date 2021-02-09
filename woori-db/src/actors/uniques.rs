@@ -4,85 +4,85 @@ use std::{
 };
 
 use actix::prelude::*;
-use ron::ser::{to_string_pretty, PrettyConfig};
+use ron::ser::{to_string_pretty};
 use serde::Serialize;
 use wql::Types;
 
-use crate::{actors::wql::Executor, model::error::Error, repository::local::UniquenessContext};
+use crate::{actors::wql::Executor, core::pretty_config_inner, model::error::Error, repository::local::UniquenessContext};
 
 #[derive(Serialize)]
-pub struct WriteUniques {
+pub struct WriteWithUniqueKeys {
     pub entity: String,
     pub uniques: Vec<String>,
 }
 
-impl Message for WriteUniques {
+impl Message for WriteWithUniqueKeys {
     type Result = Result<(), Error>;
 }
 
-impl Handler<WriteUniques> for Executor {
+impl Handler<WriteWithUniqueKeys> for Executor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: WriteUniques, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: WriteWithUniqueKeys, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_uniques;
         let unique_log =
-            to_string_pretty(&msg, pretty_config()).map_err(Error::SerializationError)?;
+            to_string_pretty(&msg, pretty_config_inner()).map_err(Error::Serialization)?;
         Ok(write_to_uniques(&unique_log)?)
     }
 }
 
-pub struct CreateUniques {
+pub struct CreateWithUniqueKeys {
     pub entity: String,
     pub uniques: Vec<String>,
     pub data: Arc<Arc<Mutex<UniquenessContext>>>,
 }
 
-impl Message for CreateUniques {
+impl Message for CreateWithUniqueKeys {
     type Result = Result<(), Error>;
 }
 
-impl Handler<CreateUniques> for Executor {
+impl Handler<CreateWithUniqueKeys> for Executor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: CreateUniques, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: CreateWithUniqueKeys, _: &mut Self::Context) -> Self::Result {
         let mut uniqueness_data = if let Ok(guard) = msg.data.lock() {
             guard
         } else {
             return Err(Error::LockData);
         };
 
-        if !uniqueness_data.contains_key(&msg.entity) {
+        if uniqueness_data.contains_key(&msg.entity) {
+            msg.uniques.iter().for_each(|name| {
+                let mut hm = HashMap::new();
+                hm.insert(name.to_owned(), HashSet::new());
+                uniqueness_data.entry(msg.entity.to_owned()).or_insert(hm);
+            });
+        } else {
             let hm = msg
                 .uniques
                 .into_iter()
                 .map(|name| (name, HashSet::new()))
                 .collect::<HashMap<String, HashSet<String>>>();
             uniqueness_data.insert(msg.entity.to_owned(), hm);
-        } else {
-            msg.uniques.iter().for_each(|name| {
-                let mut hm = HashMap::new();
-                hm.insert(name.to_owned(), HashSet::new());
-                uniqueness_data.entry(msg.entity.to_owned()).or_insert(hm);
-            });
         }
         Ok(())
     }
 }
 
-pub struct CheckForUnique {
+pub struct CheckForUniqueKeys {
     pub entity: String,
     pub content: HashMap<String, Types>,
     pub uniqueness: Arc<Arc<Mutex<UniquenessContext>>>,
 }
 
-impl Message for CheckForUnique {
+impl Message for CheckForUniqueKeys {
     type Result = Result<(), Error>;
 }
 
-impl Handler<CheckForUnique> for Executor {
+impl Handler<CheckForUniqueKeys> for Executor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: CheckForUnique, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: CheckForUniqueKeys, _: &mut Self::Context) -> Self::Result {
         let mut uniqueness_data = if let Ok(guard) = msg.uniqueness.lock() {
             guard
         } else {
@@ -117,12 +117,6 @@ impl Handler<CheckForUnique> for Executor {
     }
 }
 
-fn pretty_config() -> PrettyConfig {
-    PrettyConfig::new()
-        .with_indentor("".to_string())
-        .with_new_line("".to_string())
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -131,7 +125,7 @@ mod test {
 
     #[actix_rt::test]
     async fn write_uniques() {
-        let uniques = WriteUniques {
+        let uniques = WriteWithUniqueKeys {
             entity: String::from("my-entity"),
             uniques: vec![String::from("id"), String::from("ssn")],
         };
@@ -145,7 +139,7 @@ mod test {
     #[actix_rt::test]
     async fn create_uniques_test() {
         let data = UniquenessContext::new();
-        let uniques = CreateUniques {
+        let uniques = CreateWithUniqueKeys {
             entity: String::from("my-entity"),
             uniques: vec![String::from("id"), String::from("ssn")],
             data: Arc::new(Arc::new(Mutex::new(data.clone()))),

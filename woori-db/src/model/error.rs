@@ -13,7 +13,7 @@ pub enum Error {
     EntityAlreadyCreated(String),
     EntityNotCreated(String),
     EntityNotCreatedWithUniqueness(String),
-    SerializationError(ron::Error),
+    Serialization(ron::Error),
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
@@ -54,8 +54,8 @@ impl std::fmt::Display for Error {
                 format!("Entity `{}` not created", e),
             )
             .write(f),
-            Error::SerializationError(e) => {
-                ErrorResponse::new(String::from("SerializationError"), format!("{:?}", e)).write(f)
+            Error::Serialization(e) => {
+                ErrorResponse::new(String::from("Serialization"), format!("{:?}", e)).write(f)
             }
             Error::UuidNotCreatedForEntity(s, id) => ErrorResponse::new(
                 String::from("UuidNotCreatedForEntity"),

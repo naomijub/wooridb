@@ -58,7 +58,7 @@ impl Types {
             Types::Integer(_) => Types::Integer(0),
             Types::String(_) => Types::String(String::new()),
             Types::Uuid(_) => Types::Uuid(Uuid::new_v4()),
-            Types::Float(_) => Types::Float(0f64),
+            Types::Float(_) => Types::Float(0_f64),
             Types::Boolean(_) => Types::Boolean(false),
             Types::Vector(_) => Types::Vector(Vec::new()),
             Types::Map(_) => Types::Map(HashMap::new()),
@@ -83,7 +83,7 @@ impl Types {
             Types::Hash(_) => return Err(String::from("Hash cannot be hashed")),
             Types::Nil => return Err(String::from("Nil cannot be hashed")),
         };
-        match hash(&value, if let Some(c) = cost { c } else { DEFAULT_COST }) {
+        match hash(&value, cost.map_or(DEFAULT_COST, |c| c)) {
             Ok(s) => Ok(Types::Hash(s)),
             Err(e) => Err(format!("{:?}", e)),
         }

@@ -1,8 +1,8 @@
 use crate::{
     actors::{
-        encrypts::{CreateEncrypts, EncryptContent, VerifyEncryption, WriteEncrypts},
+        encrypts::{CreateWithEncryption, EncryptContent, VerifyEncryption, WriteWithEncryption},
         state::{MatchUpdate, PreviousRegistry, State},
-        uniques::{CreateUniques, WriteUniques},
+        uniques::{CreateWithUniqueKeys, WriteWithUniqueKeys},
         wql::{DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
     },
     model::{
@@ -13,7 +13,7 @@ use crate::{
 };
 use crate::{
     actors::{
-        uniques::CheckForUnique,
+        uniques::CheckForUniqueKeys,
         wql::{CreateEntity, EvictEntity, EvictEntityId},
     },
     schemas::tx::CreateEntityResponse,
@@ -45,7 +45,7 @@ fn pretty_config() -> PrettyConfig {
 
 pub async fn wql_handler(
     body: String,
-    data: DataLocalContext,
+    local_data: DataLocalContext,
     uniqueness: DataUniquenessContext,
     encryption: DataEncryptContext,
     bytes_counter: DataAtomicUsize,
@@ -57,15 +57,15 @@ pub async fn wql_handler(
         Ok(Wql::CreateEntity(entity, uniques, encrypts)) => {
             let _ = create_unique_controller(&entity, uniques, uniqueness, &actor).await;
             let _ = create_encrypts_controller(&entity, encrypts, encryption, &actor).await;
-            create_controller(entity, data.into_inner(), bytes_counter, actor).await
+            create_controller(entity, local_data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Delete(entity, uuid)) => {
-            delete_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
+            delete_controller(entity, uuid, local_data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::Insert(entity, content)) => {
             insert_controller(
                 InsertArgs::new(entity, content),
-                data.into_inner(),
+                local_data.into_inner(),
                 bytes_counter,
                 uniqueness,
                 encryption,
@@ -77,7 +77,7 @@ pub async fn wql_handler(
         Ok(Wql::UpdateContent(entity, content, uuid)) => {
             update_content_controller(
                 UpdateArgs::new(entity, content, uuid),
-                data.into_inner(),
+                local_data.into_inner(),
                 bytes_counter,
                 uniqueness,
                 encryption,
@@ -88,7 +88,7 @@ pub async fn wql_handler(
         Ok(Wql::UpdateSet(entity, content, uuid)) => {
             update_set_controller(
                 UpdateArgs::new(entity, content, uuid),
-                data.into_inner(),
+                local_data.into_inner(),
                 bytes_counter,
                 uniqueness,
                 encryption,
@@ -100,7 +100,7 @@ pub async fn wql_handler(
         Ok(Wql::MatchUpdate(entity, content, uuid, conditions)) => {
             match_update_set_controller(
                 MatchUpdateArgs::new(entity, content, uuid, conditions),
-                data.into_inner(),
+                local_data.into_inner(),
                 bytes_counter,
                 uniqueness,
                 encryption,
@@ -110,10 +110,10 @@ pub async fn wql_handler(
             .await
         }
         Ok(Wql::Evict(entity, uuid)) => {
-            evict_controller(entity, uuid, data.into_inner(), bytes_counter, actor).await
+            evict_controller(entity, uuid, local_data.into_inner(), bytes_counter, actor).await
         }
         Ok(Wql::CheckValue(entity, uuid, content)) => {
-            check_value_controller(entity, uuid, content, data, encryption, actor).await
+            check_value_controller(entity, uuid, content, local_data, encryption, actor).await
         }
         Ok(_) => Err(Error::SelectBadRequest),
         Err(e) => Err(Error::QueryFormat(e)),
@@ -129,7 +129,7 @@ pub async fn check_value_controller(
     entity: String,
     uuid: Uuid,
     content: HashMap<String, String>,
-    data: DataLocalContext,
+    local_data: DataLocalContext,
     encryption: DataEncryptContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
@@ -148,16 +148,16 @@ pub async fn check_value_controller(
         }
     };
 
-    let data = if let Ok(guard) = data.lock() {
+    let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&entity) {
+    if !local_data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
     }
 
-    let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let state = actor.send(State(previous_state_str)).await??;
     let keys = content
@@ -176,20 +176,20 @@ pub async fn check_value_controller(
 
 pub async fn create_controller(
     entity: String,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
 ) -> Result<String, Error> {
     {
-        let mut data = if let Ok(guard) = data.lock() {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
         } else {
             return Err(Error::LockData);
         };
-        if !data.contains_key(&entity) {
-            data.insert(entity.clone(), BTreeMap::new());
+        if local_data.contains_key(&entity) {
+            return Err(Error::EntityAlreadyCreated(entity)); 
         } else {
-            return Err(Error::EntityAlreadyCreated(entity));
+            local_data.insert(entity.clone(), BTreeMap::new());
         }
     }
 
@@ -204,7 +204,7 @@ pub async fn create_controller(
 pub async fn evict_controller(
     entity: String,
     uuid: Option<Uuid>,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
 ) -> Result<String, Error> {
@@ -213,24 +213,24 @@ pub async fn evict_controller(
         let offset = actor.send(EvictEntity::new(&entity)).await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-        let mut data = if let Ok(guard) = data.lock() {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
         } else {
             return Err(Error::LockData);
         };
-        data.remove(&entity);
+        local_data.remove(&entity);
         Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
     } else {
         let id = uuid.unwrap();
         let offset = actor.send(EvictEntityId::new(&entity, id)).await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
 
-        let mut data = if let Ok(guard) = data.lock() {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
         } else {
             return Err(Error::LockData);
         };
-        if let Some(d) = data.get_mut(&entity) {
+        if let Some(d) = local_data.get_mut(&entity) {
             d.remove(&id);
         }
 
@@ -248,18 +248,18 @@ pub async fn create_unique_controller(
     if uniques.is_empty() {
         Ok(())
     } else {
-        let data = uniqueness.into_inner();
+        let local_data = uniqueness.into_inner();
         actor
-            .send(WriteUniques {
+            .send(WriteWithUniqueKeys {
                 entity: entity.to_owned(),
                 uniques: uniques.clone(),
             })
             .await??;
         actor
-            .send(CreateUniques {
+            .send(CreateWithUniqueKeys {
                 entity: entity.to_owned(),
                 uniques,
-                data,
+                data: local_data,
             })
             .await??;
         Ok(())
@@ -275,18 +275,18 @@ pub async fn create_encrypts_controller(
     if encrypts.is_empty() {
         Ok(())
     } else {
-        let data = encryption.into_inner();
+        let local_data = encryption.into_inner();
         actor
-            .send(WriteEncrypts {
+            .send(WriteWithEncryption {
                 entity: entity.to_owned(),
                 encrypts: encrypts.clone(),
             })
             .await??;
         actor
-            .send(CreateEncrypts {
+            .send(CreateWithEncryption {
                 entity: entity.to_owned(),
                 encrypts,
-                data,
+                data: local_data,
             })
             .await??;
         Ok(())
@@ -295,7 +295,7 @@ pub async fn create_encrypts_controller(
 
 pub async fn insert_controller(
     args: InsertArgs,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     uniqueness: DataUniquenessContext,
     encryption: DataEncryptContext,
@@ -312,20 +312,20 @@ pub async fn insert_controller(
         ))
         .await??;
     let content_log =
-        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
 
-    let mut data = if let Ok(guard) = data.lock() {
+    let mut local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&args.entity) {
+    if !local_data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
     }
 
     let uniqueness = uniqueness.into_inner();
     actor
-        .send(CheckForUnique {
+        .send(CheckForUniqueKeys {
             entity: args.entity.to_owned(),
             content: encrypted_content,
             uniqueness,
@@ -335,14 +335,14 @@ pub async fn insert_controller(
     let content_value = actor
         .send(InsertEntityContent::new(&args.entity, &content_log))
         .await??;
-    let data_register = DataRegister {
+    let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.2,
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&args.entity) {
-        map.insert(content_value.1, data_register);
+    if let Some(map) = local_data.get_mut(&args.entity) {
+        map.insert(content_value.1, local_data_register);
     }
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
@@ -356,7 +356,7 @@ pub async fn insert_controller(
 
 pub async fn update_set_controller(
     args: UpdateArgs,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     uniqueness: DataUniquenessContext,
     encryption: DataEncryptContext,
@@ -373,31 +373,31 @@ pub async fn update_set_controller(
         ))
         .await??;
     let content_log =
-        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
 
-    let mut data = if let Ok(guard) = data.lock() {
+    let mut local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&args.entity) {
+    if !local_data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
-    } else if data.contains_key(&args.entity)
-        && !data.get(&args.entity).unwrap().contains_key(&args.id)
+    } else if local_data.contains_key(&args.entity)
+        && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
     {
         return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
     let uniqueness = uniqueness.into_inner();
     actor
-        .send(CheckForUnique {
+        .send(CheckForUniqueKeys {
             entity: args.entity.to_owned(),
             content: encrypted_content.to_owned(),
             uniqueness,
         })
         .await??;
 
-    let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
+    let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -407,7 +407,7 @@ pub async fn update_set_controller(
     });
 
     let state_log =
-        to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent::new(
@@ -416,19 +416,19 @@ pub async fn update_set_controller(
             &content_log,
             args.id,
             &to_string_pretty(&previous_entry.clone(), pretty_config())
-                .map_err(Error::SerializationError)?,
+                .map_err(Error::Serialization)?,
         ))
         .await??;
 
-    let data_register = DataRegister {
+    let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&args.entity) {
+    if let Some(map) = local_data.get_mut(&args.entity) {
         if let Some(reg) = map.get_mut(&args.id) {
-            *reg = data_register;
+            *reg = local_data_register;
         }
     }
 
@@ -439,7 +439,7 @@ pub async fn update_set_controller(
 
 pub async fn update_content_controller(
     args: UpdateArgs,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     uniqueness: DataUniquenessContext,
     encryption: DataEncryptContext,
@@ -460,31 +460,31 @@ pub async fn update_content_controller(
         return Err(Error::LockData);
     };
     let content_log =
-        to_string_pretty(&args.content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&args.content, pretty_config()).map_err(Error::Serialization)?;
 
-    let mut data = if let Ok(guard) = data.lock() {
+    let mut local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&args.entity) {
+    if !local_data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
-    } else if data.contains_key(&args.entity)
-        && !data.get(&args.entity).unwrap().contains_key(&args.id)
+    } else if local_data.contains_key(&args.entity)
+        && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
     {
         return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
     let uniqueness = uniqueness.into_inner();
     actor
-        .send(CheckForUnique {
+        .send(CheckForUniqueKeys {
             entity: args.entity.to_owned(),
             content: args.content.to_owned(),
             uniqueness,
         })
         .await??;
 
-    let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
+    let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -553,7 +553,7 @@ pub async fn update_content_controller(
     });
 
     let state_log =
-        to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(UpdateContentEntityContent::new(
@@ -562,19 +562,19 @@ pub async fn update_content_controller(
             &content_log,
             args.id,
             &to_string_pretty(&previous_entry, pretty_config())
-                .map_err(Error::SerializationError)?,
+                .map_err(Error::Serialization)?,
         ))
         .await??;
 
-    let data_register = DataRegister {
+    let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&args.entity) {
+    if let Some(map) = local_data.get_mut(&args.entity) {
         if let Some(reg) = map.get_mut(&args.id) {
-            *reg = data_register;
+            *reg = local_data_register;
         }
     }
 
@@ -587,7 +587,7 @@ pub async fn update_content_controller(
 pub async fn delete_controller(
     entity: String,
     id: String,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
 ) -> Result<String, Error> {
@@ -595,18 +595,18 @@ pub async fn delete_controller(
     let message = format!("Entity {} with Uuid {} deleted", &entity, id);
     let offset = bytes_counter.load(Ordering::SeqCst);
 
-    let mut data = if let Ok(guard) = data.lock() {
+    let mut local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&entity) {
+    if !local_data.contains_key(&entity) {
         return Err(Error::EntityNotCreated(entity));
-    } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&uuid) {
+    } else if local_data.contains_key(&entity) && !local_data.get(&entity).unwrap().contains_key(&uuid) {
         return Err(Error::UuidNotCreatedForEntity(entity, uuid));
     }
 
-    let previous_entry = data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let two_registries_ago = actor.send(PreviousRegistry(previous_state_str)).await??;
 
@@ -616,15 +616,15 @@ pub async fn delete_controller(
             (actor.send(State(state_str)).await??, reg.to_owned())
         }
         None => {
-            let insert_reg = data.get(&entity).unwrap().get(&uuid).unwrap();
+            let insert_reg = local_data.get(&entity).unwrap().get(&uuid).unwrap();
             (HashMap::new(), insert_reg.to_owned())
         }
     };
     let content_log =
-        to_string_pretty(&state_to_be.0, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&state_to_be.0, pretty_config()).map_err(Error::Serialization)?;
 
     let previous_register_log =
-        to_string_pretty(&state_to_be.1, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&state_to_be.1, pretty_config()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(DeleteId::new(
@@ -635,15 +635,15 @@ pub async fn delete_controller(
         ))
         .await??;
 
-    let data_register = DataRegister {
+    let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&entity) {
+    if let Some(map) = local_data.get_mut(&entity) {
         if let Some(reg) = map.get_mut(&uuid) {
-            *reg = data_register;
+            *reg = local_data_register;
         }
     }
 
@@ -654,27 +654,27 @@ pub async fn delete_controller(
 
 pub async fn match_update_set_controller(
     args: MatchUpdateArgs,
-    data: Arc<Arc<Mutex<LocalContext>>>,
+    local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     uniqueness: DataUniquenessContext,
     encryption: DataEncryptContext,
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let mut data = if let Ok(guard) = data.lock() {
+    let mut local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&args.entity) {
+    if !local_data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
-    } else if data.contains_key(&args.entity)
-        && !data.get(&args.entity).unwrap().contains_key(&args.id)
+    } else if local_data.contains_key(&args.entity)
+        && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
     {
         return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
-    let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
+    let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -696,11 +696,11 @@ pub async fn match_update_set_controller(
         ))
         .await??;
     let content_log =
-        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
 
     let uniqueness = uniqueness.into_inner();
     actor
-        .send(CheckForUnique {
+        .send(CheckForUniqueKeys {
             entity: args.entity.to_owned(),
             content: args.content.to_owned(),
             uniqueness,
@@ -713,7 +713,7 @@ pub async fn match_update_set_controller(
     });
 
     let state_log =
-        to_string_pretty(&previous_state, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent {
@@ -722,19 +722,19 @@ pub async fn match_update_set_controller(
             content_log,
             id: args.id,
             previous_registry: to_string_pretty(&previous_entry, pretty_config())
-                .map_err(Error::SerializationError)?,
+                .map_err(Error::Serialization)?,
         })
         .await??;
 
-    let data_register = DataRegister {
+    let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&args.entity) {
+    if let Some(map) = local_data.get_mut(&args.entity) {
         if let Some(reg) = map.get_mut(&args.id) {
-            *reg = data_register;
+            *reg = local_data_register;
         }
     }
 
