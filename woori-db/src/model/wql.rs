@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use uuid::Uuid;
 use wql::{MatchCondition, Types};
 
 #[derive(Debug, PartialEq)]
@@ -66,6 +67,43 @@ impl MatchUpdateArgs {
             content,
             id,
             conditions,
+        }
+    }
+}
+
+pub struct UpdateArgs {
+    pub entity: String,
+    pub content: HashMap<String, Types>,
+    pub id: Uuid,
+}
+
+impl UpdateArgs {
+    pub fn new(
+        entity: String,
+        content: HashMap<String, Types>,
+        id: Uuid,
+    ) -> Self {
+        Self {
+            entity,
+            content,
+            id,
+        }
+    }
+}
+
+pub struct InsertArgs {
+    pub entity: String,
+    pub content: HashMap<String, Types>,
+}
+
+impl InsertArgs {
+    pub fn new(
+        entity: String,
+        content: HashMap<String, Types>,
+    ) -> Self {
+        Self {
+            entity,
+            content,
         }
     }
 }

@@ -1,16 +1,15 @@
-use crate::{
-    actors::{
+use crate::{actors::{
         encrypts::{CreateEncrypts, EncryptContent, VerifyEncryption, WriteEncrypts},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateUniques, WriteUniques},
         wql::{
-            DeleteId, Executor, InsertEntityContent, UpdateContentEntityContent,
+            DeleteId, InsertEntityContent, UpdateContentEntityContent,
             UpdateSetEntityContent,
         },
-    },
-    model::wql::MatchUpdateArgs,
-    repository::local::EncryptContext,
-};
+    }, model::{
+            wql::{MatchUpdateArgs, UpdateArgs, InsertArgs},
+            DataLocalContext,DataUniquenessContext,DataEncryptContext,DataAtomicUsize, DataU32,DataExecutor,
+    },};
 use crate::{
     actors::{
         uniques::CheckForUnique,
@@ -23,18 +22,17 @@ use crate::{
     schemas::tx::InsertEntityResponse,
 };
 use crate::{
-    repository::local::{LocalContext, UniquenessContext},
+    repository::local::{LocalContext},
     schemas::tx::{DeleteOrEvictEntityResponse, UpdateEntityResponse},
 };
 
-use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     str::FromStr,
     sync::{
-        atomic::{AtomicUsize, Ordering},
+        atomic::{Ordering},
         Arc, Mutex,
     },
 };
@@ -49,12 +47,12 @@ fn pretty_config() -> PrettyConfig {
 
 pub async fn wql_handler(
     body: String,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
-    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    hashing_cost: web::Data<u32>,
-    actor: web::Data<Addr<Executor>>,
+    data: DataLocalContext,
+    uniqueness: DataUniquenessContext,
+    encryption: DataEncryptContext,
+    bytes_counter: DataAtomicUsize,
+    hashing_cost: DataU32,
+    actor: DataExecutor,
 ) -> impl Responder {
     let query = wql::Wql::from_str(&body);
     let response = match query {
@@ -68,8 +66,10 @@ pub async fn wql_handler(
         }
         Ok(Wql::Insert(entity, content)) => {
             insert_controller(
-                entity,
-                content,
+                InsertArgs::new(
+                    entity,
+                    content,
+                ),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -81,9 +81,11 @@ pub async fn wql_handler(
         }
         Ok(Wql::UpdateContent(entity, content, uuid)) => {
             update_content_controller(
-                entity,
-                content,
-                uuid,
+                UpdateArgs::new(
+                    entity,
+                    content,
+                    uuid,
+                ),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -94,9 +96,11 @@ pub async fn wql_handler(
         }
         Ok(Wql::UpdateSet(entity, content, uuid)) => {
             update_set_controller(
-                entity,
-                content,
-                uuid,
+                UpdateArgs::new(
+                    entity,
+                    content,
+                    uuid,
+                ),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -140,7 +144,7 @@ pub async fn check_value_controller(
     content: HashMap<String, String>,
     data: web::Data<Arc<Mutex<BTreeMap<String, BTreeMap<Uuid, DataRegister>>>>>,
     encryption: web::Data<Arc<Mutex<BTreeMap<String, std::collections::HashSet<String>>>>>,
-    actor: web::Data<Addr<Executor>>,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     if let Ok(guard) = encryption.lock() {
         if guard.contains_key(&entity) {
@@ -186,8 +190,8 @@ pub async fn check_value_controller(
 pub async fn create_controller(
     entity: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     {
         let mut data = if let Ok(guard) = data.lock() {
@@ -214,8 +218,8 @@ pub async fn evict_controller(
     entity: String,
     uuid: Option<Uuid>,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     if uuid.is_none() {
         let message = format!("Entity {} evicted", &entity);
@@ -251,8 +255,8 @@ pub async fn evict_controller(
 pub async fn create_unique_controller(
     entity: &str,
     uniques: Vec<String>,
-    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
-    actor: &web::Data<Addr<Executor>>,
+    uniqueness: DataUniquenessContext,
+    actor: &DataExecutor,
 ) -> Result<(), Error> {
     if uniques.is_empty() {
         Ok(())
@@ -278,8 +282,8 @@ pub async fn create_unique_controller(
 pub async fn create_encrypts_controller(
     entity: &str,
     encrypts: Vec<String>,
-    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
-    actor: &web::Data<Addr<Executor>>,
+    encryption: DataEncryptContext,
+    actor: &DataExecutor,
 ) -> Result<(), Error> {
     if encrypts.is_empty() {
         Ok(())
@@ -303,20 +307,19 @@ pub async fn create_encrypts_controller(
 }
 
 pub async fn insert_controller(
-    entity: String,
-    content: HashMap<String, Types>,
+    args: InsertArgs,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
-    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
-    hashing_cost: web::Data<u32>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    uniqueness: DataUniquenessContext,
+    encryption: DataEncryptContext,
+    hashing_cost: DataU32,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
-            &entity,
-            content,
+            &args.entity,
+            args.content,
             encryption.into_inner(),
             *hashing_cost.into_inner(),
         ))
@@ -329,21 +332,21 @@ pub async fn insert_controller(
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&entity) {
-        return Err(Error::EntityNotCreated(entity));
+    if !data.contains_key(&args.entity) {
+        return Err(Error::EntityNotCreated(args.entity));
     }
 
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.to_owned(),
+            entity: args.entity.to_owned(),
             content: encrypted_content,
             uniqueness,
         })
         .await??;
 
     let content_value = actor
-        .send(InsertEntityContent::new(&entity, &content_log))
+        .send(InsertEntityContent::new(&args.entity, &content_log))
         .await??;
     let data_register = DataRegister {
         offset,
@@ -351,32 +354,30 @@ pub async fn insert_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&entity) {
+    if let Some(map) = data.get_mut(&args.entity) {
         map.insert(content_value.1, data_register);
     }
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
 
-    let message = format!("Entity {} inserted with Uuid {}", &entity, &content_value.1);
-    Ok(InsertEntityResponse::new(entity, content_value.1, message).write())
+    let message = format!("Entity {} inserted with Uuid {}", &args.entity, &content_value.1);
+    Ok(InsertEntityResponse::new(args.entity, content_value.1, message).write())
 }
 
 pub async fn update_set_controller(
-    entity: String,
-    content: HashMap<String, Types>,
-    id: Uuid,
+    args: UpdateArgs,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
-    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
-    hashing_cost: web::Data<u32>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    uniqueness: DataUniquenessContext,
+    encryption: DataEncryptContext,
+    hashing_cost: DataU32,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
-            &entity,
-            content,
+            &args.entity,
+            args.content,
             encryption.into_inner(),
             *hashing_cost.into_inner(),
         ))
@@ -389,22 +390,22 @@ pub async fn update_set_controller(
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&entity) {
-        return Err(Error::EntityNotCreated(entity));
-    } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
-        return Err(Error::UuidNotCreatedForEntity(entity, id));
+    if !data.contains_key(&args.entity) {
+        return Err(Error::EntityNotCreated(args.entity));
+    } else if data.contains_key(&args.entity) && !data.get(&args.entity).unwrap().contains_key(&args.id) {
+        return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.to_owned(),
+            entity: args.entity.to_owned(),
             content: encrypted_content.to_owned(),
             uniqueness,
         })
         .await??;
 
-    let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
+    let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -418,10 +419,10 @@ pub async fn update_set_controller(
 
     let content_value = actor
         .send(UpdateSetEntityContent::new(
-            &entity,
+            &args.entity,
             &state_log,
             &content_log,
-            id,
+            args.id,
             &to_string_pretty(&previous_entry.clone(), pretty_config())
                 .map_err(Error::SerializationError)?,
         ))
@@ -433,33 +434,31 @@ pub async fn update_set_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&entity) {
-        if let Some(reg) = map.get_mut(&id) {
+    if let Some(map) = data.get_mut(&args.entity) {
+        if let Some(reg) = map.get_mut(&args.id) {
             *reg = data_register;
         }
     }
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-    let message = format!("Entity {} with Uuid {} updated", &entity, &id);
-    Ok(UpdateEntityResponse::new(entity, id, state_log, message).write())
+    let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
+    Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
 }
 
 pub async fn update_content_controller(
-    entity: String,
-    content: HashMap<String, Types>,
-    id: Uuid,
+    args: UpdateArgs,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
-    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    uniqueness: DataUniquenessContext,
+    encryption: DataEncryptContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
     if let Ok(guard) = encryption.lock() {
-        if guard.contains_key(&entity) {
-            let keys = content
+        if guard.contains_key(&args.entity) {
+            let keys = args.content
                 .iter()
-                .filter(|(k, _)| guard.get(&entity).unwrap().contains(k.to_owned()))
+                .filter(|(k, _)| guard.get(&args.entity).unwrap().contains(k.to_owned()))
                 .map(|(k, _)| k.to_owned())
                 .collect::<Vec<String>>();
             return Err(Error::UpdateContentEncryptKeys(keys));
@@ -468,33 +467,33 @@ pub async fn update_content_controller(
         return Err(Error::LockData);
     };
     let content_log =
-        to_string_pretty(&content, pretty_config()).map_err(Error::SerializationError)?;
+        to_string_pretty(&args.content, pretty_config()).map_err(Error::SerializationError)?;
 
     let mut data = if let Ok(guard) = data.lock() {
         guard
     } else {
         return Err(Error::LockData);
     };
-    if !data.contains_key(&entity) {
-        return Err(Error::EntityNotCreated(entity));
-    } else if data.contains_key(&entity) && !data.get(&entity).unwrap().contains_key(&id) {
-        return Err(Error::UuidNotCreatedForEntity(entity, id));
+    if !data.contains_key(&args.entity) {
+        return Err(Error::EntityNotCreated(args.entity));
+    } else if data.contains_key(&args.entity) && !data.get(&args.entity).unwrap().contains_key(&args.id) {
+        return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
     let uniqueness = uniqueness.into_inner();
     actor
         .send(CheckForUnique {
-            entity: entity.to_owned(),
-            content: content.to_owned(),
+            entity: args.entity.to_owned(),
+            content: args.content.to_owned(),
             uniqueness,
         })
         .await??;
 
-    let previous_entry = data.get(&entity).unwrap().get(&id).unwrap();
+    let previous_entry = data.get(&args.entity).unwrap().get(&args.id).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
-    content.into_iter().for_each(|(k, v)| {
+    args.content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state
             .entry(k)
             .or_insert_with(|| v.default_values());
@@ -563,10 +562,10 @@ pub async fn update_content_controller(
 
     let content_value = actor
         .send(UpdateContentEntityContent::new(
-            &entity,
+            &args.entity,
             &state_log,
             &content_log,
-            id,
+            args.id,
             &to_string_pretty(&previous_entry, pretty_config())
                 .map_err(Error::SerializationError)?,
         ))
@@ -578,24 +577,24 @@ pub async fn update_content_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = data.get_mut(&entity) {
-        if let Some(reg) = map.get_mut(&id) {
+    if let Some(map) = data.get_mut(&args.entity) {
+        if let Some(reg) = map.get_mut(&args.id) {
             *reg = data_register;
         }
     }
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
 
-    let message = format!("Entity {} with Uuid {} updated", &entity, &id);
-    Ok(UpdateEntityResponse::new(entity, id, state_log, message).write())
+    let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
+    Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
 }
 
 pub async fn delete_controller(
     entity: String,
     id: String,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let uuid = Uuid::from_str(&id)?;
     let message = format!("Entity {} with Uuid {} deleted", &entity, id);
@@ -661,11 +660,11 @@ pub async fn delete_controller(
 pub async fn match_update_set_controller(
     args: MatchUpdateArgs,
     data: Arc<Arc<Mutex<LocalContext>>>,
-    bytes_counter: web::Data<AtomicUsize>,
-    uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
-    encryption: web::Data<Arc<Mutex<EncryptContext>>>,
-    hashing_cost: web::Data<u32>,
-    actor: web::Data<Addr<Executor>>,
+    bytes_counter: DataAtomicUsize,
+    uniqueness: DataUniquenessContext,
+    encryption: DataEncryptContext,
+    hashing_cost: DataU32,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let mut data = if let Ok(guard) = data.lock() {
         guard

@@ -64,12 +64,12 @@ impl std::fmt::Display for Error {
             .write(f),
             Error::FailedToParseState => ErrorResponse::new(
                 String::from("FailedToParseState"),
-                format!("Failed to parse state"),
+                "Failed to parse state".to_string(),
             )
             .write(f),
             Error::FailedToParseRegistry => ErrorResponse::new(
                 String::from("FailedToParseRegistry"),
-                format!("Failed to parse registry"),
+                "Failed to parse registry".to_string(),
             )
             .write(f),
             Error::DuplicatedUnique(entity, key, t) => ErrorResponse::new(
@@ -82,22 +82,22 @@ impl std::fmt::Display for Error {
             .write(f),
             Error::UnkwonCondition => ErrorResponse::new(
                 String::from("UnkwonCondition"),
-                format!("UNKNOWN MATCH CONDITION"),
+                "UNKNOWN MATCH CONDITION".to_string(),
             )
             .write(f),
             Error::FailedMatchCondition => ErrorResponse::new(
                 String::from("FailedMatchCondition"),
-                format!("One or more MATCH CONDITIONS failed"),
+                "One or more MATCH CONDITIONS failed".to_string(),
             )
             .write(f),
             Error::SelectBadRequest => ErrorResponse::new(
                 String::from("SelectBadRequest"),
-                format!("SELECT expressions are handled by `/wql/query` endpoint"),
+                "SELECT expressions are handled by `/wql/query` endpoint".to_string(),
             )
             .write(f),
             Error::NonSelectQuery => ErrorResponse::new(
                 String::from("NonSelectQuery"),
-                format!("Non-SELECT expressions are handled by `/wql/tx` endpoint"),
+                "Non-SELECT expressions are handled by `/wql/tx` endpoint".to_string(),
             )
             .write(f),
             Error::MailboxError(r) => {
@@ -105,7 +105,7 @@ impl std::fmt::Display for Error {
             }
             Error::LockData => ErrorResponse::new(
                 String::from("LockData"),
-                format!("System was not able to get a lock on data"),
+                "System was not able to get a lock on data".to_string(),
             )
             .write(f),
             Error::RonSerdeError(e) => {
@@ -134,7 +134,7 @@ impl std::fmt::Display for Error {
             .write(f),
             Error::FailedToParseDate => ErrorResponse::new(
                 String::from("FailedToParseDate"),
-                format!("Log date parse error"),
+                "Log date parse error".to_string(),
             )
             .write(f),
         }

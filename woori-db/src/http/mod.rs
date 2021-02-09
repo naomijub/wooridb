@@ -35,7 +35,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let encrypt_context = Arc::new(Mutex::new(EncryptContext::new()));
     let write_offset = AtomicUsize::new(0usize);
     let actor = Executor::new().start();
-    let env_cost = std::env::var("HASHING_COST").unwrap_or("14".to_owned());
+    let env_cost = std::env::var("HASHING_COST").unwrap_or_else(|_| "14".to_owned());
     let cost = env_cost.parse::<u32>().expect("HASHING_COST must be a u32");
 
     // Deactivate scheduler for now
