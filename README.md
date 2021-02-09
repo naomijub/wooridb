@@ -6,6 +6,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 - [Prometheus](https://github.com/prometheus/prometheus) 
 - [SparkQL](https://en.wikipedia.org/wiki/SPARQL).
 - [Database Internals](https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Database+Internals%3A&qid=1612831621&sr=8-1)
+- [Database System Concept](https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
 - [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
 - Professor Andy Pavlo Database classes. 
 
@@ -19,6 +20,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 * Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
 * For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will be done later by using features.
 * Precise floats or number larger than f64::MAX/i128::MAX can be defined with an UPPERCASE `P` at the end. This type cannot be updated with `UPDATE CONTENT`. Example `INSERT {a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P, } INTO my_entity`.
+* `BLOB` will not be supported. Checkout *To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem*, Russel Sears, Catherine van Ingen, Jim Gray, MSR-TR-2006-45.
 * More info at **TODOS**.
 
 ## Transactions:
@@ -111,10 +113,8 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
-- [x] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
 - [ ] Docker
 - [ ] Test all Actors
 - [ ] Clippy
 - [ ] Benchmarks
-- [x] Numbers larger than i128 or f64 [issue 24](https://github.com/naomijub/wooridb/issues/24)
