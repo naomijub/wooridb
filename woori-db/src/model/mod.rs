@@ -4,15 +4,21 @@ pub(crate) mod wql;
 use actix::prelude::*;
 use actix_web::web;
 use serde::{Deserialize, Serialize};
-use std::{io::Error, sync::{Arc, Mutex, atomic::AtomicUsize}};
+use std::{
+    io::Error,
+    sync::{atomic::AtomicUsize, Arc, Mutex},
+};
 
-use crate::{actors::wql::Executor, repository::local::{EncryptContext, LocalContext, UniquenessContext}};
+use crate::{
+    actors::wql::Executor,
+    repository::local::{EncryptContext, LocalContext, UniquenessContext},
+};
 
 pub type DataLocalContext = web::Data<Arc<Mutex<LocalContext>>>;
-pub type DataUniquenessContext= web::Data<Arc<Mutex<UniquenessContext>>>;
+pub type DataUniquenessContext = web::Data<Arc<Mutex<UniquenessContext>>>;
 pub type DataEncryptContext = web::Data<Arc<Mutex<EncryptContext>>>;
 pub type DataAtomicUsize = web::Data<AtomicUsize>;
-pub type  DataU32 = web::Data<u32>;
+pub type DataU32 = web::Data<u32>;
 pub type DataExecutor = web::Data<Addr<Executor>>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

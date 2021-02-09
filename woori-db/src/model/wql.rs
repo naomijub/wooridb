@@ -78,11 +78,7 @@ pub struct UpdateArgs {
 }
 
 impl UpdateArgs {
-    pub fn new(
-        entity: String,
-        content: HashMap<String, Types>,
-        id: Uuid,
-    ) -> Self {
+    pub fn new(entity: String, content: HashMap<String, Types>, id: Uuid) -> Self {
         Self {
             entity,
             content,
@@ -97,14 +93,8 @@ pub struct InsertArgs {
 }
 
 impl InsertArgs {
-    pub fn new(
-        entity: String,
-        content: HashMap<String, Types>,
-    ) -> Self {
-        Self {
-            entity,
-            content,
-        }
+    pub fn new(entity: String, content: HashMap<String, Types>) -> Self {
+        Self { entity, content }
     }
 }
 

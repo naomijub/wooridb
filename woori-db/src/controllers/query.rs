@@ -79,10 +79,10 @@ async fn select_all_when_range_controller(
     use chrono::{DateTime, Utc};
     let start_date: DateTime<Utc> = start_date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParseError)?;
     let end_date: DateTime<Utc> = end_date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParseError)?;
     #[cfg(test)]
     let date_log = start_date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -104,7 +104,7 @@ async fn select_all_when_controller(
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParseError)?;
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -123,7 +123,7 @@ async fn select_all_id_when_controller(
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParseError)?;
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -145,7 +145,7 @@ async fn select_keys_id_when_controller(
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParseError)?;
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -170,7 +170,7 @@ async fn select_keys_when_controller(
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParseError)?;
 
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
@@ -245,7 +245,7 @@ async fn select_all_with_ids(
                     id,
                     id_to_registry
                         .get(&id)
-                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id.clone()))
+                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id))
                         .ok(),
                 ))
                 .filter(|(_id, reg)| reg.is_some())
@@ -254,8 +254,7 @@ async fn select_all_with_ids(
             .collect::<Vec<(Uuid, Option<DataRegister>)>>()
     } else {
         return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
+    };
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries.into_iter() {
@@ -332,7 +331,7 @@ async fn select_keys_with_ids(
                     id,
                     id_to_registry
                         .get(&id)
-                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id.clone()))
+                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id))
                         .ok(),
                 ))
                 .filter(|(_id, reg)| reg.is_some())
@@ -341,8 +340,7 @@ async fn select_keys_with_ids(
             .collect::<Vec<(Uuid, Option<DataRegister>)>>()
     } else {
         return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
+    };
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries.into_iter() {
@@ -380,13 +378,8 @@ async fn select_all(
     }
     .to_owned();
 
-    let kvs = registries
-        .into_iter()
-        .map(|k| k)
-        .collect::<Vec<(Uuid, DataRegister)>>();
-
     let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in kvs.into_iter() {
+    for (uuid, regs) in registries.into_iter() {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered = state
@@ -419,13 +412,8 @@ async fn select_args(
     }
     .to_owned();
 
-    let kvs = registries
-        .into_iter()
-        .map(|k| k)
-        .collect::<Vec<(Uuid, DataRegister)>>();
-
     let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in kvs.into_iter() {
+    for (uuid, regs) in registries.into_iter() {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered: HashMap<String, Types> = state

@@ -1,15 +1,16 @@
-use crate::{actors::{
+use crate::{
+    actors::{
         encrypts::{CreateEncrypts, EncryptContent, VerifyEncryption, WriteEncrypts},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateUniques, WriteUniques},
-        wql::{
-            DeleteId, InsertEntityContent, UpdateContentEntityContent,
-            UpdateSetEntityContent,
-        },
-    }, model::{
-            wql::{MatchUpdateArgs, UpdateArgs, InsertArgs},
-            DataLocalContext,DataUniquenessContext,DataEncryptContext,DataAtomicUsize, DataU32,DataExecutor,
-    },};
+        wql::{DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
+    },
+    model::{
+        wql::{InsertArgs, MatchUpdateArgs, UpdateArgs},
+        DataAtomicUsize, DataEncryptContext, DataExecutor, DataLocalContext, DataU32,
+        DataUniquenessContext,
+    },
+};
 use crate::{
     actors::{
         uniques::CheckForUnique,
@@ -22,19 +23,16 @@ use crate::{
     schemas::tx::InsertEntityResponse,
 };
 use crate::{
-    repository::local::{LocalContext},
+    repository::local::LocalContext,
     schemas::tx::{DeleteOrEvictEntityResponse, UpdateEntityResponse},
 };
 
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder};
 use ron::ser::{to_string_pretty, PrettyConfig};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     str::FromStr,
-    sync::{
-        atomic::{Ordering},
-        Arc, Mutex,
-    },
+    sync::{atomic::Ordering, Arc, Mutex},
 };
 use uuid::Uuid;
 use wql::{Types, Wql};
@@ -66,10 +64,7 @@ pub async fn wql_handler(
         }
         Ok(Wql::Insert(entity, content)) => {
             insert_controller(
-                InsertArgs::new(
-                    entity,
-                    content,
-                ),
+                InsertArgs::new(entity, content),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -81,11 +76,7 @@ pub async fn wql_handler(
         }
         Ok(Wql::UpdateContent(entity, content, uuid)) => {
             update_content_controller(
-                UpdateArgs::new(
-                    entity,
-                    content,
-                    uuid,
-                ),
+                UpdateArgs::new(entity, content, uuid),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -96,11 +87,7 @@ pub async fn wql_handler(
         }
         Ok(Wql::UpdateSet(entity, content, uuid)) => {
             update_set_controller(
-                UpdateArgs::new(
-                    entity,
-                    content,
-                    uuid,
-                ),
+                UpdateArgs::new(entity, content, uuid),
                 data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -142,8 +129,8 @@ pub async fn check_value_controller(
     entity: String,
     uuid: Uuid,
     content: HashMap<String, String>,
-    data: web::Data<Arc<Mutex<BTreeMap<String, BTreeMap<Uuid, DataRegister>>>>>,
-    encryption: web::Data<Arc<Mutex<BTreeMap<String, std::collections::HashSet<String>>>>>,
+    data: DataLocalContext,
+    encryption: DataEncryptContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
     if let Ok(guard) = encryption.lock() {
@@ -360,7 +347,10 @@ pub async fn insert_controller(
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
 
-    let message = format!("Entity {} inserted with Uuid {}", &args.entity, &content_value.1);
+    let message = format!(
+        "Entity {} inserted with Uuid {}",
+        &args.entity, &content_value.1
+    );
     Ok(InsertEntityResponse::new(args.entity, content_value.1, message).write())
 }
 
@@ -392,7 +382,9 @@ pub async fn update_set_controller(
     };
     if !data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
-    } else if data.contains_key(&args.entity) && !data.get(&args.entity).unwrap().contains_key(&args.id) {
+    } else if data.contains_key(&args.entity)
+        && !data.get(&args.entity).unwrap().contains_key(&args.id)
+    {
         return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
@@ -456,7 +448,8 @@ pub async fn update_content_controller(
     let offset = bytes_counter.load(Ordering::SeqCst);
     if let Ok(guard) = encryption.lock() {
         if guard.contains_key(&args.entity) {
-            let keys = args.content
+            let keys = args
+                .content
                 .iter()
                 .filter(|(k, _)| guard.get(&args.entity).unwrap().contains(k.to_owned()))
                 .map(|(k, _)| k.to_owned())
@@ -476,7 +469,9 @@ pub async fn update_content_controller(
     };
     if !data.contains_key(&args.entity) {
         return Err(Error::EntityNotCreated(args.entity));
-    } else if data.contains_key(&args.entity) && !data.get(&args.entity).unwrap().contains_key(&args.id) {
+    } else if data.contains_key(&args.entity)
+        && !data.get(&args.entity).unwrap().contains_key(&args.id)
+    {
         return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
     }
 
