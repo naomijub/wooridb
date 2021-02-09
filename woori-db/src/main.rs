@@ -16,8 +16,11 @@ use http::{ping, readiness, routes};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // std::env::set_var("RUST_LOG", "actix_web=info");
-    // env_logger::init();
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    let env_port = std::env::var("PORT").unwrap_or("1438".to_owned());
+    let port = env_port.parse::<u16>().expect("PORT must be a u16");
+    let addr = format!("0.0.0.0:{}", port);
 
     HttpServer::new(move || {
         App::new()
@@ -29,7 +32,7 @@ async fn main() -> std::io::Result<()> {
             .configure(routes)
             .route("", web::get().to(HttpResponse::NotFound))
     })
-    .bind("0.0.0.0:1438")?
+    .bind(addr)?
     .workers(1)
     .run()
     .await
