@@ -157,7 +157,6 @@ async fn test_insert_post_ok() {
     assert!(resp.status().is_success());
 
     read::assert_content("INSERT|");
-    read::assert_content("UTC|");
     read::assert_content("|test_ok|{\"a\": Integer(123),};");
     clear();
 }
@@ -265,7 +264,6 @@ async fn test_update_set_post_ok() {
     assert!(body.contains("entity: \"test_update\""));
 
     read::assert_content("UPDATE_SET|");
-    read::assert_content("UTC|");
     read::assert_content(&uuid.to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(12),");
@@ -384,7 +382,6 @@ async fn test_update_content_post_ok() {
     assert!(resp.status().is_success());
 
     read::assert_content("UPDATE_CONTENT|");
-    read::assert_content("UTC|");
     read::assert_content(&uuid.to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(135),");
@@ -883,7 +880,6 @@ async fn test_insert_encrypt_post_ok() {
     assert!(resp.status().is_success());
 
     read::assert_content("INSERT|");
-    read::assert_content("UTC|");
     read::assert_content("|test_ok|");
     read::assert_content("\"a\": Integer(123)");
     read::assert_not_content("my_password");
@@ -929,7 +925,6 @@ async fn test_update_set_encrypt_post_ok() {
 
     read::assert_content("INSERT|");
     read::assert_content("UPDATE_SET|");
-    read::assert_content("UTC|");
     read::assert_content("|test_ok_encrypt|");
     read::assert_content("\"a\": Integer(123)");
     read::assert_content("\"c\": Nil");

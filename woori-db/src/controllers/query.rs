@@ -6,27 +6,11 @@ use std::{
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
-use ron::ser::{to_string_pretty, PrettyConfig};
+use ron::ser::{to_string_pretty};
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
 
-use crate::{
-    actors::{
-        state::State,
-        when::{ReadEntitiesAt, ReadEntityIdAt},
-        wql::Executor,
-    },
-    model::{error::Error, DataRegister},
-    repository::local::LocalContext,
-};
-
-fn pretty_config() -> PrettyConfig {
-    PrettyConfig::new()
-        .with_separate_tuple_members(true)
-        .with_decimal_floats(true)
-        .with_indentor(" ".to_string())
-        .with_new_line("\n".to_string())
-}
+use crate::{actors::{state::State, when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange}, wql::Executor}, core::pretty_config_output, model::{error::Error, DataRegister}, repository::local::LocalContext};
 
 pub async fn wql_handler(
     body: String,
@@ -63,6 +47,9 @@ pub async fn wql_handler(
         Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(uuid), date)) => {
             select_keys_id_when_controller(entity, date, keys, uuid, actor).await
         }
+        Ok(Wql::SelectWhenRange(entity_name, uuid, start_date, end_date)) => {
+            select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
+        }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
     };
@@ -73,6 +60,23 @@ pub async fn wql_handler(
     }
 }
 
+async fn select_all_when_range_controller(entity: String, uuid: Uuid, start_date: String, end_date: String, actor: web::Data<Addr<Executor>>) -> Result<String, Error> {
+    use chrono::{DateTime, Utc};
+    let start_date: DateTime<Utc> = start_date
+        .parse::<DateTime<Utc>>()
+        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    let end_date: DateTime<Utc> = end_date
+        .parse::<DateTime<Utc>>()
+        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    #[cfg(test)]
+    let date_log = start_date.format("%Y_%m_%d.txt").to_string();
+    #[cfg(not(test))]
+    let date_log = start_date.format("%Y_%m_%d.log").to_string();
+
+    let result = actor.send(ReadEntityRange::new(&entity, uuid, start_date, end_date, date_log)).await??;
+
+    Ok(to_string_pretty(&result, pretty_config_output())?)
+}
 async fn select_all_when_controller(
     entity: String,
     date: String,
@@ -88,7 +92,7 @@ async fn select_all_when_controller(
     let date_log = date.format("%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
 
-    Ok(to_string_pretty(&result, pretty_config())?)
+    Ok(to_string_pretty(&result, pretty_config_output())?)
 }
 
 async fn select_all_id_when_controller(
@@ -109,7 +113,7 @@ async fn select_all_id_when_controller(
         .send(ReadEntityIdAt::new(&entity, uuid, date_log))
         .await??;
 
-    Ok(to_string_pretty(&result, pretty_config())?)
+    Ok(to_string_pretty(&result, pretty_config_output())?)
 }
 
 async fn select_keys_id_when_controller(
@@ -135,7 +139,7 @@ async fn select_keys_id_when_controller(
         .filter(|(k, _)| keys.contains(k))
         .collect::<HashMap<String, Types>>();
 
-    Ok(to_string_pretty(&result, pretty_config())?)
+    Ok(to_string_pretty(&result, pretty_config_output())?)
 }
 
 async fn select_keys_when_controller(
@@ -166,7 +170,7 @@ async fn select_keys_when_controller(
         })
         .collect::<HashMap<String, HashMap<String, Types>>>();
 
-    Ok(to_string_pretty(&result, pretty_config())?)
+    Ok(to_string_pretty(&result, pretty_config_output())?)
 }
 
 async fn select_all_with_id(
@@ -197,7 +201,7 @@ async fn select_all_with_id(
         .into_iter()
         .filter(|(_, v)| !v.is_hash())
         .collect::<HashMap<String, Types>>();
-    Ok(ron::ser::to_string_pretty(&filterd_state, pretty_config())?)
+    Ok(ron::ser::to_string_pretty(&filterd_state, pretty_config_output())?)
 }
 
 async fn select_all_with_ids(
@@ -246,7 +250,7 @@ async fn select_all_with_ids(
         }
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
+    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
 }
 
 async fn select_keys_with_id(
@@ -280,7 +284,7 @@ async fn select_keys_with_id(
         .filter(|(k, _)| keys.contains(k))
         .filter(|(_, v)| !v.is_hash())
         .collect();
-    Ok(ron::ser::to_string_pretty(&filtered, pretty_config())?)
+    Ok(ron::ser::to_string_pretty(&filtered, pretty_config_output())?)
 }
 
 async fn select_keys_with_ids(
@@ -331,7 +335,7 @@ async fn select_keys_with_ids(
         }
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
+    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
 }
 
 async fn select_all(
@@ -368,7 +372,7 @@ async fn select_all(
         states.insert(uuid, filtered);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
+    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
 }
 
 async fn select_args(
@@ -407,5 +411,5 @@ async fn select_args(
         states.insert(uuid, filtered);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config())?)
+    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
 }

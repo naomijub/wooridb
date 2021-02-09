@@ -7,7 +7,9 @@ use crate::{
         UpdateSetEntityContent,
     },
     model::wql::Action,
+    core::pretty_config_inner,
 };
+use ron::ser::{to_string_pretty};
 
 pub fn create_entity(entity: &str) -> String {
     format!("{}|{};", Action::CreateEntity, entity)
@@ -15,15 +17,17 @@ pub fn create_entity(entity: &str) -> String {
 
 pub fn evict_entity_content(entity: &str) -> String {
     let date: DateTime<Utc> = Utc::now();
-    format!("{}|{}|{};", Action::EvictEntity, date.to_string(), entity)
+    let date = to_string_pretty(&date, pretty_config_inner()).unwrap();
+    format!("{}|{}|{};", Action::EvictEntity, date, entity)
 }
 
 pub fn evict_entity_id_content(entity: EvictEntityId) -> String {
     let date: DateTime<Utc> = Utc::now();
+    let date = to_string_pretty(&date, pretty_config_inner()).unwrap();
     format!(
         "{}|{}|{}|{};",
         Action::EvictEntityId,
-        date.to_string(),
+        date,
         entity.id,
         entity.name
     )
@@ -32,11 +36,11 @@ pub fn evict_entity_id_content(entity: EvictEntityId) -> String {
 pub fn insert_entity_content(content: InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
     let uuid = Uuid::new_v4();
     let date: DateTime<Utc> = Utc::now();
-
+    let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
         "{}|{}|{}|{}|{};",
         Action::Insert,
-        date.to_string(),
+        date_str,
         uuid.to_string(),
         content.name,
         content.content
@@ -47,11 +51,11 @@ pub fn insert_entity_content(content: InsertEntityContent) -> (DateTime<Utc>, Uu
 pub fn update_set_entity_content(content: UpdateSetEntityContent) -> (DateTime<Utc>, String) {
     let uuid = content.id;
     let date: DateTime<Utc> = Utc::now();
-
+    let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
         "{}|{}|{}|{}|{}|{}|{};",
         Action::UpdateSet,
-        date.to_string(),
+        date_str,
         uuid.to_string(),
         content.name,
         content.content_log,
@@ -66,11 +70,11 @@ pub fn update_content_entity_content(
 ) -> (DateTime<Utc>, String) {
     let uuid = content.id;
     let date: DateTime<Utc> = Utc::now();
-
+    let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
         "{}|{}|{}|{}|{}|{}|{};",
         Action::UpdateContent,
-        date.to_string(),
+        date_str,
         uuid.to_string(),
         content.name,
         content.content_log,
@@ -82,11 +86,12 @@ pub fn update_content_entity_content(
 
 pub fn delete_entity_content(content: DeleteId) -> (DateTime<Utc>, String) {
     let date: DateTime<Utc> = Utc::now();
+    let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
 
     let log = format!(
         "{}|{}|{}|{}|{}|{};",
         Action::Delete,
-        date.to_string(),
+        date_str,
         content.uuid.to_string(),
         content.name,
         content.content_log,
