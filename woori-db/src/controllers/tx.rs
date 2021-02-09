@@ -53,6 +53,7 @@ pub async fn wql_handler(
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     encryption: web::Data<Arc<Mutex<EncryptContext>>>,
     bytes_counter: web::Data<AtomicUsize>,
+    hashing_cost: web::Data<u32>,
     actor: web::Data<Addr<Executor>>,
 ) -> impl Responder {
     let query = wql::Wql::from_str(&body);
@@ -73,6 +74,7 @@ pub async fn wql_handler(
                 bytes_counter,
                 uniqueness,
                 encryption,
+                hashing_cost,
                 actor,
             )
             .await
@@ -99,6 +101,7 @@ pub async fn wql_handler(
                 bytes_counter,
                 uniqueness,
                 encryption,
+                hashing_cost,
                 actor,
             )
             .await
@@ -110,6 +113,7 @@ pub async fn wql_handler(
                 bytes_counter,
                 uniqueness,
                 encryption,
+                hashing_cost,
                 actor,
             )
             .await
@@ -305,6 +309,7 @@ pub async fn insert_controller(
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     encryption: web::Data<Arc<Mutex<EncryptContext>>>,
+    hashing_cost: web::Data<u32>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -313,6 +318,7 @@ pub async fn insert_controller(
             &entity,
             content,
             encryption.into_inner(),
+            *hashing_cost.into_inner(),
         ))
         .await??;
     let content_log =
@@ -363,6 +369,7 @@ pub async fn update_set_controller(
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     encryption: web::Data<Arc<Mutex<EncryptContext>>>,
+    hashing_cost: web::Data<u32>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let offset = bytes_counter.load(Ordering::SeqCst);
@@ -371,6 +378,7 @@ pub async fn update_set_controller(
             &entity,
             content,
             encryption.into_inner(),
+            *hashing_cost.into_inner(),
         ))
         .await??;
     let content_log =
@@ -498,6 +506,10 @@ pub async fn update_content_controller(
                 if let Types::Integer(local) = *local_state {
                     *local_state = Types::Integer(local + i);
                 }
+
+                if let Types::Float(local) = *local_state {
+                    *local_state = Types::Float(local + i as f64);
+                }
             }
             Types::String(s) => {
                 if let Types::String(local) = local_state {
@@ -510,6 +522,10 @@ pub async fn update_content_controller(
             Types::Float(f) => {
                 if let Types::Float(local) = *local_state {
                     *local_state = Types::Float(local + f);
+                }
+
+                if let Types::Integer(local) = *local_state {
+                    *local_state = Types::Float(local as f64 + f);
                 }
             }
             Types::Boolean(b) => {
@@ -645,6 +661,7 @@ pub async fn match_update_set_controller(
     bytes_counter: web::Data<AtomicUsize>,
     uniqueness: web::Data<Arc<Mutex<UniquenessContext>>>,
     encryption: web::Data<Arc<Mutex<EncryptContext>>>,
+    hashing_cost: web::Data<u32>,
     actor: web::Data<Addr<Executor>>,
 ) -> Result<String, Error> {
     let mut data = if let Ok(guard) = data.lock() {
@@ -678,6 +695,7 @@ pub async fn match_update_set_controller(
             &args.entity,
             args.content.clone(),
             encryption.into_inner(),
+            *hashing_cost.into_inner(),
         ))
         .await??;
     let content_log =

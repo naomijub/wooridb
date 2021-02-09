@@ -17,7 +17,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 
 ## Usage
 * Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
-* For now only persistent local memory is used. Support for `S3`, `PostgresDB` and `DynamoDB` will be done later by using features.
+* For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will be done later by using features.
 * More info at **TODOS**.
 
 ## Transactions:
@@ -112,7 +112,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
 - [ ] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
-- [ ] Add Float values to an Integer [issue 23](https://github.com/naomijub/wooridb/issues/23)
+- [x] Add Float values to an Integer [issue 23](https://github.com/naomijub/wooridb/issues/23)
 - [ ] Docker
 - [ ] Test all Actors
 - [ ] Clippy

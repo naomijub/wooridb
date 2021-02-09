@@ -63,6 +63,7 @@ pub struct EncryptContent {
     pub entity: String,
     pub content: HashMap<String, Types>,
     pub encrypts: Arc<Arc<Mutex<EncryptContext>>>,
+    pub hashing_cost: u32,
 }
 
 impl EncryptContent {
@@ -70,11 +71,13 @@ impl EncryptContent {
         entity: &str,
         content: HashMap<String, Types>,
         encrypts: Arc<Arc<Mutex<EncryptContext>>>,
+        hashing_cost: u32,
     ) -> Self {
         Self {
             entity: entity.to_owned(),
             content,
             encrypts,
+            hashing_cost,
         }
     }
 }
@@ -103,7 +106,7 @@ impl Handler<EncryptContent> for Executor {
                         #[cfg(test)]
                         let hashed_v = v.to_hash(Some(4)).unwrap();
                         #[cfg(not(test))]
-                        let hashed_v = v.to_hash(Some(14u32)).unwrap();
+                        let hashed_v = v.to_hash(Some(msg.hashing_cost)).unwrap();
                         new_content.insert(k.to_owned(), hashed_v);
                     } else {
                         new_content.insert(k.to_owned(), v.to_owned());
