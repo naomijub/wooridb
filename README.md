@@ -18,6 +18,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 ## Usage
 * Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
 * For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will be done later by using features.
+* Precise floats or number larger than f64::MAX/i128::MAX can be defined with an UPPERCASE `P` at the end. This type cannot be updated with `UPDATE CONTENT`. Example `INSERT {a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P, } INTO my_entity`.
 * More info at **TODOS**.
 
 ## Transactions:
@@ -110,11 +111,10 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
-- [ ] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)
+- [x] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
-- [x] Add Float values to an Integer [issue 23](https://github.com/naomijub/wooridb/issues/23)
 - [ ] Docker
 - [ ] Test all Actors
 - [ ] Clippy
 - [ ] Benchmarks
-- [ ] Numbers larger than i128 or f64 [issue 24](https://github.com/naomijub/wooridb/issues/24)
+- [x] Numbers larger than i128 or f64 [issue 24](https://github.com/naomijub/wooridb/issues/24)

@@ -45,6 +45,7 @@ pub enum Types {
     Vector(Vec<Types>),
     Map(HashMap<String, Types>),
     Hash(String),
+    Precise(String),
     //DateTime
     Nil,
 }
@@ -61,6 +62,7 @@ impl Types {
             Types::Vector(_) => Types::Vector(Vec::new()),
             Types::Map(_) => Types::Map(HashMap::new()),
             Types::Hash(_) => Types::Hash(String::new()),
+            Types::Precise(_) => Types::Precise(String::from("0")),
             Types::Nil => Types::Nil,
         }
     }
@@ -76,6 +78,7 @@ impl Types {
             Types::Boolean(b) => format!("{}", b),
             Types::Vector(vec) => format!("{:?}", vec),
             Types::Map(map) => format!("{:?}", map),
+            Types::Precise(p) => format!("{}", p),
             Types::Hash(_) => return Err(String::from("Hash cannot be hashed")),
             Types::Nil => return Err(String::from("Nil cannot be hashed")),
         };
