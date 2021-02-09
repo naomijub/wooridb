@@ -29,8 +29,7 @@ pub enum Error {
     UpdateContentEncryptKeys(Vec<String>),
     CheckNonEncryptedKeys(Vec<String>),
     DateTimeParseError(chrono::ParseError),
-    // InvalidKey(String),
-    // EncryptionError(String),
+    FailedToParseDate,
 }
 
 impl std::fmt::Display for Error {
@@ -133,14 +132,11 @@ impl std::fmt::Display for Error {
                 format!("Date parse error: {:?}", e),
             )
             .write(f),
-            //     Error::InvalidKey(key) => ErrorResponse::new(
-            //         String::from("InvalidKey"),
-            //         format!(
-            //             "Invalid encrypted key: {}",
-            //             key
-            //         ),
-            //     )
-            //     .write(f),
+            Error::FailedToParseDate => ErrorResponse::new(
+                String::from("FailedToParseDate"),
+                format!("Log date parse error"),
+            )
+            .write(f),
         }
     }
 }

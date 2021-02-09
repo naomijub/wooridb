@@ -511,6 +511,33 @@ async fn test_select_when_all_id_post_ok() {
     assert!(!body.contains("41ede07f-e98b-41dd-9ff2-8dce99af4e96"));
 }
 
+#[actix_rt::test]
+async fn test_select_when_range_all_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    let payload = format!(
+        "Select * FROM test_update ID fb1ccddb-2465-4504-a4a4-e28ee75c7981 WHEN START {} END {}",
+        "2021-02-09T16:30:00Z", "2021-02-09T17:00:00Z"
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(body.contains("{\n \"2021-02-09T16:44:03.236333Z\":"));
+    assert!(body.contains("\"f\": String(\"hello\")"));
+    assert!(body.contains("\"2021-02-09T16:54:06.237774Z\":"));
+    assert!(body.contains("\"f\": String(\"helloworld\")"));
+    assert!(body.contains("\"2021-02-09T16:57:06.237774Z\":"));
+    assert!(body.contains("\"f\": String(\"JULIA\")"));
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }
