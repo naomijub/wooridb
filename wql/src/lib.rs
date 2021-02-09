@@ -58,7 +58,7 @@ impl Types {
             Types::Integer(_) => Types::Integer(0),
             Types::String(_) => Types::String(String::new()),
             Types::Uuid(_) => Types::Uuid(Uuid::new_v4()),
-            Types::Float(_) => Types::Float(0f64),
+            Types::Float(_) => Types::Float(0_f64),
             Types::Boolean(_) => Types::Boolean(false),
             Types::Vector(_) => Types::Vector(Vec::new()),
             Types::Map(_) => Types::Map(HashMap::new()),
@@ -73,34 +73,24 @@ impl Types {
         let value = match self {
             Types::Char(c) => format!("{}", c),
             Types::Integer(i) => format!("{}", i),
-            Types::String(s) => format!("{}", s),
+            Types::String(s) => s.to_string(),
             Types::Uuid(id) => format!("{}", id),
             Types::Float(f) => format!("{}", f),
             Types::Boolean(b) => format!("{}", b),
             Types::Vector(vec) => format!("{:?}", vec),
             Types::Map(map) => format!("{:?}", map),
-            Types::Precise(p) => format!("{}", p),
+            Types::Precise(p) => p.to_string(),
             Types::Hash(_) => return Err(String::from("Hash cannot be hashed")),
             Types::Nil => return Err(String::from("Nil cannot be hashed")),
         };
-        match hash(
-            &value,
-            if cost.is_some() {
-                cost.unwrap()
-            } else {
-                DEFAULT_COST
-            },
-        ) {
+        match hash(&value, cost.map_or(DEFAULT_COST, |c| c)) {
             Ok(s) => Ok(Types::Hash(s)),
             Err(e) => Err(format!("{:?}", e)),
         }
     }
 
     pub fn is_hash(&self) -> bool {
-        match self {
-            Types::Hash(_) => true,
-            _ => false,
-        }
+        matches!(self, Types::Hash(_))
     }
 }
 

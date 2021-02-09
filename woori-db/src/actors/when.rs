@@ -45,7 +45,7 @@ impl Handler<ReadEntityRange> for Executor {
         let date_log = msg.date_log.clone();
         let date_log = read_date_log(date_log)?;
         let mut hm = BTreeMap::new();
-        date_log.split(";").try_for_each(|line| {
+        date_log.split(';').try_for_each(|line| {
             let fractions = line.split('|').collect::<Vec<&str>>();
 
             if fractions[0].eq("INSERT")
@@ -136,7 +136,7 @@ impl Handler<ReadEntitiesAt> for Executor {
         let date_log = msg.date_log.clone();
         let date_log = read_date_log(date_log)?;
         let mut hm = HashMap::new();
-        date_log.split(";").try_for_each(|line| {
+        date_log.split(';').try_for_each(|line| {
             let fractions = line.split('|').collect::<Vec<&str>>();
             if fractions[0].eq("INSERT") && fractions[3].eq(&msg.entity_name) {
                 let state = fractions
@@ -210,7 +210,7 @@ impl Handler<ReadEntityIdAt> for Executor {
         let date_log = msg.date_log.clone();
         let date_log = read_date_log(date_log)?;
         let mut hm = HashMap::new();
-        date_log.split(";").try_for_each(|line| {
+        date_log.split(';').try_for_each(|line| {
             let fractions = line.split('|').collect::<Vec<&str>>();
 
             if fractions[0].eq("INSERT")

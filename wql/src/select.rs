@@ -38,13 +38,13 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         return Err(String::from("Entity name is required for SELECT"));
     }
 
-    let id_symbol = chars
+    let next_symbol = chars
         .skip_while(|c| c.is_whitespace())
         .take_while(|c| !c.is_whitespace())
         .collect::<String>()
         .to_uppercase();
 
-    if id_symbol == "ID" {
+    if next_symbol == "ID" {
         let id = chars
             .skip_while(|c| c.is_whitespace())
             .take_while(|c| c.is_alphanumeric() || c == &'-')
@@ -64,18 +64,14 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         }
 
         Ok(Wql::Select(entity_name, arg, uuid.ok()))
-    } else if id_symbol == "IDS" {
+    } else if next_symbol == "IDS" {
         let in_symbol = chars
             .skip_while(|c| c.is_whitespace())
             .take_while(|c| !c.is_whitespace())
             .collect::<String>()
             .to_uppercase();
 
-        if in_symbol != "IN" {
-            Err(String::from(
-                "IN keyword is required after IDS to define a set of uuids",
-            ))
-        } else {
+        if in_symbol == "IN" {
             let uuids: Vec<Uuid> = read_uuids(chars)?;
             let next_symbol = chars
                 .skip_while(|c| c.is_whitespace())
@@ -86,13 +82,17 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
                 return Err(String::from("WHEN not allowed after IDS IN"));
             }
             Ok(Wql::SelectIds(entity_name, arg, uuids))
+        } else {
+            Err(String::from(
+                "IN keyword is required after IDS to define a set of uuids",
+            ))
         }
-    } else if id_symbol.to_uppercase() == "WHEN" {
-        return when_selector(entity_name, arg, None, chars);
-    } else if !id_symbol.is_empty()
-        && (id_symbol.to_uppercase() != "ID" || id_symbol.to_uppercase() != "IDS")
+    } else if next_symbol.to_uppercase() == "WHEN" {
+        when_selector(entity_name, arg, None, chars)
+    } else if !next_symbol.is_empty()
+        && (next_symbol.to_uppercase() != "ID" || next_symbol.to_uppercase() != "IDS")
     {
-        println!("{:?}", id_symbol);
+        println!("{:?}", next_symbol);
         Err(String::from(
             "ID/IDS keyword is required to set an uuid in SELECT",
         ))
@@ -113,8 +113,9 @@ fn when_selector(
         .collect::<String>()
         .to_uppercase();
 
-    if arg == ToSelect::All && uuid.is_some() && next_symbol.to_uppercase() == "START" {
-        return when_time_range(entity_name, uuid.unwrap(), chars);
+    if let (&ToSelect::All, Some(uuid), "START") = (&arg, uuid, next_symbol.to_uppercase().as_str())
+    {
+        return when_time_range(entity_name, uuid, chars);
     }
     if next_symbol.to_uppercase() != "AT" {
         return Err(String::from("AT is required after WHEN"));

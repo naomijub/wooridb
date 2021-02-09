@@ -121,5 +121,5 @@ PORT=1438
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
 - [ ] Docker
 - [ ] Test all Actors
-- [ ] Clippy
+- [x] Clippy
 - [ ] Benchmarks

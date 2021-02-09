@@ -186,7 +186,7 @@ fn check(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .collect::<String>()
         .trim()
         .to_owned();
-    let id = Uuid::from_str(&entity_id).or_else(|e| Err(format!("{:?}", e)))?;
+    let id = Uuid::from_str(&entity_id).map_err(|e| format!("{:?}", e))?;
 
     Ok(Wql::CheckValue(entity_name, id, entity_map))
 }

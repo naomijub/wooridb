@@ -1,11 +1,9 @@
 use std::{
     collections::{HashMap, HashSet},
     str::FromStr,
-    sync::{Arc, Mutex},
 };
 
-use actix::Addr;
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder};
 use ron::ser::to_string_pretty;
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
@@ -14,35 +12,33 @@ use crate::{
     actors::{
         state::State,
         when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange},
-        wql::Executor,
     },
     core::pretty_config_output,
-    model::{error::Error, DataRegister},
-    repository::local::LocalContext,
+    model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
 };
 
 pub async fn wql_handler(
     body: String,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> impl Responder {
     let query = Wql::from_str(&body);
     let response = match query {
         Ok(Wql::Select(entity, ToSelect::All, Some(uuid))) => {
-            select_all_with_id(entity, uuid, data, actor).await
+            select_all_with_id(entity, uuid, local_data, actor).await
         }
         Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid))) => {
-            select_keys_with_id(entity, uuid, keys, data, actor).await
+            select_keys_with_id(entity, uuid, keys, local_data, actor).await
         }
-        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, data, actor).await,
+        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, local_data, actor).await,
         Ok(Wql::Select(entity, ToSelect::Keys(keys), None)) => {
-            select_args(entity, keys, data, actor).await
+            select_args(entity, keys, local_data, actor).await
         }
         Ok(Wql::SelectIds(entity, ToSelect::All, uuids)) => {
-            select_all_with_ids(entity, uuids, data, actor).await
+            select_all_with_ids(entity, uuids, local_data, actor).await
         }
         Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
-            select_keys_with_ids(entity, keys, uuids, data, actor).await
+            select_keys_with_ids(entity, keys, uuids, local_data, actor).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
             select_all_when_controller(entity, date, actor).await
@@ -74,15 +70,15 @@ async fn select_all_when_range_controller(
     uuid: Uuid,
     start_date: String,
     end_date: String,
-    actor: web::Data<Addr<Executor>>,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     use chrono::{DateTime, Utc};
     let start_date: DateTime<Utc> = start_date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParse)?;
     let end_date: DateTime<Utc> = end_date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
     let date_log = start_date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -99,12 +95,12 @@ async fn select_all_when_range_controller(
 async fn select_all_when_controller(
     entity: String,
     date: String,
-    actor: web::Data<Addr<Executor>>,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -118,12 +114,12 @@ async fn select_all_id_when_controller(
     entity: String,
     date: String,
     uuid: Uuid,
-    actor: web::Data<Addr<Executor>>,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -140,12 +136,12 @@ async fn select_keys_id_when_controller(
     date: String,
     keys: Vec<String>,
     uuid: Uuid,
-    actor: web::Data<Addr<Executor>>,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
@@ -165,12 +161,12 @@ async fn select_keys_when_controller(
     entity: String,
     date: String,
     keys: Vec<String>,
-    actor: web::Data<Addr<Executor>>,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
-        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+        .map_err(Error::DateTimeParse)?;
 
     #[cfg(test)]
     let date_log = date.format("%Y_%m_%d.txt").to_string();
@@ -195,24 +191,27 @@ async fn select_keys_when_controller(
 async fn select_all_with_id(
     entity: String,
     uuid: Uuid,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    let registry = if let Some(id_to_registry) = data.get(&entity) {
-        if let Some(reg) = id_to_registry.get(&uuid) {
-            reg
+    let registry = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
         } else {
-            return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+            return Err(Error::LockData);
+        };
+        let registry = if let Some(id_to_registry) = local_data.get(&entity) {
+            if let Some(reg) = id_to_registry.get(&uuid) {
+                reg
+            } else {
+                return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+            }
+        } else {
+            return Err(Error::EntityNotCreated(entity));
         }
-    } else {
-        return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
+        .to_owned();
+        registry
+    };
 
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
@@ -229,36 +228,38 @@ async fn select_all_with_id(
 async fn select_all_with_ids(
     entity: String,
     uuids: Vec<Uuid>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
+    let registries = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        let registries = if let Some(id_to_registry) = local_data.get(&entity) {
+            uuids
+                .into_iter()
+                .filter_map(|id| {
+                    Some((
+                        id,
+                        id_to_registry
+                            .get(&id)
+                            .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id))
+                            .ok(),
+                    ))
+                    .filter(|(_id, reg)| reg.is_some())
+                })
+                .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
+                .collect::<Vec<(Uuid, Option<DataRegister>)>>()
+        } else {
+            return Err(Error::EntityNotCreated(entity));
+        };
+        registries
     };
-    let registries = if let Some(id_to_registry) = data.get(&entity) {
-        uuids
-            .into_iter()
-            .filter_map(|id| {
-                Some((
-                    id,
-                    id_to_registry
-                        .get(&id)
-                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id.clone()))
-                        .ok(),
-                ))
-                .filter(|(_id, reg)| reg.is_some())
-            })
-            .map(|(uuid, reg)| (uuid, reg.map(|d| d.to_owned())))
-            .collect::<Vec<(Uuid, Option<DataRegister>)>>()
-    } else {
-        return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
-    for (uuid, registry) in registries.into_iter() {
+    for (uuid, registry) in registries {
         if let Some(regs) = registry {
             let content = actor.send(regs).await??;
             let state = actor.send(State(content)).await??;
@@ -279,25 +280,28 @@ async fn select_keys_with_id(
     entity: String,
     uuid: Uuid,
     keys: Vec<String>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let keys = keys.into_iter().collect::<HashSet<String>>();
-    let data = if let Ok(guard) = data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    let registry = if let Some(id_to_registry) = data.get(&entity) {
-        if let Some(reg) = id_to_registry.get(&uuid) {
-            reg
+    let registry = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
         } else {
-            return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+            return Err(Error::LockData);
+        };
+        let registry = if let Some(id_to_registry) = local_data.get(&entity) {
+            if let Some(reg) = id_to_registry.get(&uuid) {
+                reg
+            } else {
+                return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+            }
+        } else {
+            return Err(Error::EntityNotCreated(entity));
         }
-    } else {
-        return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
+        .to_owned();
+        registry
+    };
 
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
@@ -316,36 +320,38 @@ async fn select_keys_with_ids(
     entity: String,
     keys: Vec<String>,
     uuids: Vec<Uuid>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
+    let registries = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        let registries = if let Some(id_to_registry) = local_data.get(&entity) {
+            uuids
+                .into_iter()
+                .filter_map(|id| {
+                    Some((
+                        id,
+                        id_to_registry
+                            .get(&id)
+                            .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id))
+                            .ok(),
+                    ))
+                    .filter(|(_id, reg)| reg.is_some())
+                })
+                .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
+                .collect::<Vec<(Uuid, Option<DataRegister>)>>()
+        } else {
+            return Err(Error::EntityNotCreated(entity));
+        };
+        registries
     };
-    let registries = if let Some(id_to_registry) = data.get(&entity) {
-        uuids
-            .into_iter()
-            .filter_map(|id| {
-                Some((
-                    id,
-                    id_to_registry
-                        .get(&id)
-                        .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id.clone()))
-                        .ok(),
-                ))
-                .filter(|(_id, reg)| reg.is_some())
-            })
-            .map(|(uuid, reg)| (uuid, reg.map(|d| d.to_owned())))
-            .collect::<Vec<(Uuid, Option<DataRegister>)>>()
-    } else {
-        return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
-    for (uuid, registry) in registries.into_iter() {
+    for (uuid, registry) in registries {
         if let Some(regs) = registry {
             let content = actor.send(regs).await??;
             let state = actor.send(State(content)).await??;
@@ -365,28 +371,26 @@ async fn select_keys_with_ids(
 
 async fn select_all(
     entity: String,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
-    let data = if let Ok(guard) = data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
+    let registries = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        let registries = if let Some(id_to_registries) = local_data.get(&entity) {
+            id_to_registries
+        } else {
+            return Err(Error::EntityNotCreated(entity));
+        }
+        .to_owned();
+        registries
     };
-    let registries = if let Some(id_to_registries) = data.get(&entity) {
-        id_to_registries
-    } else {
-        return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
-
-    let kvs = registries
-        .into_iter()
-        .map(|k| k)
-        .collect::<Vec<(Uuid, DataRegister)>>();
 
     let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in kvs.into_iter() {
+    for (uuid, regs) in registries {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered = state
@@ -403,29 +407,27 @@ async fn select_all(
 async fn select_args(
     entity: String,
     keys: Vec<String>,
-    data: web::Data<Arc<Mutex<LocalContext>>>,
-    actor: web::Data<Addr<Executor>>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
 ) -> Result<String, Error> {
     let keys = keys.into_iter().collect::<HashSet<String>>();
-    let data = if let Ok(guard) = data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
+    let registries = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        let registries = if let Some(id_to_registries) = local_data.get(&entity) {
+            id_to_registries
+        } else {
+            return Err(Error::EntityNotCreated(entity));
+        }
+        .to_owned();
+        registries
     };
-    let registries = if let Some(id_to_registries) = data.get(&entity) {
-        id_to_registries
-    } else {
-        return Err(Error::EntityNotCreated(entity));
-    }
-    .to_owned();
-
-    let kvs = registries
-        .into_iter()
-        .map(|k| k)
-        .collect::<Vec<(Uuid, DataRegister)>>();
 
     let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in kvs.into_iter() {
+    for (uuid, regs) in registries {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered: HashMap<String, Types> = state

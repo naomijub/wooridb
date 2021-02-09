@@ -11,40 +11,39 @@ use wql::Types;
 use crate::{actors::wql::Executor, model::error::Error, repository::local::EncryptContext};
 
 #[derive(Serialize)]
-pub struct WriteEncrypts {
+pub struct WriteWithEncryption {
     pub entity: String,
     pub encrypts: Vec<String>,
 }
 
-impl Message for WriteEncrypts {
+impl Message for WriteWithEncryption {
     type Result = Result<(), Error>;
 }
 
-impl Handler<WriteEncrypts> for Executor {
+impl Handler<WriteWithEncryption> for Executor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: WriteEncrypts, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: WriteWithEncryption, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_encrypts;
-        let encrypt_log =
-            to_string_pretty(&msg, pretty_config()).map_err(Error::SerializationError)?;
+        let encrypt_log = to_string_pretty(&msg, pretty_config()).map_err(Error::Serialization)?;
         Ok(write_to_encrypts(&encrypt_log)?)
     }
 }
 
-pub struct CreateEncrypts {
+pub struct CreateWithEncryption {
     pub entity: String,
     pub encrypts: Vec<String>,
     pub data: Arc<Arc<Mutex<EncryptContext>>>,
 }
 
-impl Message for CreateEncrypts {
+impl Message for CreateWithEncryption {
     type Result = Result<(), Error>;
 }
 
-impl Handler<CreateEncrypts> for Executor {
+impl Handler<CreateWithEncryption> for Executor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: CreateEncrypts, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: CreateWithEncryption, _: &mut Self::Context) -> Self::Result {
         let mut encrypt_data = if let Ok(guard) = msg.data.lock() {
             guard
         } else {
@@ -96,29 +95,28 @@ impl Handler<EncryptContent> for Executor {
             return Err(Error::LockData);
         };
 
-        if !encrypts_data.is_empty() {
-            if let Some(encrypts_for_entity) = encrypts_data.get_mut(&msg.entity) {
-                let mut new_content = HashMap::new();
-                msg.content.iter().for_each(|(k, v)| {
-                    if encrypts_for_entity.contains(k) {
-                        // fix unwrap
-                        // Maybe https://docs.rs/bcrypt/0.9.0/bcrypt/fn.hash_with_salt.html
-                        #[cfg(test)]
-                        let hashed_v = v.to_hash(Some(4)).unwrap();
-                        #[cfg(not(test))]
-                        let hashed_v = v.to_hash(Some(msg.hashing_cost)).unwrap();
-                        new_content.insert(k.to_owned(), hashed_v);
-                    } else {
-                        new_content.insert(k.to_owned(), v.to_owned());
-                    }
-                });
-
-                Ok(new_content)
-            } else {
-                Ok(msg.content)
-            }
-        } else {
+        if encrypts_data.is_empty() {
             Ok(msg.content)
+        } else {
+            encrypts_data.get_mut(&msg.entity).map_or(
+                Ok(msg.content.clone()),
+                |encrypts_for_entity| {
+                    let mut new_content = HashMap::new();
+                    msg.content.iter().for_each(|(k, v)| {
+                        if encrypts_for_entity.contains(k) {
+                            #[cfg(test)]
+                            let hashed_v = v.to_hash(Some(4)).unwrap();
+                            #[cfg(not(test))]
+                            let hashed_v = v.to_hash(Some(msg.hashing_cost)).unwrap();
+                            new_content.insert(k.to_owned(), hashed_v);
+                        } else {
+                            new_content.insert(k.to_owned(), v.to_owned());
+                        }
+                    });
+
+                    Ok(new_content)
+                },
+            )
         }
     }
 }
@@ -158,7 +156,7 @@ impl Handler<VerifyEncryption> for Executor {
             })
             .collect::<HashMap<String, bool>>();
         let encrypt_log =
-            to_string_pretty(&results, pretty_config()).map_err(Error::SerializationError)?;
+            to_string_pretty(&results, pretty_config()).map_err(Error::Serialization)?;
 
         Ok(encrypt_log)
     }
@@ -177,7 +175,7 @@ mod test {
 
     #[actix_rt::test]
     async fn write_uniques() {
-        let encrypts = WriteEncrypts {
+        let encrypts = WriteWithEncryption {
             entity: String::from("my-entity"),
             encrypts: vec![String::from("id"), String::from("ssn")],
         };
@@ -191,7 +189,7 @@ mod test {
     #[actix_rt::test]
     async fn create_uniques_test() {
         let data = EncryptContext::new();
-        let encrypts = CreateEncrypts {
+        let encrypts = CreateWithEncryption {
             entity: String::from("my-entity"),
             encrypts: vec![String::from("id"), String::from("ssn")],
             data: Arc::new(Arc::new(Mutex::new(data.clone()))),

@@ -4,7 +4,7 @@ use std::io;
 use uuid::Uuid;
 use wql::Types;
 
-use crate::schemas::error::ErrorResponse;
+use crate::schemas::error::Response;
 
 #[derive(Debug)]
 pub enum Error {
@@ -13,7 +13,7 @@ pub enum Error {
     EntityAlreadyCreated(String),
     EntityNotCreated(String),
     EntityNotCreatedWithUniqueness(String),
-    SerializationError(ron::Error),
+    Serialization(ron::Error),
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
@@ -22,13 +22,13 @@ pub enum Error {
     DuplicatedUnique(String, String, Types),
     SelectBadRequest,
     NonSelectQuery,
-    MailboxError(MailboxError),
+    ActixMailbox(MailboxError),
     LockData,
-    RonSerdeError(ron::Error),
-    InvalidUuidError(uuid::Error),
+    Ron(ron::Error),
+    InvalidUuid(uuid::Error),
     UpdateContentEncryptKeys(Vec<String>),
     CheckNonEncryptedKeys(Vec<String>),
-    DateTimeParseError(chrono::ParseError),
+    DateTimeParse(chrono::ParseError),
     FailedToParseDate,
 }
 
@@ -36,43 +36,43 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::QueryFormat(s) => {
-                ErrorResponse::new(String::from("QueryFormat"), format!("{:?}", s)).write(f)
+                Response::new(String::from("QueryFormat"), format!("{:?}", s)).write(f)
             }
-            Error::Io(e) => ErrorResponse::new(String::from("IO"), format!("{:?}", e)).write(f),
-            Error::EntityAlreadyCreated(e) => ErrorResponse::new(
+            Error::Io(e) => Response::new(String::from("IO"), format!("{:?}", e)).write(f),
+            Error::EntityAlreadyCreated(e) => Response::new(
                 String::from("EntityAlreadyCreated"),
                 format!("Entity `{}` already created", e),
             )
             .write(f),
-            Error::EntityNotCreated(e) => ErrorResponse::new(
+            Error::EntityNotCreated(e) => Response::new(
                 String::from("EntityNotCreated"),
                 format!("Entity `{}` not created", e),
             )
             .write(f),
-            Error::EntityNotCreatedWithUniqueness(e) => ErrorResponse::new(
+            Error::EntityNotCreatedWithUniqueness(e) => Response::new(
                 String::from("EntityNotCreatedWithUniqueness"),
                 format!("Entity `{}` not created", e),
             )
             .write(f),
-            Error::SerializationError(e) => {
-                ErrorResponse::new(String::from("SerializationError"), format!("{:?}", e)).write(f)
+            Error::Serialization(e) => {
+                Response::new(String::from("Serialization"), format!("{:?}", e)).write(f)
             }
-            Error::UuidNotCreatedForEntity(s, id) => ErrorResponse::new(
+            Error::UuidNotCreatedForEntity(s, id) => Response::new(
                 String::from("UuidNotCreatedForEntity"),
                 format!("Uuid {:?} not created for entity {}", id, s),
             )
             .write(f),
-            Error::FailedToParseState => ErrorResponse::new(
+            Error::FailedToParseState => Response::new(
                 String::from("FailedToParseState"),
-                format!("Failed to parse state"),
+                "Failed to parse state".to_string(),
             )
             .write(f),
-            Error::FailedToParseRegistry => ErrorResponse::new(
+            Error::FailedToParseRegistry => Response::new(
                 String::from("FailedToParseRegistry"),
-                format!("Failed to parse registry"),
+                "Failed to parse registry".to_string(),
             )
             .write(f),
-            Error::DuplicatedUnique(entity, key, t) => ErrorResponse::new(
+            Error::DuplicatedUnique(entity, key, t) => Response::new(
                 String::from("DuplicatedUnique"),
                 format!(
                     "key `{}` in entity `{}` already contains value `{:?}`",
@@ -80,41 +80,39 @@ impl std::fmt::Display for Error {
                 ),
             )
             .write(f),
-            Error::UnkwonCondition => ErrorResponse::new(
+            Error::UnkwonCondition => Response::new(
                 String::from("UnkwonCondition"),
-                format!("UNKNOWN MATCH CONDITION"),
+                "UNKNOWN MATCH CONDITION".to_string(),
             )
             .write(f),
-            Error::FailedMatchCondition => ErrorResponse::new(
+            Error::FailedMatchCondition => Response::new(
                 String::from("FailedMatchCondition"),
-                format!("One or more MATCH CONDITIONS failed"),
+                "One or more MATCH CONDITIONS failed".to_string(),
             )
             .write(f),
-            Error::SelectBadRequest => ErrorResponse::new(
+            Error::SelectBadRequest => Response::new(
                 String::from("SelectBadRequest"),
-                format!("SELECT expressions are handled by `/wql/query` endpoint"),
+                "SELECT expressions are handled by `/wql/query` endpoint".to_string(),
             )
             .write(f),
-            Error::NonSelectQuery => ErrorResponse::new(
+            Error::NonSelectQuery => Response::new(
                 String::from("NonSelectQuery"),
-                format!("Non-SELECT expressions are handled by `/wql/tx` endpoint"),
+                "Non-SELECT expressions are handled by `/wql/tx` endpoint".to_string(),
             )
             .write(f),
-            Error::MailboxError(r) => {
-                ErrorResponse::new(String::from("MailboxError"), format!("{:?}", r)).write(f)
+            Error::ActixMailbox(r) => {
+                Response::new(String::from("ActixMailbox"), format!("{:?}", r)).write(f)
             }
-            Error::LockData => ErrorResponse::new(
+            Error::LockData => Response::new(
                 String::from("LockData"),
-                format!("System was not able to get a lock on data"),
+                "System was not able to get a lock on data".to_string(),
             )
             .write(f),
-            Error::RonSerdeError(e) => {
-                ErrorResponse::new(String::from("RonSerdeError"), format!("{:?}", e)).write(f)
+            Error::Ron(e) => Response::new(String::from("Ron"), format!("{:?}", e)).write(f),
+            Error::InvalidUuid(e) => {
+                Response::new(String::from("InvalidUuid"), format!("{:?}", e)).write(f)
             }
-            Error::InvalidUuidError(e) => {
-                ErrorResponse::new(String::from("InvalidUuidError"), format!("{:?}", e)).write(f)
-            }
-            Error::UpdateContentEncryptKeys(keys) => ErrorResponse::new(
+            Error::UpdateContentEncryptKeys(keys) => Response::new(
                 String::from("UpdateContentEncryptKeys"),
                 format!(
                     "Encrypted keys cannont be updated with UPDATE CONTENT: {:?}",
@@ -122,19 +120,19 @@ impl std::fmt::Display for Error {
                 ),
             )
             .write(f),
-            Error::CheckNonEncryptedKeys(keys) => ErrorResponse::new(
+            Error::CheckNonEncryptedKeys(keys) => Response::new(
                 String::from("CheckNonEncryptedKeys"),
                 format!("CHECK can only verify encrypted keys: {:?}", keys),
             )
             .write(f),
-            Error::DateTimeParseError(e) => ErrorResponse::new(
-                String::from("DateTimeParseError"),
+            Error::DateTimeParse(e) => Response::new(
+                String::from("DateTimeParse"),
                 format!("Date parse error: {:?}", e),
             )
             .write(f),
-            Error::FailedToParseDate => ErrorResponse::new(
+            Error::FailedToParseDate => Response::new(
                 String::from("FailedToParseDate"),
-                format!("Log date parse error"),
+                "Log date parse error".to_string(),
             )
             .write(f),
         }
@@ -149,18 +147,18 @@ impl From<io::Error> for Error {
 
 impl From<MailboxError> for Error {
     fn from(error: MailboxError) -> Self {
-        Error::MailboxError(error)
+        Error::ActixMailbox(error)
     }
 }
 
 impl From<ron::Error> for Error {
     fn from(error: ron::Error) -> Self {
-        Error::RonSerdeError(error)
+        Error::Ron(error)
     }
 }
 
 impl From<uuid::Error> for Error {
     fn from(error: uuid::Error) -> Self {
-        Error::InvalidUuidError(error)
+        Error::InvalidUuid(error)
     }
 }
