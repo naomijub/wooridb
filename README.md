@@ -17,18 +17,18 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 
 ## Usage
 * Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
-* For now only persistent local memory is used. Support for `S3`, `PsotgresDB` and `DynamoDB` will be done later by using features.
+* For now only persistent local memory is used. Support for `S3`, `PostgresDB` and `DynamoDB` will be done later by using features.
 * More info at **TODOS**.
 
 ## Transactions:
-> **Remainder**
+> **Reminder**
 > At the end of every data structure representation a `,` (comma) is required. `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. No need for `;` at the end of each expression.
 
 ### Parser
 - [x] Woori Query language parser
 
 ### Transactions by type
-- [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires a rntity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name'`. 
+- [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name'`. 
   - [x] Create entity with Unique identifier. This prevents duplciated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`
   - [x] Encrypt entities keys. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
   - It is possible to create entities with uniques and encryption. `CREATE ENTITY my_entity_name ENCRYPT #{password,} UNIQUES #{name, ssn,}`
@@ -107,7 +107,7 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 
 ### TODOS
 - [ ] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
-- [ ] Autentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
+- [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
 - [ ] Precise Floats [issue 30](https://github.com/naomijub/wooridb/issues/30)
