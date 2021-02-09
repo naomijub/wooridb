@@ -188,6 +188,20 @@ mod test_insert {
     }
 
     #[test]
+    fn insert_precise() {
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P
+        } INTO my_entity",
+        );
+
+        let mut hm = HashMap::new();
+        hm.insert("a".to_string(), Types::Precise("98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673".to_string()));
+
+        assert_eq!(wql.unwrap(), Wql::Insert("my_entity".to_string(), hm));
+    }
+
+    #[test]
     fn insert_missing_into() {
         let wql = Wql::from_str(
             "INSERT {

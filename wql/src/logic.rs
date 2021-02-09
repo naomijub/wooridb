@@ -292,8 +292,9 @@ pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types,
             .take_while(|c| !c.is_whitespace() && c != &',')
             .collect::<String>()
     );
-
-    if value.parse::<isize>().is_ok() {
+    if value.ends_with('P') && value[..value.len() - 1].parse::<f64>().is_ok() {
+        Ok(Types::Precise(value[..value.len() - 1].to_string()))
+    } else if value.parse::<isize>().is_ok() {
         Ok(Types::Integer(value.parse().unwrap()))
     } else if value.parse::<f64>().is_ok() {
         Ok(Types::Float(value.parse().unwrap()))

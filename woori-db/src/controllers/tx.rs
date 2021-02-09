@@ -552,6 +552,9 @@ pub async fn update_content_controller(
             Types::Nil => {
                 *local_state = Types::Nil;
             }
+            Types::Precise(p) => {
+                *local_state = Types::Precise(p);
+            }
         }
     });
 
