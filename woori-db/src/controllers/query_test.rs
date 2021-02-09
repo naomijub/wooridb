@@ -412,6 +412,105 @@ async fn test_select_all_without_encrypts_post_ok() {
     assert!(!body.contains("\"pswd\""));
 }
 
+#[actix_rt::test]
+async fn test_select_when_all_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    let payload = format!(
+        "Select * FROM test_ok WHEN AT {}",
+        "2021-01-08T12:00:00+03:00"
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(body.contains("\"a\": Integer(123)"));
+    assert!(body.contains("30d2b740-e791-4ff6-8471-215d38b1ff5c"));
+    assert!(body.contains("bcab53d9-1ef0-4eb3-9b99-f00259d8725b"));
+}
+
+#[actix_rt::test]
+async fn test_select_when_args_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    let payload = format!(
+        "Select #{{g,}} FROM test_update WHEN AT {}",
+        "2021-01-08T12:00:00+03:00"
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(!body.contains("\"a\": Integer(123)"));
+    assert!(body.contains("\"g\": Nil"));
+    assert!(body.contains("0a1b16ed-886c-4c99-97c9-0b977778ec13"));
+    assert!(body.contains("41ede07f-e98b-41dd-9ff2-8dce99af4e96"));
+}
+
+#[actix_rt::test]
+async fn test_select_when_args_id_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    let payload = format!(
+        "Select #{{g,}} FROM test_update ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT {}",
+        "2021-01-08T12:00:00+03:00"
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(!body.contains("\"a\": Integer(123)"));
+    assert!(body.contains("\"g\": Nil"));
+    assert!(!body.contains("0a1b16ed-886c-4c99-97c9-0b977778ec13"));
+    assert!(!body.contains("41ede07f-e98b-41dd-9ff2-8dce99af4e96"));
+}
+
+#[actix_rt::test]
+async fn test_select_when_all_id_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    let payload = format!(
+        "Select * FROM test_update ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT {}",
+        "2021-01-08T12:00:00+03:00"
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(body.contains("\"a\": Integer(123)"));
+    assert!(body.contains("\"g\": Nil"));
+    assert!(!body.contains("0a1b16ed-886c-4c99-97c9-0b977778ec13"));
+    assert!(!body.contains("41ede07f-e98b-41dd-9ff2-8dce99af4e96"));
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

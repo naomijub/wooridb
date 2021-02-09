@@ -21,6 +21,7 @@ pub enum Wql {
     MatchUpdate(String, Entity, Uuid, MatchCondition),
     Evict(String, Option<Uuid>),
     Select(String, ToSelect, Option<Uuid>),
+    SelectWhen(String, ToSelect, Option<Uuid>, String),
     SelectIds(String, ToSelect, Vec<Uuid>),
     CheckValue(String, Uuid, HashMap<String, String>),
 }

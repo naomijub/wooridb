@@ -1,5 +1,6 @@
 use actix::prelude::*;
 use std::collections::HashMap;
+use uuid::Uuid;
 use wql::Types;
 
 use crate::{io::read::read_date_log, model::error::Error};
@@ -29,29 +30,31 @@ impl Handler<ReadEntitiesAt> for Executor {
 
     fn handle(&mut self, msg: ReadEntitiesAt, _: &mut Self::Context) -> Self::Result {
         use ron::de::from_str;
-        let date_log = read_date_log(msg.date_log)?;
+        let date_log = msg.date_log.clone();
+        let date_log = read_date_log(date_log)?;
         let mut hm = HashMap::new();
-        date_log.split(";").into_iter().try_for_each(|line| {
+        date_log.split(";").try_for_each(|line| {
             let fractions = line.split('|').collect::<Vec<&str>>();
-            if fractions[3].eq(&msg.entity_name) {
-                if fractions[0].eq("INSERT") {
-                    let state = fractions
-                        .last()
-                        .ok_or_else(|| Error::FailedToParseState)?
-                        .to_owned();
+            if fractions[0].eq("INSERT") && fractions[3].eq(&msg.entity_name) {
+                let state = fractions
+                    .last()
+                    .ok_or_else(|| Error::FailedToParseState)?
+                    .to_owned();
 
-                    let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
-                        Ok(x) => Ok(x),
-                        Err(_) => Err(Error::FailedToParseState),
-                    };
-                    match resp {
-                        Ok(map) => {
-                            hm.insert(fractions[2].to_owned(), map);
-                        }
-                        Err(e) => return Err(e),
-                    };
-                }
-            } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
+                let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
+                    Ok(x) => Ok(x),
+                    Err(_) => Err(Error::FailedToParseState),
+                };
+                match resp {
+                    Ok(map) => {
+                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        hm.insert(fractions[2].to_owned(), map);
+                    }
+                    Err(e) => return Err(e),
+                };
+            } else if (fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT"))
+                && fractions[3].eq(&msg.entity_name)
+            {
                 let state = fractions
                     .get(fractions.len() - 2)
                     .ok_or_else(|| Error::FailedToParseState)?
@@ -63,13 +66,93 @@ impl Handler<ReadEntitiesAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
+                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm.insert(fractions[2].to_owned(), map);
                     }
                     Err(e) => return Err(e),
                 };
             }
             Ok(())
-        });
+        })?;
+
+        Ok(hm)
+    }
+}
+
+pub struct ReadEntityIdAt {
+    entity_name: String,
+    uuid: Uuid,
+    date_log: String,
+}
+
+impl ReadEntityIdAt {
+    pub fn new(entity_name: &str, uuid: Uuid, date_log: String) -> Self {
+        Self {
+            entity_name: entity_name.to_owned(),
+            uuid,
+            date_log,
+        }
+    }
+}
+
+impl Message for ReadEntityIdAt {
+    type Result = Result<HashMap<String, Types>, Error>;
+}
+
+impl Handler<ReadEntityIdAt> for Executor {
+    type Result = Result<HashMap<String, Types>, Error>;
+
+    fn handle(&mut self, msg: ReadEntityIdAt, _: &mut Self::Context) -> Self::Result {
+        use ron::de::from_str;
+        let date_log = msg.date_log.clone();
+        let date_log = read_date_log(date_log)?;
+        let mut hm = HashMap::new();
+        date_log.split(";").try_for_each(|line| {
+            let fractions = line.split('|').collect::<Vec<&str>>();
+
+            if fractions[0].eq("INSERT")
+                && fractions[3].eq(&msg.entity_name)
+                && fractions[2].eq(&msg.uuid.to_string())
+            {
+                let state = fractions
+                    .last()
+                    .ok_or_else(|| Error::FailedToParseState)?
+                    .to_owned();
+
+                let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
+                    Ok(x) => Ok(x),
+                    Err(_) => Err(Error::FailedToParseState),
+                };
+                match resp {
+                    Ok(map) => {
+                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        hm = map;
+                    }
+                    Err(e) => return Err(e),
+                };
+            } else if (fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT"))
+                && fractions[3].eq(&msg.entity_name)
+                && fractions[2].eq(&msg.uuid.to_string())
+            {
+                let state = fractions
+                    .get(fractions.len() - 2)
+                    .ok_or_else(|| Error::FailedToParseState)?
+                    .to_owned();
+
+                let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
+                    Ok(x) => Ok(x),
+                    Err(_) => Err(Error::FailedToParseState),
+                };
+                match resp {
+                    Ok(map) => {
+                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        hm = map;
+                    }
+                    Err(e) => return Err(e),
+                };
+            }
+            Ok(())
+        })?;
 
         Ok(hm)
     }

@@ -54,6 +54,15 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         if uuid.is_err() {
             return Err(String::from("Field ID must be a UUID v4"));
         }
+        let next_symbol = chars
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| !c.is_whitespace())
+            .collect::<String>()
+            .to_uppercase();
+        if next_symbol.to_uppercase() == "WHEN" {
+            return when_selector(entity_name, arg, uuid.ok(), chars);
+        }
+
         Ok(Wql::Select(entity_name, arg, uuid.ok()))
     } else if id_symbol == "IDS" {
         let in_symbol = chars
@@ -68,15 +77,52 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             ))
         } else {
             let uuids: Vec<Uuid> = read_uuids(chars)?;
+            let next_symbol = chars
+                .skip_while(|c| c.is_whitespace())
+                .take_while(|c| !c.is_whitespace())
+                .collect::<String>()
+                .to_uppercase();
+            if next_symbol.to_uppercase() == "WHEN" {
+                return Err(String::from("WHEN not allowed after IDS IN"));
+            }
             Ok(Wql::SelectIds(entity_name, arg, uuids))
         }
-    } else if !id_symbol.is_empty() && (id_symbol != "ID" || id_symbol != "IDS") {
+    } else if id_symbol.to_uppercase() == "WHEN" {
+        return when_selector(entity_name, arg, None, chars);
+    } else if !id_symbol.is_empty()
+        && (id_symbol.to_uppercase() != "ID" || id_symbol.to_uppercase() != "IDS")
+    {
+        println!("{:?}", id_symbol);
         Err(String::from(
             "ID/IDS keyword is required to set an uuid in SELECT",
         ))
     } else {
         Ok(Wql::Select(entity_name, arg, None))
     }
+}
+
+fn when_selector(
+    entity_name: String,
+    arg: ToSelect,
+    uuid: Option<Uuid>,
+    chars: &mut std::str::Chars,
+) -> Result<Wql, String> {
+    let next_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_uppercase();
+
+    if next_symbol.to_uppercase() != "AT" {
+        return Err(String::from("AT is required after WHEN"));
+    };
+
+    let date = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    Ok(Wql::SelectWhen(entity_name, arg, uuid, date))
 }
 
 #[cfg(test)]

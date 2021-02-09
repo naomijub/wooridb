@@ -11,7 +11,11 @@ use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
 
 use crate::{
-    actors::{state::State, when::ReadEntitiesAt, wql::Executor},
+    actors::{
+        state::State,
+        when::{ReadEntitiesAt, ReadEntityIdAt},
+        wql::Executor,
+    },
     model::{error::Error, DataRegister},
     repository::local::LocalContext,
 };
@@ -54,10 +58,10 @@ pub async fn wql_handler(
             select_keys_when_controller(entity, date, keys, actor).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, Some(uuid), date)) => {
-            select_all_id_when_controller(entity, date, uuid, data, actor).await
+            select_all_id_when_controller(entity, date, uuid, actor).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(uuid), date)) => {
-            select_keys_id_when_controller(entity, date, keys, uuid, data, actor).await
+            select_keys_id_when_controller(entity, date, keys, uuid, actor).await
         }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
@@ -78,8 +82,58 @@ async fn select_all_when_controller(
     let date = date
         .parse::<DateTime<Utc>>()
         .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    #[cfg(test)]
+    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    #[cfg(not(test))]
     let date_log = date.format("%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
+
+    Ok(to_string_pretty(&result, pretty_config())?)
+}
+
+async fn select_all_id_when_controller(
+    entity: String,
+    date: String,
+    uuid: Uuid,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    use chrono::{DateTime, Utc};
+    let date = date
+        .parse::<DateTime<Utc>>()
+        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    #[cfg(test)]
+    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    #[cfg(not(test))]
+    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let result = actor
+        .send(ReadEntityIdAt::new(&entity, uuid, date_log))
+        .await??;
+
+    Ok(to_string_pretty(&result, pretty_config())?)
+}
+
+async fn select_keys_id_when_controller(
+    entity: String,
+    date: String,
+    keys: Vec<String>,
+    uuid: Uuid,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
+    use chrono::{DateTime, Utc};
+    let date = date
+        .parse::<DateTime<Utc>>()
+        .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+    #[cfg(test)]
+    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    #[cfg(not(test))]
+    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let result = actor
+        .send(ReadEntityIdAt::new(&entity, uuid, date_log))
+        .await??;
+    let result = result
+        .into_iter()
+        .filter(|(k, _)| keys.contains(k))
+        .collect::<HashMap<String, Types>>();
 
     Ok(to_string_pretty(&result, pretty_config())?)
 }
@@ -94,6 +148,10 @@ async fn select_keys_when_controller(
     let date = date
         .parse::<DateTime<Utc>>()
         .or_else(|e| Err(Error::DateTimeParseError(e)))?;
+
+    #[cfg(test)]
+    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    #[cfg(not(test))]
     let date_log = date.format("%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
     let result = result
