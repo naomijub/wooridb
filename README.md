@@ -9,6 +9,8 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 - [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
 - Professor Andy Pavlo Database classes. 
 
+`Woori` mean `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
+
 ## Installation
 - if you don't have Rust and Cargo installed run `make setup` at root.
 - `make run` at root.
