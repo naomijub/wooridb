@@ -8,15 +8,21 @@ use crate::{io::read::read_date_log, model::error::Error};
 
 use super::wql::Executor;
 pub struct ReadEntityRange {
-    entity_name:String,
+    entity_name: String,
     uuid: Uuid,
     start_date: DateTime<Utc>,
     end_date: DateTime<Utc>,
-    date_log: String
+    date_log: String,
 }
 
 impl ReadEntityRange {
-    pub fn new(entity_name: &str, uuid: Uuid, start_date: DateTime<Utc>, end_date: DateTime<Utc>, date_log: String) -> Self {
+    pub fn new(
+        entity_name: &str,
+        uuid: Uuid,
+        start_date: DateTime<Utc>,
+        end_date: DateTime<Utc>,
+        date_log: String,
+    ) -> Self {
         Self {
             entity_name: entity_name.to_owned(),
             uuid,
@@ -30,7 +36,6 @@ impl ReadEntityRange {
 impl Message for ReadEntityRange {
     type Result = Result<BTreeMap<DateTime<Utc>, HashMap<String, Types>>, Error>;
 }
-
 
 impl Handler<ReadEntityRange> for Executor {
     type Result = Result<BTreeMap<DateTime<Utc>, HashMap<String, Types>>, Error>;
@@ -53,9 +58,7 @@ impl Handler<ReadEntityRange> for Executor {
                     .to_owned();
                 let date: Result<DateTime<Utc>, Error> = match from_str(fractions[1]) {
                     Ok(x) => Ok(x),
-                    Err(_) => {
-                        Err(Error::FailedToParseDate)
-                    },
+                    Err(_) => Err(Error::FailedToParseDate),
                 };
                 let date = date?;
 

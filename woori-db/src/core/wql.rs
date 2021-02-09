@@ -6,10 +6,10 @@ use crate::{
         DeleteId, EvictEntityId, InsertEntityContent, UpdateContentEntityContent,
         UpdateSetEntityContent,
     },
-    model::wql::Action,
     core::pretty_config_inner,
+    model::wql::Action,
 };
-use ron::ser::{to_string_pretty};
+use ron::ser::to_string_pretty;
 
 pub fn create_entity(entity: &str) -> String {
     format!("{}|{};", Action::CreateEntity, entity)

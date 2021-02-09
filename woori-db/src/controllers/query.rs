@@ -6,11 +6,20 @@ use std::{
 
 use actix::Addr;
 use actix_web::{web, HttpResponse, Responder};
-use ron::ser::{to_string_pretty};
+use ron::ser::to_string_pretty;
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
 
-use crate::{actors::{state::State, when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange}, wql::Executor}, core::pretty_config_output, model::{error::Error, DataRegister}, repository::local::LocalContext};
+use crate::{
+    actors::{
+        state::State,
+        when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange},
+        wql::Executor,
+    },
+    core::pretty_config_output,
+    model::{error::Error, DataRegister},
+    repository::local::LocalContext,
+};
 
 pub async fn wql_handler(
     body: String,
@@ -60,7 +69,13 @@ pub async fn wql_handler(
     }
 }
 
-async fn select_all_when_range_controller(entity: String, uuid: Uuid, start_date: String, end_date: String, actor: web::Data<Addr<Executor>>) -> Result<String, Error> {
+async fn select_all_when_range_controller(
+    entity: String,
+    uuid: Uuid,
+    start_date: String,
+    end_date: String,
+    actor: web::Data<Addr<Executor>>,
+) -> Result<String, Error> {
     use chrono::{DateTime, Utc};
     let start_date: DateTime<Utc> = start_date
         .parse::<DateTime<Utc>>()
@@ -73,7 +88,11 @@ async fn select_all_when_range_controller(entity: String, uuid: Uuid, start_date
     #[cfg(not(test))]
     let date_log = start_date.format("%Y_%m_%d.log").to_string();
 
-    let result = actor.send(ReadEntityRange::new(&entity, uuid, start_date, end_date, date_log)).await??;
+    let result = actor
+        .send(ReadEntityRange::new(
+            &entity, uuid, start_date, end_date, date_log,
+        ))
+        .await??;
 
     Ok(to_string_pretty(&result, pretty_config_output())?)
 }
@@ -201,7 +220,10 @@ async fn select_all_with_id(
         .into_iter()
         .filter(|(_, v)| !v.is_hash())
         .collect::<HashMap<String, Types>>();
-    Ok(ron::ser::to_string_pretty(&filterd_state, pretty_config_output())?)
+    Ok(ron::ser::to_string_pretty(
+        &filterd_state,
+        pretty_config_output(),
+    )?)
 }
 
 async fn select_all_with_ids(
@@ -284,7 +306,10 @@ async fn select_keys_with_id(
         .filter(|(k, _)| keys.contains(k))
         .filter(|(_, v)| !v.is_hash())
         .collect();
-    Ok(ron::ser::to_string_pretty(&filtered, pretty_config_output())?)
+    Ok(ron::ser::to_string_pretty(
+        &filtered,
+        pretty_config_output(),
+    )?)
 }
 
 async fn select_keys_with_ids(

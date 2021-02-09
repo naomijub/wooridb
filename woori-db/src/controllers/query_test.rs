@@ -517,8 +517,7 @@ async fn test_select_when_range_all_post_ok() {
 
     let payload = format!(
         "Select * FROM test_update ID fb1ccddb-2465-4504-a4a4-e28ee75c7981 WHEN START {} END {}",
-        "2021-02-09T16:30:00Z",
-        "2021-02-09T17:00:00Z"
+        "2021-02-09T16:30:00Z", "2021-02-09T17:00:00Z"
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
