@@ -1,5 +1,6 @@
 use crate::{
     actors::wql::Executor,
+    io::read::{encryption, local_data, offset},
     repository::local::{LocalContext, UniquenessContext},
 };
 use crate::{
@@ -30,10 +31,12 @@ pub async fn readiness() -> impl Responder {
 }
 
 pub fn routes(config: &mut web::ServiceConfig) {
-    let wql_context = Arc::new(Mutex::new(LocalContext::new()));
+    let local_context = local_data().map_or(LocalContext::new(), |map| map);
+    let encrypt_context = encryption().map_or(EncryptContext::new(), |e| e);
+    let wql_context = Arc::new(Mutex::new(local_context));
     let unique_context = Arc::new(Mutex::new(UniquenessContext::new()));
-    let encrypt_context = Arc::new(Mutex::new(EncryptContext::new()));
-    let write_offset = AtomicUsize::new(0_usize);
+    let encrypt_context = Arc::new(Mutex::new(encrypt_context));
+    let write_offset = AtomicUsize::new(offset().map_or(0_usize, |o| o));
     let actor = Executor::new().start();
     let env_cost = std::env::var("HASHING_COST").unwrap_or_else(|_| "14".to_owned());
     let cost = env_cost.parse::<u32>().expect("HASHING_COST must be a u32");
