@@ -33,9 +33,11 @@ PORT=1438
 > At the end of every data structure representation a `,` (comma) is required. `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. No need for `;` at the end of each expression.
 
 ### Parser
-- [x] Woori Query language parser
+- [x] [Woori Query language parser](https://github.com/naomijub/wooridb/tree/main/wql)
 
-### Transactions by type
+### TX Transactions by type
+> `<ip>:1438/wql/tx`
+
 - [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name'`. 
   - [x] Create entity with Unique identifier. This prevents duplciated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`
   - [x] Encrypt entities keys. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
@@ -75,6 +77,9 @@ PORT=1438
 
 - [x] Evict entity: Removes all ocurrences of an entity. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
 - [x] Evict entity registry: Similar to SQL `DROP TABLE <entity>`.
+
+### Query Transactions by type
+> `<ip>:1438/wql/query`
 
 - [x] Select entities: The basic read operation. Endpoint is `/wql/query`. To better udnerstand the next sub-items, lets say the entity `my_entity_name` has the following values:
 ```
