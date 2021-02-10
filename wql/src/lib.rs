@@ -1,11 +1,13 @@
 use language_parser::read_symbol;
 use serde::{Deserialize, Serialize};
+use where_clause::Clause;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
 
 mod language_parser;
 mod logic;
 mod select;
+mod where_clause;
 #[cfg(test)]
 mod test;
 
@@ -24,6 +26,7 @@ pub enum Wql {
     SelectWhen(String, ToSelect, Option<Uuid>, String),
     SelectWhenRange(String, Uuid, String, String),
     SelectIds(String, ToSelect, Vec<Uuid>),
+    SelectWhere(String, ToSelect, Vec<Clause>),
     CheckValue(String, Uuid, HashMap<String, String>),
 }
 

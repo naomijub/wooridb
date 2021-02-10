@@ -117,7 +117,6 @@ PORT=1438
 - [ ] Division
 
 ### TODOS
-- [x] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
