@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: DB-tests
-      run: | 
+      run: |
         cargo test -- --nocapture
         rm -rf *.log
         cargo test -- --ignored controllers::test::test_update_content_post_ok
@@ -58,6 +58,11 @@ jobs:
         cargo test -- --ignored controllers::tx_test::test_update_content_encrypt_post_err
         rm -rf *.log
         cargo test -- --ignored controllers::tx_test::test_check_encrypt_post_ok
+    - name: DB-featured-tests
+      run: | 
+        cargo test --features test_read -- --ignored io::read::test::encryption_test
+        cargo test --features test_read -- --ignored io::read::test::local_data_test
+        cargo test --features test_read -- --ignored io::read::test::offset_test
     - name: DB-FMT
       run: cargo fmt -- --check
   
