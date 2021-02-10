@@ -41,6 +41,30 @@ pub fn assert_uniques(pat: &str) {
 }
 
 #[cfg(test)]
+pub fn assert_offset(pat: &str) {
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open("offset_counter.log")
+        .unwrap();
+    let mut s = String::new();
+    file.read_to_string(&mut s).unwrap();
+
+    assert!(s.contains(pat));
+}
+
+#[cfg(test)]
+pub fn assert_local_data(pat: &str) {
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open("local_data.log")
+        .unwrap();
+    let mut s = String::new();
+    file.read_to_string(&mut s).unwrap();
+
+    assert!(s.contains(pat));
+}
+
+#[cfg(test)]
 pub fn assert_encrypt(pat: &str) {
     let mut file = OpenOptions::new().read(true).open("encrypt.log").unwrap();
     let mut s = String::new();
