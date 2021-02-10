@@ -379,6 +379,8 @@ async fn test_update_content_post_ok() {
         .to_request();
 
     let resp = test::call_service(&mut app, req).await;
+    // let body = resp.take_body().as_str().to_string();
+    // assert_eq!(body, "");
     assert!(resp.status().is_success());
 
     read::assert_content("UPDATE_CONTENT|");

@@ -97,9 +97,9 @@ pub fn read_date_log(date_log: String) -> Result<String, Error> {
 }
 
 pub fn offset() -> Result<usize, error::Error> {
-    #[cfg(not(test))]
+    #[cfg(not(feature = "test_read"))]
     let path = "offset_counter.log";
-    #[cfg(test)]
+    #[cfg(feature = "test_read")]
     let path = "offset_counter.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::new();
@@ -110,9 +110,9 @@ pub fn offset() -> Result<usize, error::Error> {
 }
 
 pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, error::Error> {
-    #[cfg(not(test))]
+    #[cfg(not(feature = "test_read"))]
     let path = "local_data.log";
-    #[cfg(test)]
+    #[cfg(feature = "test_read")]
     let path = "local_data.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::new();
@@ -128,9 +128,9 @@ pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, er
 }
 
 pub fn encryption() -> Result<BTreeMap<String, HashSet<String>>, error::Error> {
-    #[cfg(not(test))]
+    #[cfg(not(feature = "test_read"))]
     let path = "encrypt.log";
-    #[cfg(test)]
+    #[cfg(feature = "test_read")]
     let path = "encrypt.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::from('[');
@@ -163,6 +163,7 @@ mod test {
     use super::*;
     use crate::model::DataRegister;
 
+    #[ignore]
     #[test]
     fn encryption_test() {
         let encrypt = encryption().unwrap();
@@ -187,6 +188,7 @@ mod test {
         assert_eq!(log, "i am too lazy to create.");
     }
 
+    #[ignore]
     #[test]
     fn offset_test() {
         let offset = offset();
@@ -194,6 +196,7 @@ mod test {
         assert_eq!(offset.unwrap(), 701);
     }
 
+    #[ignore]
     #[test]
     fn local_data_test() {
         let local_data = local_data();
