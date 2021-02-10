@@ -60,9 +60,10 @@ jobs:
         cargo test -- --ignored controllers::tx_test::test_check_encrypt_post_ok
     - name: DB-featured-tests
       run: | 
-        cargo test --features test_read -- --ignored io::read::test::encryption_test
-        cargo test --features test_read -- --ignored io::read::test::local_data_test
-        cargo test --features test_read -- --ignored io::read::test::offset_test
+        cargo test --features test_read io::read::test::encryption_test
+        cargo test --features test_read io::read::test::local_data_test
+        cargo test --features test_read io::read::test::offset_test
+        cargo test --features test_read io::read::unique_data_test
     - name: DB-FMT
       run: cargo fmt -- --check
   

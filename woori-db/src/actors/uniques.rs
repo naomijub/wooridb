@@ -9,7 +9,7 @@ use serde::Serialize;
 use wql::Types;
 
 use crate::{
-    actors::wql::Executor, core::pretty_config_inner, model::error::Error,
+    actors::wql::Executor, core::pretty_config_inner, io::write::unique_data, model::error::Error,
     repository::local::UniquenessContext,
 };
 
@@ -68,6 +68,9 @@ impl Handler<CreateWithUniqueKeys> for Executor {
                 .collect::<HashMap<String, HashSet<String>>>();
             uniqueness_data.insert(msg.entity.to_owned(), hm);
         }
+        let unique_ron =
+            ron::ser::to_string_pretty(&uniqueness_data.clone(), pretty_config_inner())?;
+        unique_data(&unique_ron)?;
         Ok(())
     }
 }
@@ -114,6 +117,9 @@ impl Handler<CheckForUniqueKeys> for Executor {
                     }
                 })?;
             }
+            let unique_ron =
+                ron::ser::to_string_pretty(&uniqueness_data.clone(), pretty_config_inner())?;
+            unique_data(&unique_ron)?;
         }
 
         Ok(())

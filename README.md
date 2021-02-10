@@ -112,10 +112,10 @@ PORT=1438
 - [ ] Division
 
 ### TODOS
-- [ ] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
+- [x] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
-- [x] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
+- [ ] Remove data files from root
 - [ ] Docker
 - [ ] Benchmarks
