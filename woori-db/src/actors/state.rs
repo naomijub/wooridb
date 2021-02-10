@@ -100,17 +100,14 @@ impl Handler<MatchUpdate> for Executor {
 
     fn handle(&mut self, msg: MatchUpdate, _: &mut Self::Context) -> Self::Result {
         match msg.conditions.clone() {
-            MatchCondition::All(all) => match_all(all, msg.previous_state),
-            MatchCondition::Any(any) => match_any(any, msg.previous_state),
+            MatchCondition::All(all) => match_all(all.as_slice(), &msg.previous_state),
+            MatchCondition::Any(any) => match_any(any.as_slice(), &msg.previous_state),
             _ => Err(Error::UnkwonCondition),
         }?;
         Ok(())
     }
 }
-fn match_all(
-    all: Vec<MatchCondition>,
-    previous_state: HashMap<String, Types>,
-) -> Result<(), Error> {
+fn match_all(all: &[MatchCondition], previous_state: &HashMap<String, Types>) -> Result<(), Error> {
     let conds = all
         .iter()
         .map(|cond| match cond.clone() {
@@ -166,10 +163,7 @@ fn match_all(
     }
 }
 
-fn match_any(
-    any: Vec<MatchCondition>,
-    previous_state: HashMap<String, Types>,
-) -> Result<(), Error> {
+fn match_any(any: &[MatchCondition], previous_state: &HashMap<String, Types>) -> Result<(), Error> {
     let conds = any
         .iter()
         .map(|cond| match cond.clone() {
