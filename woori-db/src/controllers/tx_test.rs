@@ -8,19 +8,21 @@ async fn test_create_post_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
-        .set_payload("CREATE ENTITY test_ok")
+        .set_payload("CREATE ENTITY crete_test_ok")
         .uri("/wql/tx")
         .to_request();
 
     let mut resp = test::call_service(&mut app, req).await;
-    // assert!(resp.status().is_success());
+    assert!(resp.status().is_success());
     let body = resp.take_body();
     let body = body.as_ref().unwrap();
     assert_eq!(
-        &Body::from("(\n entity: \"test_ok\",\n message: \"Entity `test_ok` created\",\n)"),
+        &Body::from(
+            "(\n entity: \"crete_test_ok\",\n message: \"Entity `crete_test_ok` created\",\n)"
+        ),
         body
     );
-    read::assert_content("CREATE_ENTITY|test_ok;");
+    read::assert_content("CREATE_ENTITY|crete_test_ok;");
     clear();
 }
 
