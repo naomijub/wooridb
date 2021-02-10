@@ -1,6 +1,6 @@
 use crate::{
     actors::wql::Executor,
-    io::read::{encryption, local_data, offset},
+    io::read::{encryption, local_data, offset, unique_data},
     repository::local::{LocalContext, UniquenessContext},
 };
 use crate::{
@@ -33,8 +33,9 @@ pub async fn readiness() -> impl Responder {
 pub fn routes(config: &mut web::ServiceConfig) {
     let local_context = local_data().map_or(LocalContext::new(), |map| map);
     let encrypt_context = encryption().map_or(EncryptContext::new(), |e| e);
+    let uniqueness = unique_data().map_or(UniquenessContext::new(), |u| u);
     let wql_context = Arc::new(Mutex::new(local_context));
-    let unique_context = Arc::new(Mutex::new(UniquenessContext::new()));
+    let unique_context = Arc::new(Mutex::new(uniqueness));
     let encrypt_context = Arc::new(Mutex::new(encrypt_context));
     let write_offset = AtomicUsize::new(offset().map_or(0_usize, |o| o));
     let actor = Executor::new().start();

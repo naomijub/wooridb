@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fs::OpenOptions,
     io::{Error, Read, Seek, SeekFrom},
 };
@@ -69,6 +69,18 @@ pub fn assert_local_data(pat: &str) {
 }
 
 #[cfg(test)]
+pub fn assert_unique_data(pat: &str) {
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open("unique_data.log")
+        .unwrap();
+    let mut s = String::new();
+    file.read_to_string(&mut s).unwrap();
+
+    assert!(s.contains(pat));
+}
+
+#[cfg(test)]
 pub fn assert_encrypt(pat: &str) {
     let mut file = OpenOptions::new().read(true).open("encrypt.log").unwrap();
     let mut s = String::new();
@@ -127,6 +139,24 @@ pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, er
     data
 }
 
+pub fn unique_data() -> Result<BTreeMap<String, HashMap<String, HashSet<String>>>, error::Error> {
+    #[cfg(not(feature = "test_read"))]
+    let path = "unique_data.log";
+    #[cfg(feature = "test_read")]
+    let path = "unique_data.txt";
+    let mut file = OpenOptions::new().read(true).open(path)?;
+    let mut s = String::new();
+    file.read_to_string(&mut s)?;
+
+    let data: Result<BTreeMap<String, HashMap<String, HashSet<String>>>, error::Error> =
+        match ron::de::from_str(&s) {
+            Ok(x) => Ok(x),
+            Err(_) => Err(error::Error::FailedToParseState),
+        };
+
+    data
+}
+
 pub fn encryption() -> Result<BTreeMap<String, HashSet<String>>, error::Error> {
     #[cfg(not(feature = "test_read"))]
     let path = "encrypt.log";
@@ -163,18 +193,6 @@ mod test {
     use super::*;
     use crate::model::DataRegister;
 
-    #[ignore]
-    #[test]
-    fn encryption_test() {
-        let encrypt = encryption().unwrap();
-        let s = format!("{:?}", encrypt);
-
-        assert!(s.contains("encrypt_ent"));
-        assert!(s.contains("encrypt_ent2"));
-        assert!(s.contains("name"));
-        assert!(s.contains("cpf"));
-    }
-
     #[test]
     fn read_log_range() {
         let log_size = write_new();
@@ -188,26 +206,6 @@ mod test {
         assert_eq!(log, "i am too lazy to create.");
     }
 
-    #[ignore]
-    #[test]
-    fn offset_test() {
-        let offset = offset();
-
-        assert_eq!(offset.unwrap(), 701);
-    }
-
-    #[ignore]
-    #[test]
-    fn local_data_test() {
-        let local_data = local_data();
-
-        assert!(local_data.is_ok());
-        assert_eq!(
-            format!("{:?}", local_data), 
-            "Ok({\"encrypt_ent\": {}, \"encrypt_ent2\": {}, \"hello\": {50e68bc1-0c3b-4ffc-93be-46e57f59b415: DataRegister { file_name: \"2021_02_10.log\", offset: 447, bytes_length: 153 }}, \"oh_yeah\": {27367bd0-1966-4005-a8b5-5e323e1c3524: DataRegister { file_name: \"2021_02_10.log\", offset: 180, bytes_length: 247 }}})"
-        );
-    }
-
     fn write_new() -> usize {
         let log =
             "this is a very long text that i am too lazy to create. Guess it is enough already.";
@@ -218,5 +216,49 @@ mod test {
             .unwrap();
 
         file.write(log.as_bytes()).unwrap()
+    }
+
+    #[cfg(feature = "test_read")]
+    #[test]
+    fn encryption_test() {
+        let encrypt = encryption().unwrap();
+        let s = format!("{:?}", encrypt);
+
+        assert!(s.contains("encrypt_ent"));
+        assert!(s.contains("encrypt_ent2"));
+        assert!(s.contains("name"));
+        assert!(s.contains("cpf"));
+    }
+
+    #[cfg(feature = "test_read")]
+    #[test]
+    fn offset_test() {
+        let offset = offset();
+
+        assert_eq!(offset.unwrap(), 701);
+    }
+
+    #[cfg(feature = "test_read")]
+    #[test]
+    fn local_data_test() {
+        let local_data = local_data();
+
+        assert!(local_data.is_ok());
+        assert_eq!(
+                format!("{:?}", local_data), 
+                "Ok({\"encrypt_ent\": {}, \"encrypt_ent2\": {}, \"hello\": {50e68bc1-0c3b-4ffc-93be-46e57f59b415: DataRegister { file_name: \"2021_02_10.log\", offset: 447, bytes_length: 153 }}, \"oh_yeah\": {27367bd0-1966-4005-a8b5-5e323e1c3524: DataRegister { file_name: \"2021_02_10.log\", offset: 180, bytes_length: 247 }}})"
+            );
+    }
+
+    #[cfg(feature = "test_read")]
+    #[test]
+    fn unique_data_test() {
+        let unique_data = unique_data();
+
+        assert!(unique_data.is_ok());
+        assert_eq!(
+                format!("{:?}", unique_data), 
+                "Ok({\"uniq2_ent2\": {\"id\": {\"Integer(4234)\", \"Integer(734)\"}, \"rg\": {\"Precise(\\\"42356546\\\")\", \"Precise(\\\"123456789\\\")\"}}, \"uniq_ent\": {\"cpf\": {\"Precise(\\\"42356546\\\")\", \"Precise(\\\"423560546\\\")\"}, \"snn\": {}}})"
+            );
     }
 }

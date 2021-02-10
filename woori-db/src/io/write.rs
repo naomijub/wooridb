@@ -39,6 +39,19 @@ pub fn local_data(log: &str) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn unique_data(log: &str) -> Result<(), Error> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(false)
+        .create(true)
+        .open("unique_data.log")?;
+
+    let _ = file.seek(SeekFrom::Start(0));
+    file.write_all(log.as_bytes())?;
+
+    Ok(())
+}
+
 pub fn offset_counter(log: usize) -> Result<(), Error> {
     let mut file = OpenOptions::new()
         .write(true)
@@ -66,7 +79,9 @@ pub fn write_to_encrypts(log: &str) -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::io::read::{assert_content, assert_local_data, assert_offset, assert_uniques};
+    use crate::io::read::{
+        assert_content, assert_local_data, assert_offset, assert_unique_data, assert_uniques,
+    };
     #[test]
     fn write_unique() {
         let _ = write_to_uniques("oh crazy unique log");
@@ -89,5 +104,11 @@ mod test {
     fn local_data_test() {
         let _ = local_data("some crazy date here");
         assert_local_data("some crazy date here");
+    }
+
+    #[test]
+    fn unique_data_test() {
+        let _ = unique_data("some crazy date here");
+        assert_unique_data("some crazy date here");
     }
 }

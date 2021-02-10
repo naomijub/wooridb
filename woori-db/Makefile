@@ -14,9 +14,10 @@ lint: fmt clippy
 
 test:
 	cargo test -- --nocapture
-	cargo test --features test_read -- --ignored io::read::test::encryption_test
-	cargo test --features test_read -- --ignored io::read::test::local_data_test
-	cargo test --features test_read -- --ignored io::read::test::offset_test
+	cargo test --features test_read io::read::test::encryption_test
+	cargo test --features test_read io::read::test::local_data_test
+	cargo test --features test_read io::read::test::offset_test
+	cargo test --features test_read io::read::unique_data_test
 	rm -rf *.log
 	cargo test -- --ignored controllers::tx_test::test_update_content_post_ok
 	rm -rf *.log
