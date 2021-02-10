@@ -95,10 +95,8 @@ PORT=1438
   - [ ] Selects with WHERE?
 
 - [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
-
-- [ ] Multiple queries/tx.
   
-  ### SELECT = Functions that could be implemented from Relation Algebra:
+### SELECT = Functions that could be implemented from Relation Algebra:
 - [x] Select
 - [ ] Projection
 - [ ] Union
@@ -121,5 +119,4 @@ PORT=1438
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
 - [ ] Docker
 - [ ] Test all Actors
-- [x] Clippy
 - [ ] Benchmarks
