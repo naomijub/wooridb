@@ -30,7 +30,10 @@ impl Handler<State> for Executor {
                 Err(_) => Err(Error::FailedToParseState),
             };
             resp
-        } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
+        } else if fractions[0].eq("UPDATE_SET")
+            || fractions[0].eq("UPDATE_CONTENT")
+            || fractions[0].eq("DELETE")
+        {
             let state = fractions
                 .get(fractions.len() - 2)
                 .ok_or_else(|| Error::FailedToParseState)?
@@ -62,7 +65,10 @@ impl Handler<PreviousRegistry> for Executor {
         let fractions = msg.0.split('|').collect::<Vec<&str>>();
         if fractions[0].eq("INSERT") {
             Ok(None)
-        } else if fractions[0].eq("UPDATE_SET") || fractions[0].eq("UPDATE_CONTENT") {
+        } else if fractions[0].eq("UPDATE_SET")
+            || fractions[0].eq("UPDATE_CONTENT")
+            || fractions[0].eq("DELETE")
+        {
             let state = fractions
                 .last()
                 .ok_or_else(|| Error::FailedToParseRegistry)?
