@@ -118,5 +118,4 @@ PORT=1438
 - [ ] Use tokio::sync::Mutex instead of sync (problem is the usage with actors...) [issue 29](https://github.com/naomijub/wooridb/issues/29)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
 - [ ] Docker
-- [ ] Test all Actors
 - [ ] Benchmarks

@@ -240,3 +240,125 @@ impl Handler<EvictEntityId> for Executor {
         Ok(write_to_log(&content)?)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use actix::Actor;
+
+    use crate::io::read;
+
+    use super::{
+        CreateEntity, DeleteId, EvictEntity, EvictEntityId, Executor, InsertEntityContent,
+        UpdateSetEntityContent,
+    };
+
+    #[actix_rt::test]
+    async fn create_test() {
+        let create = CreateEntity {
+            name: String::from("create-my-entity"),
+        };
+        let actor = Executor::new().start();
+
+        let resp = actor.send(create).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("CREATE_ENTITY|create-my-entity;")
+    }
+
+    #[actix_rt::test]
+    async fn insert_test() {
+        let insert = InsertEntityContent {
+            name: String::from("insert-my-entity"),
+            content: String::from("this is the content"),
+        };
+        let actor = Executor::new().start();
+
+        let resp = actor.send(insert).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("INSERT|");
+        read::assert_content("insert-my-entity");
+        read::assert_content("this is the content");
+    }
+
+    #[actix_rt::test]
+    async fn update_set_test() {
+        let uuid = uuid::Uuid::new_v4();
+        let update_set = UpdateSetEntityContent::new(
+            "update-set-my-entity",
+            "this is the content",
+            "this is the current state",
+            uuid,
+            "this is the previous registry",
+        );
+        let actor = Executor::new().start();
+
+        let resp = actor.send(update_set).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("UPDATE_SET|");
+        read::assert_content("update-set-my-entity");
+        read::assert_content("this is the content");
+        read::assert_content(&uuid.to_string());
+        read::assert_content("this is the current state");
+        read::assert_content("this is the previous registry");
+    }
+
+    #[actix_rt::test]
+    async fn update_content_test() {
+        let uuid = uuid::Uuid::new_v4();
+        let update_content = UpdateSetEntityContent::new(
+            "update-content-my-entity",
+            "this is the content",
+            "this is the current state",
+            uuid,
+            "this is the previous registry",
+        );
+        let actor = Executor::new().start();
+
+        let resp = actor.send(update_content).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("UPDATE_SET|");
+        read::assert_content("update-content-my-entity");
+        read::assert_content(&uuid.to_string());
+    }
+
+    #[actix_rt::test]
+    async fn delete_test() {
+        let uuid = uuid::Uuid::new_v4();
+        let update_content = DeleteId::new(
+            "delete-my-entity",
+            "this is the content",
+            uuid,
+            "this is the previous registry",
+        );
+        let actor = Executor::new().start();
+
+        let resp = actor.send(update_content).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("DELETE|");
+        read::assert_content("delete-my-entity");
+        read::assert_content(&uuid.to_string());
+    }
+
+    #[actix_rt::test]
+    async fn evict_test() {
+        let evict = EvictEntity::new("evict-my-entity");
+        let actor = Executor::new().start();
+
+        let resp = actor.send(evict).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("EVICT_ENTITY|");
+        read::assert_content("evict-my-entity");
+    }
+
+    #[actix_rt::test]
+    async fn evict_id_test() {
+        let uuid = uuid::Uuid::new_v4();
+        let evict = EvictEntityId::new("evict-id-my-entity", uuid);
+        let actor = Executor::new().start();
+
+        let resp = actor.send(evict).await.unwrap();
+        assert!(resp.is_ok());
+        read::assert_content("EVICT_ENTITY_ID|");
+        read::assert_content("evict-id-my-entity");
+        read::assert_content(&uuid.to_string());
+    }
+}
