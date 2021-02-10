@@ -98,6 +98,30 @@ mod test_create {
     }
 
     #[test]
+    fn create_uniques_in_encrypt() {
+        let wql = Wql::from_str(
+            "CREATE ENTITY entity ENCRYPT #{password,something,} UNIQUES #{name, something,}",
+        );
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Encrypted arguments cannot be set to UNIQUE"))
+        );
+    }
+
+    #[test]
+    fn create_encrypts_in_uniques() {
+        let wql = Wql::from_str(
+            "CREATE ENTITY entity UNIQUES #{name, something,} ENCRYPT #{password,something,}",
+        );
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Encrypted arguments cannot be set to UNIQUE"))
+        );
+    }
+
+    #[test]
     fn create_entity_with_uniques_and_encrypt() {
         let wql = Wql::from_str(
             "CREATE ENTITY entity UNIQUES #{name, ssn,} ENCRYPT #{password,something,}",

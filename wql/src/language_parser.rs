@@ -56,6 +56,10 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
             encrypts = read_args(chars)?;
         }
 
+        if encrypts.iter().any(|e| unique_vec.contains(e)) {
+            return Err(String::from("Encrypted arguments cannot be set to UNIQUE"));
+        }
+
         Ok(Wql::CreateEntity(entity_name, unique_vec, encrypts))
     } else if next_symbol.to_uppercase() == "ENCRYPT" {
         let mut unique_vec = Vec::new();
@@ -76,6 +80,10 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
                 ));
             }
             unique_vec = read_args(chars)?;
+        }
+
+        if encrypt_vec.iter().any(|e| unique_vec.contains(e)) {
+            return Err(String::from("Encrypted arguments cannot be set to UNIQUE"));
         }
 
         Ok(Wql::CreateEntity(entity_name, unique_vec, encrypt_vec))
