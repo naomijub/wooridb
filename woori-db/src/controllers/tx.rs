@@ -1,6 +1,7 @@
 use crate::{
     actors::{
         encrypts::{CreateWithEncryption, EncryptContent, VerifyEncryption, WriteWithEncryption},
+        recovery::{LocalData, OffsetCounter},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateWithUniqueKeys, WriteWithUniqueKeys},
         wql::{DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
@@ -181,7 +182,7 @@ pub async fn create_controller(
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    {
+    let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
         } else {
@@ -192,12 +193,17 @@ pub async fn create_controller(
         } else {
             local_data.insert(entity.clone(), BTreeMap::new());
         }
-    }
+        local_data.clone()
+    };
+    actor.send(LocalData::new(local_data)).await??;
 
     let message = format!("Entity `{}` created", &entity);
     let offset = actor.send(CreateEntity::new(&entity)).await??;
 
     bytes_counter.fetch_add(offset, Ordering::SeqCst);
+    actor
+        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+        .await??;
 
     Ok(CreateEntityResponse::new(entity, message).write())
 }
@@ -213,6 +219,9 @@ pub async fn evict_controller(
         let message = format!("Entity {} evicted", &entity);
         let offset = actor.send(EvictEntity::new(&entity)).await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
 
         let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -220,11 +229,15 @@ pub async fn evict_controller(
             return Err(Error::LockData);
         };
         local_data.remove(&entity);
+        actor.send(LocalData::new(local_data.clone())).await??;
         Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
     } else {
         let id = uuid.unwrap();
         let offset = actor.send(EvictEntityId::new(&entity, id)).await??;
         bytes_counter.fetch_add(offset, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
 
         let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -234,6 +247,7 @@ pub async fn evict_controller(
         if let Some(d) = local_data.get_mut(&entity) {
             d.remove(&id);
         }
+        actor.send(LocalData::new(local_data.clone())).await??;
 
         let message = format!("Entity {} with id {} evicted", &entity, &id);
         Ok(DeleteOrEvictEntityResponse::new(entity, uuid, message).write())
@@ -345,8 +359,12 @@ pub async fn insert_controller(
     if let Some(map) = local_data.get_mut(&args.entity) {
         map.insert(content_value.1, local_data_register);
     }
+    actor.send(LocalData::new(local_data.clone())).await??;
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
+    actor
+        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+        .await??;
 
     let message = format!(
         "Entity {} inserted with Uuid {}",
@@ -432,8 +450,12 @@ pub async fn update_set_controller(
             *reg = local_data_register;
         }
     }
+    actor.send(LocalData::new(local_data.clone())).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+    actor
+        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+        .await??;
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
     Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
 }
@@ -517,8 +539,12 @@ pub async fn update_content_controller(
             *reg = local_data_register;
         }
     }
+    actor.send(LocalData::new(local_data.clone())).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+    actor
+        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+        .await??;
 
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
     Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
@@ -586,8 +612,12 @@ pub async fn delete_controller(
             *reg = local_data_register;
         }
     }
+    actor.send(LocalData::new(local_data.clone())).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+    actor
+        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+        .await??;
 
     Ok(DeleteOrEvictEntityResponse::new(entity, Some(uuid), message).write())
 }
@@ -677,8 +707,12 @@ pub async fn match_update_set_controller(
             *reg = local_data_register;
         }
     }
+    actor.send(LocalData::new(local_data.clone())).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+    actor
+        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+        .await??;
 
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
     Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
