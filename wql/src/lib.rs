@@ -1,15 +1,15 @@
 use language_parser::read_symbol;
 use serde::{Deserialize, Serialize};
-use where_clause::Clause;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
+use where_clause::Clause;
 
 mod language_parser;
 mod logic;
 mod select;
-mod where_clause;
 #[cfg(test)]
 mod test;
+mod where_clause;
 
 use logic::{read_map, read_match_args};
 
