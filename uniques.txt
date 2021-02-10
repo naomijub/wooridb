@@ -1,0 +1,1 @@
+(entity: "uniq_ent",uniques: ["name","cpf",],)(entity: "uniq_ent_2",uniques: ["name","cpf",],)

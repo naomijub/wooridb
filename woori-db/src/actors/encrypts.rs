@@ -5,12 +5,12 @@ use std::{
 
 use actix::prelude::*;
 use ron::ser::{to_string_pretty, PrettyConfig};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use wql::Types;
 
 use crate::{actors::wql::Executor, model::error::Error, repository::local::EncryptContext};
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WriteWithEncryption {
     pub entity: String,
     pub encrypts: Vec<String>,
