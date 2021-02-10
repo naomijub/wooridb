@@ -34,7 +34,7 @@ pub fn local_data(log: &str) -> Result<(), Error> {
         .open("local_data.log")?;
 
     let _ = file.seek(SeekFrom::Start(0));
-    let _ = file.write_all(log.as_bytes())?;
+    file.write_all(log.as_bytes())?;
 
     Ok(())
 }
@@ -47,7 +47,7 @@ pub fn offset_counter(log: usize) -> Result<(), Error> {
         .open("offset_counter.log")?;
 
     let _ = file.seek(SeekFrom::Start(0));
-    let _ = file.write_all(log.to_string().as_bytes())?;
+    file.write_all(log.to_string().as_bytes())?;
 
     Ok(())
 }

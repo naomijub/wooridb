@@ -150,14 +150,17 @@ pub async fn check_value_controller(
         }
     };
 
-    let local_data = if let Ok(guard) = local_data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
+    let local_data = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&entity) {
+            return Err(Error::EntityNotCreated(entity));
+        }
+        local_data.clone()
     };
-    if !local_data.contains_key(&entity) {
-        return Err(Error::EntityNotCreated(entity));
-    }
 
     let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
@@ -223,13 +226,17 @@ pub async fn evict_controller(
             .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
             .await??;
 
-        let mut local_data = if let Ok(guard) = local_data.lock() {
-            guard
-        } else {
-            return Err(Error::LockData);
+        let local_data = {
+            let mut local_data = if let Ok(guard) = local_data.lock() {
+                guard
+            } else {
+                return Err(Error::LockData);
+            };
+            local_data.remove(&entity);
+            local_data.clone()
         };
-        local_data.remove(&entity);
-        actor.send(LocalData::new(local_data.clone())).await??;
+
+        actor.send(LocalData::new(local_data)).await??;
         Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
     } else {
         let id = uuid.unwrap();
@@ -239,15 +246,18 @@ pub async fn evict_controller(
             .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
             .await??;
 
-        let mut local_data = if let Ok(guard) = local_data.lock() {
-            guard
-        } else {
-            return Err(Error::LockData);
+        let local_data = {
+            let mut local_data = if let Ok(guard) = local_data.lock() {
+                guard
+            } else {
+                return Err(Error::LockData);
+            };
+            if let Some(d) = local_data.get_mut(&entity) {
+                d.remove(&id);
+            }
+            local_data.clone()
         };
-        if let Some(d) = local_data.get_mut(&entity) {
-            d.remove(&id);
-        }
-        actor.send(LocalData::new(local_data.clone())).await??;
+        actor.send(LocalData::new(local_data)).await??;
 
         let message = format!("Entity {} with id {} evicted", &entity, &id);
         Ok(DeleteOrEvictEntityResponse::new(entity, uuid, message).write())
@@ -263,7 +273,7 @@ pub async fn create_unique_controller(
     if uniques.is_empty() {
         Ok(())
     } else {
-        let local_data = uniqueness.into_inner();
+        let uniqueness_data = uniqueness.into_inner();
         actor
             .send(WriteWithUniqueKeys {
                 entity: entity.to_owned(),
@@ -274,7 +284,7 @@ pub async fn create_unique_controller(
             .send(CreateWithUniqueKeys {
                 entity: entity.to_owned(),
                 uniques,
-                data: local_data,
+                data: uniqueness_data,
             })
             .await??;
         Ok(())
@@ -329,13 +339,15 @@ pub async fn insert_controller(
     let content_log =
         to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
 
-    let mut local_data = if let Ok(guard) = local_data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    if !local_data.contains_key(&args.entity) {
-        return Err(Error::EntityNotCreated(args.entity));
+    {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&args.entity) {
+            return Err(Error::EntityNotCreated(args.entity));
+        }
     }
 
     let uniqueness = uniqueness.into_inner();
@@ -356,10 +368,19 @@ pub async fn insert_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = local_data.get_mut(&args.entity) {
-        map.insert(content_value.1, local_data_register);
-    }
-    actor.send(LocalData::new(local_data.clone())).await??;
+    let local_data = {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if let Some(map) = local_data.get_mut(&args.entity) {
+            map.insert(content_value.1, local_data_register);
+        }
+        local_data.clone()
+    };
+
+    actor.send(LocalData::new(local_data)).await??;
 
     bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
     actor
@@ -394,17 +415,19 @@ pub async fn update_set_controller(
     let content_log =
         to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
 
-    let mut local_data = if let Ok(guard) = local_data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    if !local_data.contains_key(&args.entity) {
-        return Err(Error::EntityNotCreated(args.entity));
-    } else if local_data.contains_key(&args.entity)
-        && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
     {
-        return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&args.entity) {
+            return Err(Error::EntityNotCreated(args.entity));
+        } else if local_data.contains_key(&args.entity)
+            && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
+        {
+            return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+        }
     }
 
     let uniqueness = uniqueness.into_inner();
@@ -416,7 +439,16 @@ pub async fn update_set_controller(
         })
         .await??;
 
-    let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
+    let previous_entry = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
+        previous_entry.clone()
+    };
+
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -445,12 +477,20 @@ pub async fn update_set_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = local_data.get_mut(&args.entity) {
-        if let Some(reg) = map.get_mut(&args.id) {
-            *reg = local_data_register;
+    let local_data = {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if let Some(map) = local_data.get_mut(&args.entity) {
+            if let Some(reg) = map.get_mut(&args.id) {
+                *reg = local_data_register;
+            }
         }
-    }
-    actor.send(LocalData::new(local_data.clone())).await??;
+        local_data.clone()
+    };
+    actor.send(LocalData::new(local_data)).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
     actor
@@ -485,17 +525,19 @@ pub async fn update_content_controller(
     let content_log =
         to_string_pretty(&args.content, pretty_config()).map_err(Error::Serialization)?;
 
-    let mut local_data = if let Ok(guard) = local_data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    if !local_data.contains_key(&args.entity) {
-        return Err(Error::EntityNotCreated(args.entity));
-    } else if local_data.contains_key(&args.entity)
-        && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
     {
-        return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&args.entity) {
+            return Err(Error::EntityNotCreated(args.entity));
+        } else if local_data.contains_key(&args.entity)
+            && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
+        {
+            return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+        }
     }
 
     let uniqueness = uniqueness.into_inner();
@@ -507,7 +549,16 @@ pub async fn update_content_controller(
         })
         .await??;
 
-    let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
+    let previous_entry = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
+        previous_entry.clone()
+    };
+
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -533,13 +584,20 @@ pub async fn update_content_controller(
         bytes_length: content_value.1,
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
-
-    if let Some(map) = local_data.get_mut(&args.entity) {
-        if let Some(reg) = map.get_mut(&args.id) {
-            *reg = local_data_register;
+    let local_data = {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if let Some(map) = local_data.get_mut(&args.entity) {
+            if let Some(reg) = map.get_mut(&args.id) {
+                *reg = local_data_register;
+            }
         }
-    }
-    actor.send(LocalData::new(local_data.clone())).await??;
+        local_data.clone()
+    };
+    actor.send(LocalData::new(local_data)).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
     actor
@@ -561,20 +619,24 @@ pub async fn delete_controller(
     let message = format!("Entity {} with Uuid {} deleted", &entity, id);
     let offset = bytes_counter.load(Ordering::SeqCst);
 
-    let mut local_data = if let Ok(guard) = local_data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    if !local_data.contains_key(&entity) {
-        return Err(Error::EntityNotCreated(entity));
-    } else if local_data.contains_key(&entity)
-        && !local_data.get(&entity).unwrap().contains_key(&uuid)
-    {
-        return Err(Error::UuidNotCreatedForEntity(entity, uuid));
-    }
+    let previous_entry = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&entity) {
+            return Err(Error::EntityNotCreated(entity));
+        } else if local_data.contains_key(&entity)
+            && !local_data.get(&entity).unwrap().contains_key(&uuid)
+        {
+            return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+        }
 
-    let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+        let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+        previous_entry.clone()
+    };
+
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let two_registries_ago = actor.send(PreviousRegistry(previous_state_str)).await??;
 
@@ -582,6 +644,11 @@ pub async fn delete_controller(
         let state_str = actor.send(reg.to_owned()).await??;
         (actor.send(State(state_str)).await??, reg.to_owned())
     } else {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
         let insert_reg = local_data.get(&entity).unwrap().get(&uuid).unwrap();
         (HashMap::new(), insert_reg.to_owned())
     };
@@ -607,12 +674,21 @@ pub async fn delete_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = local_data.get_mut(&entity) {
-        if let Some(reg) = map.get_mut(&uuid) {
-            *reg = local_data_register;
+    let local_data = {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if let Some(map) = local_data.get_mut(&entity) {
+            if let Some(reg) = map.get_mut(&uuid) {
+                *reg = local_data_register;
+            }
         }
-    }
-    actor.send(LocalData::new(local_data.clone())).await??;
+        local_data.clone()
+    };
+
+    actor.send(LocalData::new(local_data)).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
     actor
@@ -631,20 +707,23 @@ pub async fn match_update_set_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let mut local_data = if let Ok(guard) = local_data.lock() {
-        guard
-    } else {
-        return Err(Error::LockData);
-    };
-    if !local_data.contains_key(&args.entity) {
-        return Err(Error::EntityNotCreated(args.entity));
-    } else if local_data.contains_key(&args.entity)
-        && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
-    {
-        return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
-    }
+    let previous_entry = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&args.entity) {
+            return Err(Error::EntityNotCreated(args.entity));
+        } else if local_data.contains_key(&args.entity)
+            && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
+        {
+            return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+        }
 
-    let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
+        let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
+        previous_entry.clone()
+    };
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
@@ -702,12 +781,21 @@ pub async fn match_update_set_controller(
         file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
     };
 
-    if let Some(map) = local_data.get_mut(&args.entity) {
-        if let Some(reg) = map.get_mut(&args.id) {
-            *reg = local_data_register;
+    let local_data = {
+        let mut local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if let Some(map) = local_data.get_mut(&args.entity) {
+            if let Some(reg) = map.get_mut(&args.id) {
+                *reg = local_data_register;
+            }
         }
-    }
-    actor.send(LocalData::new(local_data.clone())).await??;
+        local_data.clone()
+    };
+
+    actor.send(LocalData::new(local_data)).await??;
 
     bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
     actor
