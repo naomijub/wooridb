@@ -1040,7 +1040,7 @@ impl BodyTest for ResponseBody<Body> {
     }
 }
 
-fn clear() {
+pub fn clear() {
     std::process::Command::new("rm")
         .arg("-rf")
         .arg("*.log")

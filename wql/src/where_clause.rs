@@ -79,7 +79,25 @@ fn clause_function(clause: &str) -> Clause {
                 Clause::Error
             }
         }
-        "in" | "between" => Clause::Error,
+        "in" | "between" => {
+            let function = Function::from_str(args[0]).unwrap();
+            let key = args[1].to_string();
+            let values = args[2..]
+                .iter()
+                .filter(|s| !s.is_empty())
+                .filter_map(|s| {
+                    let mut chs = s.chars();
+                    parse_value(chs.next().unwrap(), &mut chs).ok()
+                })
+                .collect::<Vec<Types>>();
+            if (Function::Between == function && values.len() != 2)
+                || values.iter().any(|t| t == &Types::Nil)
+            {
+                Clause::Error
+            } else {
+                Clause::ComplexComparisonFunctions(function, key, values)
+            }
+        }
         _ => Clause::Error,
     }
 }
@@ -124,16 +142,17 @@ fn clause_entity_definition(entity_name: &str, clause: String) -> Clause {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Clause {
     ContainsKeyValue(String, String, Types),
     ValueAttribution(String, String, Value),
     EntitiesKeyComparison(String, String, String, Value),
     SimpleComparisonFunction(Function, String, Types),
+    ComplexComparisonFunctions(Function, String, Vec<Types>),
     Error,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Function {
     Eq,
     GEq,
@@ -142,7 +161,7 @@ pub enum Function {
     L,
     NotEq,
     Like,
-    Betweem,
+    Between,
     In,
     Error,
 }
@@ -160,14 +179,14 @@ impl FromStr for Function {
             "!=" => Function::NotEq,
             "<>" => Function::NotEq,
             "like" => Function::Like,
-            "between" => Function::Betweem,
+            "between" => Function::Between,
             "in" => Function::In,
             _ => Function::Error,
         })
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Value(pub String);
 
 #[cfg(test)]
@@ -307,20 +326,57 @@ mod test {
             )
         )
     }
-}
 
-// SELECT *
-// FROM my_entity
-// WHERE {
-//     (in ?id [32434, 45345, 345346436]),
-//     ?* my_entity:age ?age,
-//     (>= ?age 30),
-//     (> ?age 30),
-//     (== ?age 30),
-//     (<= ?age 30),
-//     (< ?age 30),
-//     (between ?age 30 35),
-//     ?* my_entity:name ?name,
-//     (like ?name "%uli%"),
-//     ?* other_entity:id ?id,
-// }
+    #[test]
+    fn complex_comp_func() {
+        let mut chars = " {
+            (in ?id 32434 45345 345346436),
+            (between ?age 30 35),
+        }"
+        .chars();
+        let wql = where_selector("my_entity".to_string(), ToSelect::All, &mut chars);
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhere(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![
+                    Clause::ComplexComparisonFunctions(
+                        Function::In,
+                        "?id".to_string(),
+                        vec![
+                            Types::Integer(32434),
+                            Types::Integer(45345),
+                            Types::Integer(345346436),
+                        ]
+                    ),
+                    Clause::ComplexComparisonFunctions(
+                        Function::Between,
+                        "?age".to_string(),
+                        vec![Types::Integer(30), Types::Integer(35)]
+                    )
+                ]
+            )
+        )
+    }
+
+    #[test]
+    fn between_err() {
+        let mut chars = " {
+            (between ?id 32434),
+            (between ?age 30 35 34),
+        }"
+        .chars();
+        let wql = where_selector("my_entity".to_string(), ToSelect::All, &mut chars);
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhere(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![Clause::Error, Clause::Error,]
+            )
+        )
+    }
+}

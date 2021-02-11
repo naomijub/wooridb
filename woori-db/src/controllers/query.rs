@@ -17,6 +17,8 @@ use crate::{
     model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
 };
 
+use super::clauses::select_where;
+
 pub async fn wql_handler(
     body: String,
     local_data: DataLocalContext,
@@ -54,6 +56,9 @@ pub async fn wql_handler(
         }
         Ok(Wql::SelectWhenRange(entity_name, uuid, start_date, end_date)) => {
             select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
+        }
+        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses)) => {
+            select_where(entity_name, args_to_select, clauses, local_data, actor).await
         }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),

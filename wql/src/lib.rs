@@ -1,8 +1,8 @@
 use language_parser::read_symbol;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
-use where_clause::Clause;
 
 mod language_parser;
 mod logic;
@@ -11,7 +11,9 @@ mod select;
 mod test;
 mod where_clause;
 
+pub use logic::parse_value as parse_types;
 use logic::{read_map, read_match_args};
+pub use where_clause::{Clause, Function, Value};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Wql {
@@ -39,6 +41,40 @@ pub enum ToSelect {
 pub type Entity = HashMap<String, Types>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum MatchCondition {
+    All(Vec<MatchCondition>),
+    Any(Vec<MatchCondition>),
+    Eq(String, Types),
+    NotEq(String, Types),
+    GEq(String, Types),
+    G(String, Types),
+    LEq(String, Types),
+    L(String, Types),
+}
+
+pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
+    wql.chars()
+}
+
+impl std::str::FromStr for Wql {
+    type Err = String;
+
+    /// Parses a `&str` that contains an Edn into `Result<Edn, EdnError>`
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut tokens = tokenize(s.trim_start());
+        let wql = parse(tokens.next(), &mut tokens)?;
+        Ok(wql)
+    }
+}
+
+pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql, String> {
+    c.map_or_else(
+        || Err(String::from("Empty WQL")),
+        |ch| read_symbol(ch, chars),
+    )
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Types {
     Char(char),
     Integer(isize),
@@ -97,36 +133,33 @@ impl Types {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub enum MatchCondition {
-    All(Vec<MatchCondition>),
-    Any(Vec<MatchCondition>),
-    Eq(String, Types),
-    NotEq(String, Types),
-    GEq(String, Types),
-    G(String, Types),
-    LEq(String, Types),
-    L(String, Types),
-}
-
-pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
-    wql.chars()
-}
-
-impl std::str::FromStr for Wql {
-    type Err = String;
-
-    /// Parses a `&str` that contains an Edn into `Result<Edn, EdnError>`
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut tokens = tokenize(s.trim_start());
-        let wql = parse(tokens.next(), &mut tokens)?;
-        Ok(wql)
+impl Eq for Types {}
+impl PartialOrd for Types {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Types::Integer(a), Types::Integer(b)) => Some(a.cmp(b)),
+            (Types::Float(a), Types::Float(b)) => Some(if a > b {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
+            (Types::Integer(a), Types::Float(b)) => Some(if &(*a as f64) > b {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
+            (Types::Float(a), Types::Integer(b)) => Some(if a > &(*b as f64) {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
+            (Types::Char(a), Types::Char(b)) => Some(a.cmp(b)),
+            (Types::String(a), Types::String(b)) => Some(a.cmp(b)),
+            (Types::Uuid(a), Types::Uuid(b)) => Some(a.cmp(b)),
+            (Types::Boolean(a), Types::Boolean(b)) => Some(a.cmp(b)),
+            (Types::Precise(a), Types::Precise(b)) => Some(a.cmp(b)),
+            (Types::Vector(a), Types::Vector(b)) => Some(a.len().cmp(&b.len())),
+            _ => None,
+        }
     }
-}
-
-pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql, String> {
-    c.map_or_else(
-        || Err(String::from("Empty WQL")),
-        |ch| read_symbol(ch, chars),
-    )
 }

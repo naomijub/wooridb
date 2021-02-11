@@ -59,6 +59,14 @@ test:
 	rm -rf *.log
 	cargo test -- --ignored controllers::tx_test::test_check_encrypt_post_ok
 	rm -rf *.log
+	cargo test -- --ignored controllers::clauses_test::simple_where_clause_eq
+	rm -rf *.log
+	cargo test -- --ignored controllers::clauses_test::clause_between
+	rm -rf *.log
+	cargo test -- --ignored controllers::clauses_test::clause_in
+	rm -rf *.log
+	cargo test -- --ignored controllers::clauses_test::clause_ge_le
+	rm -rf *.log
 
 release:
 	cargo run --release
