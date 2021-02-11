@@ -2,6 +2,8 @@ use std::str::FromStr;
 
 use uuid::Uuid;
 
+use crate::where_clause::where_selector;
+
 use super::{
     logic::{read_select_args, read_uuids},
     ToSelect, Wql,
@@ -89,6 +91,8 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         }
     } else if next_symbol.to_uppercase() == "WHEN" {
         when_selector(entity_name, arg, None, chars)
+    } else if next_symbol.to_uppercase() == "WHERE" {
+        where_selector(entity_name, arg, chars)
     } else if !next_symbol.is_empty()
         && (next_symbol.to_uppercase() != "ID" || next_symbol.to_uppercase() != "IDS")
     {

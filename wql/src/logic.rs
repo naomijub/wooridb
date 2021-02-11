@@ -280,7 +280,7 @@ pub(crate) fn parse_key(c: char, chars: &mut std::str::Chars) -> String {
     format!("{}{}", c, key_rest)
 }
 
-pub(crate) fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types, String> {
+pub fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types, String> {
     if c == '"' {
         return read_str(chars);
     }

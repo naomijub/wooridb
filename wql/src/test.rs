@@ -758,3 +758,41 @@ mod check {
         hm
     }
 }
+
+#[cfg(test)]
+mod test_where {
+    use super::*;
+
+    #[test]
+    fn where_ok() {
+        let query = "Select * FROM my_entity WherE {
+            (in ?id 32434 45345 345346436),
+            (between ?age 30 35),
+        }";
+        let wql = Wql::from_str(query);
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhere(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![
+                    Clause::ComplexComparisonFunctions(
+                        where_clause::Function::In,
+                        "?id".to_string(),
+                        vec![
+                            Types::Integer(32434),
+                            Types::Integer(45345),
+                            Types::Integer(345346436),
+                        ]
+                    ),
+                    Clause::ComplexComparisonFunctions(
+                        where_clause::Function::Between,
+                        "?age".to_string(),
+                        vec![Types::Integer(30), Types::Integer(35),]
+                    )
+                ]
+            )
+        )
+    }
+}

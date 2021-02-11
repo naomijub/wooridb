@@ -97,7 +97,15 @@ PORT=1438
   - [x] Select a few entities from entity, knowing their IDs. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
   - [x] Select an entity at past a day. `ID` field can be used before `WHEN` to define and specific entity. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00'` or something like `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
   - [x] Select a specific entity in a time range. The time range must be at the same day like `START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z'`. 
-  - [ ] Selects with WHERE?
+  - [x] Selects with WHERE clause.This is probably the msot different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. To use select with the where clause you can use the following expressions `SELECT * FROM my_entity WHERE {<clauses>}` or  `SELECT #{key_1, key_2, key_3,} FROM my_entity WHERE {<clauses>}`. All clauses should be separated by `,` and the available functions are `==, !=, >, <, >=, <=, like, between, in` and to use them you need to attribute a key content to a variable, this is done by `?* my_entity:key_1 ?k1` and then `?k1` can be used as follows:
+    - `in`: `(in ?k1 123 34543 7645 435)`, where arguments after `?k1` are turned into a set. **for now please don't use `,`**.
+    - `between`: `(between ?k1 0 435)`, after `?k1` the first argument is the `start` value and the second argument is the `end` value.  If tou set more than 2 arguments it will return a `ClauseError`.
+    - `like`: `(like ?k2 "%naomi%")`, like compared `?k2` with the string `"%naomi%"` considering that `%` are wildcards. `"%naomi"` means `end_with("naomi")`, `"naomi%"` means `starts_with("naomi")` and `"%naomi%"` means `contains("naomi")` In the future this will be replaced by regex.
+    - `==`, `>=`, `>`, `<`, `<=`, `!=` -> `(>= ?k1 0)` which means *all values that `?k1` is greater than or equal to `0`*.
+    Missing features: 
+    - [ ] function `and`
+    - [ ] function `or`
+    - [ ] ?Temporality?
 
 - [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
   
@@ -117,7 +125,6 @@ PORT=1438
 - [ ] Division
 
 ### TODOS
-- [x] Crash recovery [issue 25](https://github.com/naomijub/wooridb/issues/25)
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
