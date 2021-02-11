@@ -36,11 +36,13 @@ PORT=1438
 - [x] [Woori Query language parser](https://github.com/naomijub/wooridb/tree/main/wql)
 
 ### TX Transactions by type
-> `<ip>:1438/wql/tx`
+> Endpoint for `CREATE, INSERT, UPDATE, MATCH`: `<ip>:1438/wql/tx`
+> 
+> Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d`
 
-- [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name'`. 
-  - [x] Create entity with Unique identifier. This prevents duplciated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`
-  - [x] Encrypt entities keys. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
+- [x] Create entity: it is similar to `CREATE TABLE` in SQL. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `'CREATE ENTITY my_entity_name'`. 
+  - [x] Create entity with Unique identifier. This prevents duplciated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`
+  - [x] Encrypt entities keys. Example request: `'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
   - It is possible to create entities with uniques and encryption. `CREATE ENTITY my_entity_name ENCRYPT #{password,} UNIQUES #{name, ssn,}`
   - When the system has encrypted keys, the requests take longer due to hashing function and the verify function. This is determined by the hashing cost:
   ```
@@ -51,7 +53,7 @@ PORT=1438
   * Note that I don't go above 14 as it takes too long. But is way safer, it is a trade-off. 
   ```
 
-- [x] Insert entity: it inserts a HashMap into the entity created (`my_entity_name`). This request returns a `Uuid`. Ecample request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'insert {a: 123,  c: \"hello\", d: \"world\",} INTO my_entity_name'`. This will insert an entity as follows:
+- [x] Insert entity: it inserts a HashMap into the entity created (`my_entity_name`). This request returns a `Uuid`. Ecample request `'insert {a: 123,  c: \"hello\", d: \"world\",} INTO my_entity_name'`. This will insert an entity as follows:
 ```
 {"my_entity_name": {
   48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, c: \"hello\", d: \"world\",},
@@ -60,10 +62,10 @@ PORT=1438
 
 - [x] Update entity: There are 2 updates possible.
 
-  - [x] SET: `SET` updates defines the current value of the entity to the ones being passed, so if your entity is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state value will be `{a: 432, b: 12.5, c: \"hello\",}`. Example request:  `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
-  - [x] CONTENT: `CONTENT` updates are a way to add numerical values and concatenate Strings, so if your entity is `{a: 432, c: \"hello\",}` and your content update has the hashmap `{a: -5, c: \"world\", b: 12.5}` the current state will be `{a: 427, c: \"helloworld\", b: 12.5}`. `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
+  - [x] SET: `SET` updates defines the current value of the entity to the ones being passed, so if your entity is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state value will be `{a: 432, b: 12.5, c: \"hello\",}`. Example request:  `'UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
+  - [x] CONTENT: `CONTENT` updates are a way to add numerical values and concatenate Strings, so if your entity is `{a: 432, c: \"hello\",}` and your content update has the hashmap `{a: -5, c: \"world\", b: 12.5}` the current state will be `{a: 427, c: \"helloworld\", b: 12.5}`. `'UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
 
-- [x] Match Update: Updates only if precondition is matched, this transaction is significantly slower than others. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. Possible preconditions:
+- [x] Match Update: Updates only if precondition is matched, this transaction is significantly slower than others. Example request `'MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. Possible preconditions:
   - `ALL` or `ANY` are required to set preconditions. `ALL` means that a logical `AND`/`&&` will be applied to all conditions and `ANY` means that a logical `OR`/`||` will be applied to all conditions. They contain a series of preconditions separated by `,`. For example `ALL(a > 100, b <= 20.0)` or `ANY(a == "hello", b != true)`.
   - **NULL KEYS**, `ALL` returns error if a null key is present and `ANY` just ignores null keys.
   - `==` means equals, so if `a == 100`, this means that the entity key `a` must equal to `100`.
@@ -73,13 +75,15 @@ PORT=1438
   - `>` means greater, so if `a > 100`, this means that the entity key `a` must greater than `100`. 
   - `<` means lesser, so if `a < 100`, this means that the entity key `a` must lesser than `100`. 
 
-- [x] Delete last entity event: This is pretty simple, it deletes the last state of an entity. So if you have one update on you entity it will roll back to the `INSERT` event. However, if you have only an `INSERT` event you state will become an empty hashmap. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
+- [x] Delete last entity event: This is pretty simple, it deletes the last state of an entity. So if you have one update on you entity it will roll back to the `INSERT` event. However, if you have only an `INSERT` event you state will become an empty hashmap. Example request: `'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
 
-- [x] Evict entity: Removes all ocurrences of an entity. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
+- [x] Evict entity: Removes all ocurrences of an entity. Example request `'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the acess to the entity history.
 - [x] Evict entity registry: Similar to SQL `DROP TABLE <entity>`.
 
 ### Query Transactions by type
-> `<ip>:1438/wql/query`
+> Endpoint for `SELECT, CHECK`: `<ip>:1438/wql/query`
+> 
+> Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d`
 
 - [x] Select entities: The basic read operation. Endpoint is `/wql/query`. To better udnerstand the next sub-items, lets say the entity `my_entity_name` has the following values:
 ```
@@ -90,13 +94,20 @@ PORT=1438
 }}
 ```
 
-  - [x] Select All entities from Entity with all keys for each entity. This operation selects all entities from an entity key. It is equivalent to `Select * From table`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name'`. This query will return `48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\", d: \"world\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\", d: \"brasil\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\", d: \"korea\",},`.
-  - [x] Select All entities from Entity with a set of keys for each entity. This operation selects all entities from an entity key with restricted keys in the output. It is equivalent to `SELECT a, b, c FROM table`.  Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name'`. This query will return `48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\",},` 
-  - [x] Select one entity from Entity with all key_values. This operation selects one entity defined by its `ID`. It is equivalent to `Select * From table WHERE id = <uuid>`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
-  - [x] Select one entity from Entity with a set of key_values. This operation selects one entity defined by its `ID` with restricted keys in the output. It is equivalent to `SELECT a, b, c FROM table WHERE id = <uuid>`.  Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\",}`
-  - [x] Select a few entities from entity, knowing their IDs. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
-  - [x] Select an entity at past a day. `ID` field can be used before `WHEN` to define and specific entity. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. Example request `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00'` or something like `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
-  - [x] Select a specific entity in a time range. The time range must be at the same day like `START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d 'SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z'`. 
+  - [x] Select All entities from Entity with all keys for each entity. This operation selects all entities from an entity key. It is equivalent to `Select * From table`. Example request `'SELECT * from my_entity_name'`. This query will return `48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\", d: \"world\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\", d: \"brasil\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\", d: \"korea\",},`.
+
+  - [x] Select All entities from Entity with a set of keys for each entity. This operation selects all entities from an entity key with restricted keys in the output. It is equivalent to `SELECT a, b, c FROM table`.  Example request `'SELECT #{a, b, c,} from my_entity_name'`. This query will return `48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\",},` 
+
+  - [x] Select one entity from Entity with all key_values. This operation selects one entity defined by its `ID`. It is equivalent to `Select * From table WHERE id = <uuid>`. Example request `'SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
+
+  - [x] Select one entity from Entity with a set of key_values. This operation selects one entity defined by its `ID` with restricted keys in the output. It is equivalent to `SELECT a, b, c FROM table WHERE id = <uuid>`.  Example request `'SELECT #{a, b, c,} from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\",}`
+
+  - [x] Select a few entities from entity, knowing their IDs. Example request `'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
+  
+  - [x] Select an entity at past a day. `ID` field can be used before `WHEN` to define and specific entity. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. Example request `'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00'` or something like `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
+  
+  - [x] Select a specific entity in a time range. The time range must be at the same day like `START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. Example request: `'SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z'`. 
+  
   - [x] Selects with WHERE clause.This is probably the msot different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. To use select with the where clause you can use the following expressions `SELECT * FROM my_entity WHERE {<clauses>}` or  `SELECT #{key_1, key_2, key_3,} FROM my_entity WHERE {<clauses>}`. All clauses should be separated by `,` and the available functions are `==, !=, >, <, >=, <=, like, between, in` and to use them you need to attribute a key content to a variable, this is done by `?* my_entity:key_1 ?k1` and then `?k1` can be used as follows:
     - `in`: `(in ?k1 123 34543 7645 435)`, where arguments after `?k1` are turned into a set. **for now please don't use `,`**.
     - `between`: `(between ?k1 0 435)`, after `?k1` the first argument is the `start` value and the second argument is the `end` value.  If tou set more than 2 arguments it will return a `ClauseError`.
@@ -107,7 +118,7 @@ PORT=1438
     - [ ] function `or`
     - [ ] ?Temporality?
 
-- [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
+- [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
   
 ### SELECT = Functions that could be implemented from Relation Algebra:
 - [x] Select
