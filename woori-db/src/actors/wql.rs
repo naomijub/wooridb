@@ -33,11 +33,11 @@ impl CreateEntity {
 }
 
 impl Message for CreateEntity {
-    type Result = Result<usize, Error>;
+    type Result = Result<(usize, bool), Error>;
 }
 
 impl Handler<CreateEntity> for Executor {
-    type Result = Result<usize, Error>;
+    type Result = Result<(usize, bool), Error>;
 
     fn handle(&mut self, msg: CreateEntity, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
@@ -61,16 +61,17 @@ impl InsertEntityContent {
 }
 
 impl Message for InsertEntityContent {
-    type Result = Result<(DateTime<Utc>, Uuid, usize), Error>;
+    type Result = Result<(DateTime<Utc>, Uuid, usize, bool), Error>;
 }
 
 impl Handler<InsertEntityContent> for Executor {
-    type Result = Result<(DateTime<Utc>, Uuid, usize), Error>;
+    type Result = Result<(DateTime<Utc>, Uuid, usize, bool), Error>;
 
     fn handle(&mut self, msg: InsertEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, uuid, content) = insert_entity_content(&msg);
-        Ok((date, uuid, write_to_log(&content)?))
+        let (bytes_written, is_empty) = write_to_log(&content)?;
+        Ok((date, uuid, bytes_written, is_empty))
     }
 }
 
@@ -101,16 +102,17 @@ impl UpdateSetEntityContent {
 }
 
 impl Message for UpdateSetEntityContent {
-    type Result = Result<(DateTime<Utc>, usize), Error>;
+    type Result = Result<(DateTime<Utc>, usize, bool), Error>;
 }
 
 impl Handler<UpdateSetEntityContent> for Executor {
-    type Result = Result<(DateTime<Utc>, usize), Error>;
+    type Result = Result<(DateTime<Utc>, usize, bool), Error>;
 
     fn handle(&mut self, msg: UpdateSetEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = update_set_entity_content(&msg);
-        Ok((date, write_to_log(&content)?))
+        let (bytes_written, is_empty) = write_to_log(&content)?;
+        Ok((date, bytes_written, is_empty))
     }
 }
 
@@ -142,16 +144,17 @@ impl UpdateContentEntityContent {
 }
 
 impl Message for UpdateContentEntityContent {
-    type Result = Result<(DateTime<Utc>, usize), Error>;
+    type Result = Result<(DateTime<Utc>, usize, bool), Error>;
 }
 
 impl Handler<UpdateContentEntityContent> for Executor {
-    type Result = Result<(DateTime<Utc>, usize), Error>;
+    type Result = Result<(DateTime<Utc>, usize, bool), Error>;
 
     fn handle(&mut self, msg: UpdateContentEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = update_content_entity_content(&msg);
-        Ok((date, write_to_log(&content)?))
+        let (bytes_written, is_empty) = write_to_log(&content)?;
+        Ok((date, bytes_written, is_empty))
     }
 }
 
@@ -174,16 +177,17 @@ impl DeleteId {
 }
 
 impl Message for DeleteId {
-    type Result = Result<(DateTime<Utc>, usize), Error>;
+    type Result = Result<(DateTime<Utc>, usize, bool), Error>;
 }
 
 impl Handler<DeleteId> for Executor {
-    type Result = Result<(DateTime<Utc>, usize), Error>;
+    type Result = Result<(DateTime<Utc>, usize, bool), Error>;
 
     fn handle(&mut self, msg: DeleteId, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = delete_entity_content(&msg);
-        Ok((date, write_to_log(&content)?))
+        let (bytes_written, is_empty) = write_to_log(&content)?;
+        Ok((date, bytes_written, is_empty))
     }
 }
 
@@ -200,11 +204,11 @@ impl EvictEntity {
 }
 
 impl Message for EvictEntity {
-    type Result = Result<usize, Error>;
+    type Result = Result<(usize, bool), Error>;
 }
 
 impl Handler<EvictEntity> for Executor {
-    type Result = Result<usize, Error>;
+    type Result = Result<(usize, bool), Error>;
 
     fn handle(&mut self, msg: EvictEntity, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
@@ -228,11 +232,11 @@ impl EvictEntityId {
 }
 
 impl Message for EvictEntityId {
-    type Result = Result<usize, Error>;
+    type Result = Result<(usize, bool), Error>;
 }
 
 impl Handler<EvictEntityId> for Executor {
-    type Result = Result<usize, Error>;
+    type Result = Result<(usize, bool), Error>;
 
     fn handle(&mut self, msg: EvictEntityId, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
