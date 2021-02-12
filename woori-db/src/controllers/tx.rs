@@ -201,9 +201,14 @@ pub async fn create_controller(
     actor.send(LocalData::new(local_data)).await??;
 
     let message = format!("Entity `{}` created", &entity);
-    let offset = actor.send(CreateEntity::new(&entity)).await??;
+    let (offset, is_empty) = actor.send(CreateEntity::new(&entity)).await??;
 
-    bytes_counter.fetch_add(offset, Ordering::SeqCst);
+    if is_empty {
+        bytes_counter.fetch_add(offset, Ordering::SeqCst);
+    } else {
+        bytes_counter.store(0, Ordering::SeqCst)
+    }
+
     actor
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
@@ -220,8 +225,13 @@ pub async fn evict_controller(
 ) -> Result<String, Error> {
     if uuid.is_none() {
         let message = format!("Entity {} evicted", &entity);
-        let offset = actor.send(EvictEntity::new(&entity)).await??;
-        bytes_counter.fetch_add(offset, Ordering::SeqCst);
+        let (offset, is_empty) = actor.send(EvictEntity::new(&entity)).await??;
+        if is_empty {
+            bytes_counter.fetch_add(offset, Ordering::SeqCst);
+        } else {
+            bytes_counter.store(0, Ordering::SeqCst)
+        }
+
         actor
             .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
             .await??;
@@ -240,8 +250,13 @@ pub async fn evict_controller(
         Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
     } else {
         let id = uuid.unwrap();
-        let offset = actor.send(EvictEntityId::new(&entity, id)).await??;
-        bytes_counter.fetch_add(offset, Ordering::SeqCst);
+        let (offset, is_empty) = actor.send(EvictEntityId::new(&entity, id)).await??;
+        if is_empty {
+            bytes_counter.fetch_add(offset, Ordering::SeqCst);
+        } else {
+            bytes_counter.store(0, Ordering::SeqCst)
+        }
+
         actor
             .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
             .await??;
