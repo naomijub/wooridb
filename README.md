@@ -208,8 +208,8 @@ Checks for encrypted data validity. It requires entity name after `FROM` and an 
 ## TODOS
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
-- [ ] restart `DataAtomicUsize` when day changes [issue 51](https://github.com/naomijub/wooridb/issues/51)
-- [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
+- [x] Restart `DataAtomicUsize` when day changes [issue 51](https://github.com/naomijub/wooridb/issues/51)
+- [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54)
 - [ ] Remove data files from root
 - [ ] Docker
 - [ ] Benchmarks
