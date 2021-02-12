@@ -31,7 +31,11 @@ use crate::{
 
 use actix_web::{HttpResponse, Responder};
 use ron::ser::{to_string_pretty, PrettyConfig};
-use std::{collections::{BTreeMap, HashMap, HashSet}, str::FromStr, sync::{Arc, Mutex, atomic::{Ordering}}};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    str::FromStr,
+    sync::{atomic::Ordering, Arc, Mutex},
+};
 use uuid::Uuid;
 use wql::{Types, Wql};
 
@@ -204,7 +208,7 @@ pub async fn create_controller(
     } else {
         bytes_counter.store(0, Ordering::SeqCst)
     }
-    
+
     actor
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
