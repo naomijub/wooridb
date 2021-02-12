@@ -85,9 +85,9 @@ async fn select_all_when_range_controller(
         .parse::<DateTime<Utc>>()
         .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
-    let date_log = start_date.format("%Y_%m_%d.txt").to_string();
+    let date_log = start_date.format("data/%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
-    let date_log = start_date.format("%Y_%m_%d.log").to_string();
+    let date_log = start_date.format("data/%Y_%m_%d.log").to_string();
 
     let result = actor
         .send(ReadEntityRange::new(
@@ -107,9 +107,9 @@ async fn select_all_when_controller(
         .parse::<DateTime<Utc>>()
         .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
-    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    let date_log = date.format("data/%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
-    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
 
     Ok(to_string_pretty(&result, pretty_config_output())?)
@@ -126,9 +126,9 @@ async fn select_all_id_when_controller(
         .parse::<DateTime<Utc>>()
         .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
-    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    let date_log = date.format("data/%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
-    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor
         .send(ReadEntityIdAt::new(&entity, uuid, date_log))
         .await??;
@@ -148,9 +148,9 @@ async fn select_keys_id_when_controller(
         .parse::<DateTime<Utc>>()
         .map_err(Error::DateTimeParse)?;
     #[cfg(test)]
-    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    let date_log = date.format("data/%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
-    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor
         .send(ReadEntityIdAt::new(&entity, uuid, date_log))
         .await??;
@@ -174,9 +174,9 @@ async fn select_keys_when_controller(
         .map_err(Error::DateTimeParse)?;
 
     #[cfg(test)]
-    let date_log = date.format("%Y_%m_%d.txt").to_string();
+    let date_log = date.format("data/%Y_%m_%d.txt").to_string();
     #[cfg(not(test))]
-    let date_log = date.format("%Y_%m_%d.log").to_string();
+    let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
     let result = result
         .into_iter()

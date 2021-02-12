@@ -209,6 +209,6 @@ Checks for encrypted data validity. It requires an entity name after `FROM` and 
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54)
-- [ ] Remove data files from root
+- [x] Remove data files from root
 - [ ] Docker
 - [ ] Benchmarks
