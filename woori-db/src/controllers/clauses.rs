@@ -49,6 +49,9 @@ async fn filter_where_clauses(
                     .map(|clause| match clause {
                         Clause::ValueAttribution(_, _, _) => true,
                         Clause::Error => false,
+                        Clause::Or(_, inner_clauses) => {
+                            or_clauses(state, &args_to_key, inner_clauses)
+                        }
                         Clause::ContainsKeyValue(_, key, value) => {
                             if let Some(v) = state.get(key) {
                                 value == v
@@ -116,6 +119,76 @@ async fn filter_where_clauses(
         })
         .collect::<BTreeMap<Uuid, HashMap<String, Types>>>()
         .await
+}
+
+fn or_clauses(
+    state: &HashMap<std::string::String, wql::Types>,
+    args_to_key: &HashMap<String, String>,
+    inner_clauses: &Vec<Clause>,
+) -> bool {
+    let default = String::new();
+    inner_clauses
+        .iter()
+        .map(|clause| match clause {
+            Clause::ValueAttribution(_, _, _) => true,
+            Clause::Error => false,
+            Clause::Or(_, or_inner_clauses) => or_clauses(state, &args_to_key, or_inner_clauses),
+            Clause::ContainsKeyValue(_, key, value) => {
+                if let Some(v) = state.get(key) {
+                    value == v
+                } else {
+                    false
+                }
+            }
+            Clause::SimpleComparisonFunction(f, key, value) => {
+                if let Some(v) = state.get(key) {
+                    match f {
+                        wql::Function::Eq => v == value,
+                        wql::Function::NotEq => v != value,
+                        wql::Function::GEq => v >= value,
+                        wql::Function::G => v > value,
+                        wql::Function::LEq => v <= value,
+                        wql::Function::L => v < value,
+                        wql::Function::Like => {
+                            if let (Types::String(content), Types::String(regex)) = (v, value) {
+                                if regex.starts_with("%") && regex.ends_with("%") {
+                                    content.contains(&regex[1..regex.len() - 1])
+                                } else if regex.starts_with("%") {
+                                    content.ends_with(&regex[..regex.len() - 1])
+                                } else if regex.ends_with("%") {
+                                    content.starts_with(&regex[1..])
+                                } else {
+                                    content.contains(&regex[..])
+                                }
+                            } else {
+                                false
+                            }
+                        }
+                        _ => false,
+                    }
+                } else {
+                    false
+                }
+            }
+            Clause::ComplexComparisonFunctions(wql::Function::In, key, set) => {
+                let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                if let Some(v) = state.get(key) {
+                    set.contains(v)
+                } else {
+                    false
+                }
+            }
+            Clause::ComplexComparisonFunctions(wql::Function::Between, key, start_end) => {
+                let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                if let Some(v) = state.get(key) {
+                    v >= &start_end[0] && v <= &start_end[1]
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        })
+        .any(|f| f)
 }
 
 async fn generate_state(

@@ -50,15 +50,16 @@ fn set_clause(entity_name: &str, chs: &mut std::str::Chars) -> Clause {
         .skip_while(|c| c.is_whitespace())
         .take_while(|c| c != &',')
         .collect();
+
     if c_str.starts_with("?*") {
         clause_entity_definition(entity_name, c_str)
     } else if c_str.starts_with('(') && c_str.ends_with(')') {
-        clause_function(&c_str[1..c_str.len() - 1])
+        clause_function(entity_name, &c_str[1..c_str.len() - 1])
     } else {
         Clause::Error
     }
 }
-fn clause_function(clause: &str) -> Clause {
+fn clause_function(entity_name: &str, clause: &str) -> Clause {
     let args: Vec<&str> = clause
         .split(' ')
         .filter(|c| !c.is_empty())
@@ -67,6 +68,7 @@ fn clause_function(clause: &str) -> Clause {
     if args.len() < 3 {
         return Clause::Error;
     }
+
     match &args[0].to_lowercase()[..] {
         ">=" | ">" | "==" | "<=" | "<" | "like" => {
             let mut chs = args[2].chars();
@@ -98,8 +100,42 @@ fn clause_function(clause: &str) -> Clause {
                 Clause::ComplexComparisonFunctions(function, key, values)
             }
         }
+        "or" => {
+            let clauses = or_clauses(entity_name, clause);
+            Clause::Or(Function::Or, clauses)
+        }
         _ => Clause::Error,
     }
+}
+
+fn or_clauses(entity_name: &str, clause: &str) -> Vec<Clause> {
+    let mut chars = clause[2..].chars();
+    let mut clauses = Vec::new();
+    let mut clause = String::new();
+    loop {
+        match chars.next() {
+            Some(',') => {
+                clauses.push(clause);
+                clause = String::new();
+            }
+            Some(')') => {
+                clause.push(')');
+                clauses.push(clause);
+                clause = String::new();
+            }
+            Some('(') => clause = String::from('('),
+            Some(c) => clause.push(c),
+            None => break,
+        }
+    }
+    clauses
+        .iter()
+        .filter(|c| !c.is_empty())
+        .map(|c| {
+            let mut chs = c.trim().chars();
+            set_clause(entity_name, &mut chs)
+        })
+        .collect::<Vec<Clause>>()
 }
 
 fn clause_entity_definition(entity_name: &str, clause: String) -> Clause {
@@ -120,12 +156,7 @@ fn clause_entity_definition(entity_name: &str, clause: String) -> Clause {
 
     let (entity, key) = (entity_key[0], entity_key[1]);
     if entity != entity_name {
-        return Clause::EntitiesKeyComparison(
-            entity_name.to_string(),
-            entity.to_string(),
-            key.to_string(),
-            Value(last_element.to_string()),
-        );
+        return Clause::Error;
     }
 
     let mut last = last_element.chars();
@@ -146,9 +177,9 @@ fn clause_entity_definition(entity_name: &str, clause: String) -> Clause {
 pub enum Clause {
     ContainsKeyValue(String, String, Types),
     ValueAttribution(String, String, Value),
-    EntitiesKeyComparison(String, String, String, Value),
     SimpleComparisonFunction(Function, String, Types),
     ComplexComparisonFunctions(Function, String, Vec<Types>),
+    Or(Function, Vec<Clause>),
     Error,
 }
 
@@ -162,6 +193,7 @@ pub enum Function {
     NotEq,
     Like,
     Between,
+    Or,
     In,
     Error,
 }
@@ -231,37 +263,6 @@ mod test {
                         "id".to_string(),
                         Types::Integer(349875325)
                     ),
-                ]
-            )
-        )
-    }
-
-    #[test]
-    fn var_attribution() {
-        let mut chars = " {
-            ?* my_entity:id ?id,
-            ?* other_entity:id ?id,
-        }"
-        .chars();
-        let wql = where_selector("my_entity".to_string(), ToSelect::All, &mut chars);
-
-        assert_eq!(
-            wql.unwrap(),
-            Wql::SelectWhere(
-                "my_entity".to_string(),
-                ToSelect::All,
-                vec![
-                    Clause::ValueAttribution(
-                        "my_entity".to_string(),
-                        "id".to_string(),
-                        Value("?id".to_string())
-                    ),
-                    Clause::EntitiesKeyComparison(
-                        "my_entity".to_string(),
-                        "other_entity".to_string(),
-                        "id".to_string(),
-                        Value("?id".to_string())
-                    )
                 ]
             )
         )
@@ -376,6 +377,55 @@ mod test {
                 "my_entity".to_string(),
                 ToSelect::All,
                 vec![Clause::Error, Clause::Error,]
+            )
+        )
+    }
+
+    #[test]
+    fn or() {
+        let mut chars = " {
+            ?* my_entity:age ?age,
+            ?* my_entity:name ?name,
+            (or 
+                (>= ?age 30)
+                (like ?name \"%uli%\")
+            ),
+        }"
+        .chars();
+        let wql = where_selector("my_entity".to_string(), ToSelect::All, &mut chars);
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhere(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![
+                    Clause::ValueAttribution(
+                        "my_entity".to_string(),
+                        "age".to_string(),
+                        Value("?age".to_string())
+                    ),
+                    Clause::ValueAttribution(
+                        "my_entity".to_string(),
+                        "name".to_string(),
+                        Value("?name".to_string())
+                    ),
+                    Clause::Or(
+                        Function::Or,
+                        vec![
+                            Clause::SimpleComparisonFunction(
+                                Function::GEq,
+                                "?age".to_string(),
+                                Types::Integer(30)
+                            ),
+                            Clause::SimpleComparisonFunction(
+                                Function::Like,
+                                "?name".to_string(),
+                                Types::String("%uli%".to_string())
+                            ),
+                        ]
+                    ),
+                ]
             )
         )
     }

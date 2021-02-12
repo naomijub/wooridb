@@ -795,4 +795,58 @@ mod test_where {
             )
         )
     }
+
+    #[test]
+    fn or_clause() {
+        let query = "Select * FROM my_entity WherE {
+            ?* my_entity:a ?a,
+            ?* my_entity:c ?c,
+            (== ?a 123),
+            (or
+                (>= c 4300.0)
+                (< c 6.9)
+            ),
+        }";
+        let wql = Wql::from_str(query);
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhere(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![
+                    Clause::ValueAttribution(
+                        "my_entity".to_string(),
+                        "a".to_string(),
+                        Value("?a".to_string())
+                    ),
+                    Clause::ValueAttribution(
+                        "my_entity".to_string(),
+                        "c".to_string(),
+                        Value("?c".to_string())
+                    ),
+                    Clause::SimpleComparisonFunction(
+                        Function::Eq,
+                        "?a".to_string(),
+                        Types::Integer(123)
+                    ),
+                    Clause::Or(
+                        Function::Or,
+                        vec![
+                            Clause::SimpleComparisonFunction(
+                                Function::GEq,
+                                "c".to_string(),
+                                Types::Float(4300.0)
+                            ),
+                            Clause::SimpleComparisonFunction(
+                                Function::L,
+                                "c".to_string(),
+                                Types::Float(6.9)
+                            )
+                        ]
+                    )
+                ]
+            )
+        )
+    }
 }

@@ -67,6 +67,8 @@ test:
 	rm -rf *.log
 	cargo test -- --ignored controllers::clauses_test::clause_ge_le
 	rm -rf *.log
+	cargo test -- --ignored controllers::clauses_test::clause_or
+	rm -rf *.log
 
 release:
 	cargo run --release
