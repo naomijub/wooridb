@@ -50,6 +50,7 @@ fn set_clause(entity_name: &str, chs: &mut std::str::Chars) -> Clause {
         .skip_while(|c| c.is_whitespace())
         .take_while(|c| c != &',')
         .collect();
+
     if c_str.starts_with("?*") {
         clause_entity_definition(entity_name, c_str)
     } else if c_str.starts_with('(') && c_str.ends_with(')') {
@@ -67,6 +68,7 @@ fn clause_function(entity_name: &str, clause: &str) -> Clause {
     if args.len() < 3 {
         return Clause::Error;
     }
+
     match &args[0].to_lowercase()[..] {
         ">=" | ">" | "==" | "<=" | "<" | "like" => {
             let mut chs = args[2].chars();

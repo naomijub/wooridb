@@ -272,6 +272,78 @@ async fn clause_ge_le() {
     clear();
 }
 
+#[ignore]
+#[actix_rt::test]
+async fn clause_or() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_or")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 3, b: \"hello world\", c: 45.6,} INTO test_or")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: \"Julia Naomi\", c: 57.6,} INTO test_or")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: \"Otavio Pace\", c: 5.6,} INTO test_or")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: \"hello johnny\", c: 4345.6,} INTO test_or")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(
+            "Select * From test_or WHERE {
+            ?* test_or:a ?a,
+            ?* test_or:c ?c,
+            (== ?a 123),
+            (or
+                (>= c 4300.0)
+                (< c 6.9)
+            ),
+        }",
+        )
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
+    let result: BTreeMap<Uuid, HashMap<String, Types>> = ron::de::from_str(&body).unwrap();
+
+    assert!(result.iter().count() == 2);
+    if let Some((_, map)) = result.iter().last() {
+        assert_eq!(map["a"], Types::Integer(123));
+        assert!(map["c"] == Types::Float(5.6) || map["c"] == Types::Float(4345.6));
+    } else {
+        assert!(false);
+    }
+
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

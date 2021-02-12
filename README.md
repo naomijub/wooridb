@@ -113,9 +113,10 @@ PORT=1438
     - `between`: `(between ?k1 0 435)`, after `?k1` the first argument is the `start` value and the second argument is the `end` value.  If tou set more than 2 arguments it will return a `ClauseError`.
     - `like`: `(like ?k2 "%naomi%")`, like compared `?k2` with the string `"%naomi%"` considering that `%` are wildcards. `"%naomi"` means `end_with("naomi")`, `"naomi%"` means `starts_with("naomi")` and `"%naomi%"` means `contains("naomi")` In the future this will be replaced by regex.
     - `==`, `>=`, `>`, `<`, `<=`, `!=` -> `(>= ?k1 0)` which means *all values that `?k1` is greater than or equal to `0`*.
+    - `or`: All arguments inside the `or` function call will be evaluated to `true` if any of them is `true`. Example 
+    - Every function will be added as logical `and` unless they are inside a function `or`. Example: `"Select * From test_or WHERE { ?* test_or:a ?a, ?* test_or:c ?c, (== ?a 123), (or (>= c 4300.0) (< c 6.9) ), }`, this means that `?a` needs to be equal to 123 **and** `?c` is greater or equal to 4300.0 `or` `?c` is less than 6.9.
     Missing features: 
-    - [ ] function `and`
-    - [ ] function `or`
+    - `and` inside `or` block.
     - [ ] ?Temporality?
 
 - [x] Check for encrypted data validity. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false`. Example request: `'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
@@ -138,6 +139,7 @@ PORT=1438
 ### TODOS
 - [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
+- [ ] restart `DataAtomicUsize` when day changes [issue 51](https://github.com/naomijub/wooridb/issues/51)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31)
 - [ ] Remove data files from root
 - [ ] Docker

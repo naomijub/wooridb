@@ -66,6 +66,8 @@ jobs:
         cargo test -- --ignored controllers::clauses_test::clause_in
         rm -rf *.log
         cargo test -- --ignored controllers::clauses_test::clause_ge_le
+        rm -rf *.log
+        cargo test -- --ignored controllers::clauses_test::clause_or
     - name: DB-featured-tests
       run: | 
         cargo test --features test_read io::read::test::encryption_test
