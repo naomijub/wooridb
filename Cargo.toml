@@ -42,6 +42,6 @@ bytes = "1.0.1"
 criterion = "0.3"
 rand = "*"
 
-[[bench]]
-name = "query"
-harness = false
+# [[bench]]
+# name = "tx"
+# harness = false
