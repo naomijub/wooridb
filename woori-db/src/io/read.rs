@@ -13,7 +13,7 @@ use crate::{actors::encrypts::WriteWithEncryption, model::DataRegister};
 pub fn assert_content(pat: &str) {
     use chrono::prelude::*;
     let utc: DateTime<Utc> = Utc::now();
-    let date_log = utc.format("%Y_%m_%d.log").to_string();
+    let date_log = utc.format("data/%Y_%m_%d.log").to_string();
 
     let mut file = OpenOptions::new().read(true).open(date_log).unwrap();
     let mut s = String::new();
@@ -26,7 +26,7 @@ pub fn assert_content(pat: &str) {
 pub fn assert_not_content(pat: &str) {
     use chrono::prelude::*;
     let utc: DateTime<Utc> = Utc::now();
-    let date_log = utc.format("%Y_%m_%d.log").to_string();
+    let date_log = utc.format("data/%Y_%m_%d.log").to_string();
 
     let mut file = OpenOptions::new().read(true).open(date_log).unwrap();
     let mut s = String::new();
@@ -37,7 +37,10 @@ pub fn assert_not_content(pat: &str) {
 
 #[cfg(test)]
 pub fn assert_uniques(pat: &str) {
-    let mut file = OpenOptions::new().read(true).open("uniques.log").unwrap();
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open("data/uniques.log")
+        .unwrap();
     let mut s = String::new();
     file.read_to_string(&mut s).unwrap();
 
@@ -48,7 +51,7 @@ pub fn assert_uniques(pat: &str) {
 pub fn assert_offset(pat: &str) {
     let mut file = OpenOptions::new()
         .read(true)
-        .open("offset_counter.log")
+        .open("data/offset_counter.log")
         .unwrap();
     let mut s = String::new();
     file.read_to_string(&mut s).unwrap();
@@ -60,7 +63,7 @@ pub fn assert_offset(pat: &str) {
 pub fn assert_local_data(pat: &str) {
     let mut file = OpenOptions::new()
         .read(true)
-        .open("local_data.log")
+        .open("data/local_data.log")
         .unwrap();
     let mut s = String::new();
     file.read_to_string(&mut s).unwrap();
@@ -72,7 +75,7 @@ pub fn assert_local_data(pat: &str) {
 pub fn assert_unique_data(pat: &str) {
     let mut file = OpenOptions::new()
         .read(true)
-        .open("unique_data.log")
+        .open("data/unique_data.log")
         .unwrap();
     let mut s = String::new();
     file.read_to_string(&mut s).unwrap();
@@ -82,7 +85,10 @@ pub fn assert_unique_data(pat: &str) {
 
 #[cfg(test)]
 pub fn assert_encrypt(pat: &str) {
-    let mut file = OpenOptions::new().read(true).open("encrypt.log").unwrap();
+    let mut file = OpenOptions::new()
+        .read(true)
+        .open("data/encrypt.log")
+        .unwrap();
     let mut s = String::new();
     file.read_to_string(&mut s).unwrap();
 
@@ -110,9 +116,9 @@ pub fn read_date_log(date_log: String) -> Result<String, Error> {
 
 pub fn offset() -> Result<usize, error::Error> {
     #[cfg(not(feature = "test_read"))]
-    let path = "offset_counter.log";
+    let path = "data/offset_counter.log";
     #[cfg(feature = "test_read")]
-    let path = "offset_counter.txt";
+    let path = "data/offset_counter.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::new();
     file.read_to_string(&mut s)?;
@@ -123,9 +129,9 @@ pub fn offset() -> Result<usize, error::Error> {
 
 pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, error::Error> {
     #[cfg(not(feature = "test_read"))]
-    let path = "local_data.log";
+    let path = "data/local_data.log";
     #[cfg(feature = "test_read")]
-    let path = "local_data.txt";
+    let path = "data/local_data.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::new();
     file.read_to_string(&mut s)?;
@@ -141,9 +147,9 @@ pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, er
 
 pub fn unique_data() -> Result<BTreeMap<String, HashMap<String, HashSet<String>>>, error::Error> {
     #[cfg(not(feature = "test_read"))]
-    let path = "unique_data.log";
+    let path = "data/unique_data.log";
     #[cfg(feature = "test_read")]
-    let path = "unique_data.txt";
+    let path = "data/unique_data.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::new();
     file.read_to_string(&mut s)?;
@@ -159,9 +165,9 @@ pub fn unique_data() -> Result<BTreeMap<String, HashMap<String, HashSet<String>>
 
 pub fn encryption() -> Result<BTreeMap<String, HashSet<String>>, error::Error> {
     #[cfg(not(feature = "test_read"))]
-    let path = "encrypt.log";
+    let path = "data/encrypt.log";
     #[cfg(feature = "test_read")]
-    let path = "encrypt.txt";
+    let path = "data/encrypt.txt";
     let mut file = OpenOptions::new().read(true).open(path)?;
     let mut s = String::from('[');
     file.read_to_string(&mut s)?;
@@ -197,7 +203,7 @@ mod test {
     fn read_log_range() {
         let log_size = write_new();
         let data = DataRegister {
-            file_name: "read_test.log".to_string(),
+            file_name: "data/read_test.log".to_string(),
             offset: 30,
             bytes_length: log_size - 58,
         };
@@ -212,7 +218,7 @@ mod test {
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open("read_test.log")
+            .open("data/read_test.log")
             .unwrap();
 
         file.write(log.as_bytes()).unwrap()

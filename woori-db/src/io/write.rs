@@ -4,7 +4,7 @@ use std::{fs::OpenOptions, io::Write};
 
 pub fn write_to_log(log: &str) -> Result<(usize, bool), Error> {
     let utc: DateTime<Utc> = Utc::now();
-    let date_log = utc.format("%Y_%m_%d.log").to_string();
+    let date_log = utc.format("data/%Y_%m_%d.log").to_string();
 
     let mut file = OpenOptions::new()
         .append(true)
@@ -20,7 +20,7 @@ pub fn write_to_uniques(log: &str) -> Result<(), Error> {
     let mut file = OpenOptions::new()
         .append(true)
         .create(true)
-        .open("uniques.log")?;
+        .open("data/uniques.log")?;
 
     let _ = file.write(log.as_bytes())?;
 
@@ -32,7 +32,7 @@ pub fn local_data(log: &str) -> Result<(), Error> {
         .write(true)
         .append(false)
         .create(true)
-        .open("local_data.log")?;
+        .open("data/local_data.log")?;
 
     let _ = file.seek(SeekFrom::Start(0));
     file.write_all(log.as_bytes())?;
@@ -45,7 +45,7 @@ pub fn unique_data(log: &str) -> Result<(), Error> {
         .write(true)
         .append(false)
         .create(true)
-        .open("unique_data.log")?;
+        .open("data/unique_data.log")?;
 
     let _ = file.seek(SeekFrom::Start(0));
     file.write_all(log.as_bytes())?;
@@ -58,7 +58,7 @@ pub fn offset_counter(log: usize) -> Result<(), Error> {
         .write(true)
         .append(false)
         .create(true)
-        .open("offset_counter.log")?;
+        .open("data/offset_counter.log")?;
 
     let _ = file.seek(SeekFrom::Start(0));
     file.write_all(log.to_string().as_bytes())?;
@@ -70,7 +70,7 @@ pub fn write_to_encrypts(log: &str) -> Result<(), Error> {
     let mut file = OpenOptions::new()
         .append(true)
         .create(true)
-        .open("encrypt.log")?;
+        .open("data/encrypt.log")?;
 
     let _ = file.write(log.as_bytes())?;
 

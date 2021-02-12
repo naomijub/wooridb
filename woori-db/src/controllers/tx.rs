@@ -380,7 +380,7 @@ pub async fn insert_controller(
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.2,
-        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
     };
 
     let local_data = {
@@ -489,7 +489,7 @@ pub async fn update_set_controller(
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
-        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
     };
 
     let local_data = {
@@ -597,7 +597,7 @@ pub async fn update_content_controller(
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
-        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
     };
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
@@ -686,7 +686,7 @@ pub async fn delete_controller(
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
-        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
     };
 
     let local_data = {
@@ -793,7 +793,7 @@ pub async fn match_update_set_controller(
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
-        file_name: content_value.0.format("%Y_%m_%d.log").to_string(),
+        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
     };
 
     let local_data = {
