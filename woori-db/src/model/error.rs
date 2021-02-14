@@ -1,4 +1,5 @@
 use actix::MailboxError;
+use actix_web::error;
 use std::io;
 
 use uuid::Uuid;
@@ -186,3 +187,5 @@ impl From<uuid::Error> for Error {
         Error::InvalidUuid(error)
     }
 }
+
+impl error::ResponseError for Error {}

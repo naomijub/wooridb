@@ -22,12 +22,14 @@ impl SessionInfo {
         Self { expiration, roles }
     }
 
-    // pub fn is_valid_role(&self, role: Role) -> bool {
-    //     self.roles.contains(&role)
-    // }
+    #[cfg(not(debug_assertions))]
+    pub fn is_valid_role(&self, roles: Vec<Role>) -> bool {
+        roles.iter().any(|role| self.roles.contains(&role))
+    }
 
-    // pub fn is_valid_date(&self) -> bool {
-    //     let now = Utc::now();
-    //     self.expiration > now
-    // }
+    #[cfg(not(debug_assertions))]
+    pub fn is_valid_date(&self) -> bool {
+        let now = Utc::now();
+        self.expiration > now
+    }
 }

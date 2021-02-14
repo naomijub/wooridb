@@ -206,3 +206,83 @@ mod test {
         }
     }
 }
+
+#[cfg(test)]
+mod routes_test_with_auth {
+    use crate::{auth::schemas::UserId, http::routes};
+    use actix_http::body::ResponseBody;
+    use actix_web::{body::Body, test, App};
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn query_and_tx_with_token() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
+            .uri("/auth/createUser")
+            .to_request();
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+        let uuid: UserId = ron::de::from_str(&body).unwrap();
+
+        let payload = format!(
+            "(id: \"{}\", user_password: \"my_password\",)",
+            uuid.user_id
+        );
+        let req = test::TestRequest::post()
+            .set_payload(payload)
+            .uri("/auth/putUserSession")
+            .to_request();
+        let mut resp = test::call_service(&mut app, req).await;
+        let token = resp.take_body().as_str().to_string();
+        let token = format!("Bearer {}", token);
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .header("Authorization", token.clone())
+            .set_payload("CREATE ENTITY token_test_ok")
+            .uri("/wql/tx")
+            .to_request();
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .header("Authorization", token.clone())
+            .set_payload("INSERT {a: 123,} INTO token_test_ok")
+            .uri("/wql/tx")
+            .to_request();
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .header("Authorization", token.clone())
+            .set_payload("Select * FROM token_test_ok")
+            .uri("/wql/query")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+
+        assert!(resp.status().is_success());
+        assert!(body.contains("{\n  \"a\": Integer(123),\n }"))
+    }
+
+    trait BodyTest {
+        fn as_str(&self) -> &str;
+    }
+
+    impl BodyTest for ResponseBody<Body> {
+        fn as_str(&self) -> &str {
+            match self {
+                ResponseBody::Body(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(&by).unwrap(),
+                    _ => panic!(),
+                },
+                ResponseBody::Other(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(&by).unwrap(),
+                    _ => panic!(),
+                },
+            }
+        }
+    }
+}

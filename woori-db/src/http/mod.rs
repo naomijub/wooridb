@@ -1,3 +1,8 @@
+#[cfg(not(debug_assertions))]
+use crate::auth::middlewares::wql_validator;
+#[cfg(not(debug_assertions))]
+use actix_web_httpauth::middleware::HttpAuthentication;
+
 use crate::{
     actors::wql::Executor,
     auth::io::read_admin_info,
@@ -50,7 +55,36 @@ pub fn routes(config: &mut web::ServiceConfig) {
 
     // Deactivate scheduler for now
     // Scheduler.start();
+    #[cfg(not(debug_assertions))]
+    let wql_auth = HttpAuthentication::bearer(wql_validator);
+    // #[cfg(not(debug_assertions))]
+    // let query_auth = HttpAuthentication::bearer(query_validator);
 
+    #[cfg(not(debug_assertions))]
+    config
+        .data(session_context)
+        .service(
+            web::scope("/auth")
+                .data(admin_info)
+                .route("/createUser", web::post().to(auth::create_user))
+                .route("/putUserSession", web::post().to(auth::put_user_session)),
+        )
+        .service(
+            web::scope("/wql")
+                .guard(guard::Header("Content-Type", "application/wql"))
+                .data(wql_context)
+                .data(cost)
+                .data(unique_context)
+                .data(encrypt_context)
+                .data(write_offset)
+                .data(actor)
+                .wrap(wql_auth)
+                .route("/tx", web::post().to(tx::wql_handler))
+                .route("/query", web::post().to(query::wql_handler)),
+        )
+        .route("", web::get().to(HttpResponse::NotFound));
+
+    #[cfg(debug_assertions)]
     config
         .data(session_context)
         .service(
