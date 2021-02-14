@@ -1,9 +1,11 @@
 use crate::{
     actors::wql::Executor,
+    auth::io::read_admin_info,
     io::read::{encryption, local_data, offset, unique_data},
     repository::local::{LocalContext, UniquenessContext},
 };
 use crate::{
+    auth::controllers as auth,
     controllers::{query, tx},
     repository::local::EncryptContext,
 };
@@ -42,10 +44,17 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let env_cost = std::env::var("HASHING_COST").unwrap_or_else(|_| "14".to_owned());
     let cost = env_cost.parse::<u32>().expect("HASHING_COST must be a u32");
 
+    let admin_info = read_admin_info().unwrap();
+
     // Deactivate scheduler for now
     // Scheduler.start();
 
     config
+        .service(
+            web::scope("/auth")
+                .data(admin_info)
+                .route("/createUser", web::post().to(auth::create_user)),
+        )
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))

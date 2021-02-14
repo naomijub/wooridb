@@ -1,1 +1,0 @@
-(entity: "encrypt_ent",encrypts: ["name","cpf",],)(entity: "encrypt_ent2",encrypts: ["name","cpf",],)

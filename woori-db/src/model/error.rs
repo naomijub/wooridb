@@ -30,6 +30,9 @@ pub enum Error {
     CheckNonEncryptedKeys(Vec<String>),
     DateTimeParse(chrono::ParseError),
     FailedToParseDate,
+    AdminNotConfigured,
+    AuthBadRequest,
+    FailedToCreateUser,
 }
 
 impl std::fmt::Display for Error {
@@ -133,6 +136,21 @@ impl std::fmt::Display for Error {
             Error::FailedToParseDate => Response::new(
                 String::from("FailedToParseDate"),
                 "Log date parse error".to_string(),
+            )
+            .write(f),
+            Error::AdminNotConfigured => Response::new(
+                String::from("AdminNotConfigured"),
+                "Admin credentials not configured".to_string(),
+            )
+            .write(f),
+            Error::AuthBadRequest => Response::new(
+                String::from("AuthBadRequest"),
+                "Bad request at authentication endpoint".to_string(),
+            )
+            .write(f),
+            Error::FailedToCreateUser => Response::new(
+                String::from("FailedToCreateUser"),
+                "Failed to create requested user".to_string(),
             )
             .write(f),
         }
