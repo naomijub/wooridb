@@ -17,7 +17,7 @@ pub enum Error {
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
-    UnkwonCondition,
+    UnknownCondition,
     FailedMatchCondition,
     DuplicatedUnique(String, String, Types),
     SelectBadRequest,
@@ -33,6 +33,7 @@ pub enum Error {
     AdminNotConfigured,
     AuthBadRequest,
     FailedToCreateUser,
+    Unknown,
 }
 
 impl std::fmt::Display for Error {
@@ -83,8 +84,8 @@ impl std::fmt::Display for Error {
                 ),
             )
             .write(f),
-            Error::UnkwonCondition => Response::new(
-                String::from("UnkwonCondition"),
+            Error::UnknownCondition => Response::new(
+                String::from("UnknownCondition"),
                 "UNKNOWN MATCH CONDITION".to_string(),
             )
             .write(f),
@@ -151,6 +152,11 @@ impl std::fmt::Display for Error {
             Error::FailedToCreateUser => Response::new(
                 String::from("FailedToCreateUser"),
                 "Failed to create requested user".to_string(),
+            )
+            .write(f),
+            Error::Unknown => Response::new(
+                String::from("Unknown"),
+                "Request credentials failed".to_string(),
             )
             .write(f),
         }

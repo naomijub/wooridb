@@ -102,7 +102,7 @@ impl Handler<MatchUpdate> for Executor {
         match msg.conditions.clone() {
             MatchCondition::All(all) => match_all(all.as_slice(), &msg.previous_state),
             MatchCondition::Any(any) => match_any(any.as_slice(), &msg.previous_state),
-            _ => Err(Error::UnkwonCondition),
+            _ => Err(Error::UnknownCondition),
         }?;
         Ok(())
     }

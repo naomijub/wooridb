@@ -14,7 +14,7 @@ pub struct UserInfo {
     pub role: Vec<Role>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum Role {
     // Admin,
     User,
@@ -26,4 +26,10 @@ pub enum Role {
 #[derive(Serialize, Deserialize)]
 pub struct UserId {
     pub user_id: Uuid,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct User {
+    pub id: Uuid,
+    pub user_password: String,
 }

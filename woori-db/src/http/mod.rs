@@ -2,7 +2,7 @@ use crate::{
     actors::wql::Executor,
     auth::io::read_admin_info,
     io::read::{encryption, local_data, offset, unique_data},
-    repository::local::{LocalContext, UniquenessContext},
+    repository::local::{LocalContext, SessionContext, UniquenessContext},
 };
 use crate::{
     auth::controllers as auth,
@@ -44,16 +44,20 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let env_cost = std::env::var("HASHING_COST").unwrap_or_else(|_| "14".to_owned());
     let cost = env_cost.parse::<u32>().expect("HASHING_COST must be a u32");
 
+    let session_context = Arc::new(Mutex::new(SessionContext::new()));
+
     let admin_info = read_admin_info().unwrap();
 
     // Deactivate scheduler for now
     // Scheduler.start();
 
     config
+        .data(session_context)
         .service(
             web::scope("/auth")
                 .data(admin_info)
-                .route("/createUser", web::post().to(auth::create_user)),
+                .route("/createUser", web::post().to(auth::create_user))
+                .route("/putUserSession", web::post().to(auth::put_user_session)),
         )
         .service(
             web::scope("/wql")

@@ -50,6 +50,12 @@ pub struct UserRegistry {
     date: DateTime<Utc>,
 }
 
+impl UserRegistry {
+    pub fn context(self) -> (String, Vec<Role>) {
+        (self.hash, self.roles)
+    }
+}
+
 impl User {
     pub fn new(id: Uuid, user_password: String, roles: Vec<Role>) -> Self {
         Self {
@@ -66,6 +72,9 @@ impl User {
             roles: self.roles.clone(),
             date,
         };
-        Ok(ron::ser::to_string_pretty(&value, pretty_config_inner())?)
+        Ok(format!(
+            "{}\n",
+            ron::ser::to_string_pretty(&value, pretty_config_inner())?
+        ))
     }
 }

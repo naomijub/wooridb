@@ -1,9 +1,16 @@
+use std::sync::{Arc, Mutex};
+
 use actix_web::{web, HttpResponse, Responder};
 use bcrypt::hash;
+use chrono::Utc;
 use ron::de::from_str;
 use uuid::Uuid;
 
-use crate::{core::pretty_config_output, model::error::Error};
+use crate::{
+    core::pretty_config_output,
+    model::error::Error,
+    repository::local::{SessionContext, SessionInfo},
+};
 
 use super::{
     io,
@@ -45,9 +52,47 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
     }
 }
 
+pub async fn put_user_session(
+    body: String,
+    session_context: web::Data<Arc<Mutex<SessionContext>>>,
+) -> impl Responder {
+    let ok_user: Result<super::schemas::User, Error> = match ron::de::from_str(&body) {
+        Ok(u) => Ok(u),
+        Err(_) => Err(Error::Unknown),
+    };
+    if let Ok(user) = ok_user {
+        let user_registry = io::find_user(user.clone()).await;
+        if let Ok(reg) = user_registry {
+            let (hash, roles) = reg.context();
+            match bcrypt::verify(&(user.user_password), &hash) {
+                Err(_) => (),
+                Ok(false) => (),
+                Ok(true) => {
+                    if let Ok(mut session) = session_context.lock() {
+                        let token = bcrypt::hash(&Uuid::new_v4().to_string(), 4)
+                            .unwrap_or(Uuid::new_v4().to_string());
+                        let expiration = Utc::now() + chrono::Duration::seconds(3600);
+
+                        session.insert(token.clone(), SessionInfo::new(expiration, roles));
+
+                        return HttpResponse::Created().body(token);
+                    }
+                }
+            };
+        }
+
+        HttpResponse::BadRequest().body(Error::Unknown.to_string())
+    } else {
+        HttpResponse::BadRequest().body(ok_user.err().unwrap().to_string())
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use crate::{auth::io::assert_users_content, http::routes};
+    use crate::{
+        auth::{io::assert_users_content, schemas::UserId},
+        http::routes,
+    };
     use actix_http::body::ResponseBody;
     use actix_web::{body::Body, test, App};
 
@@ -81,6 +126,65 @@ mod test {
         let body = resp.take_body().as_str().to_string();
         assert!(resp.status().is_client_error());
         assert_eq!(body, "(\n error_type: \"AuthBadRequest\",\n error_message: \"Bad request at authentication endpoint\",\n)");
+    }
+
+    #[actix_rt::test]
+    async fn get_tooken_test() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
+            .uri("/auth/createUser")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+        let uuid: UserId = ron::de::from_str(&body).unwrap();
+
+        let payload = format!(
+            "(id: \"{}\", user_password: \"my_password\",)",
+            uuid.user_id
+        );
+        let req = test::TestRequest::post()
+            .set_payload(payload)
+            .uri("/auth/putUserSession")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+
+        assert!(resp.status().is_success());
+        assert!(body.len() > 20);
+    }
+
+    #[actix_rt::test]
+    async fn bad_request_if_user_password_is_wrong() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
+            .uri("/auth/createUser")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+        let uuid: UserId = ron::de::from_str(&body).unwrap();
+
+        let payload = format!(
+            "(id: \"{}\", user_password: \"another_pswd\",)",
+            uuid.user_id
+        );
+        let req = test::TestRequest::post()
+            .set_payload(payload)
+            .uri("/auth/putUserSession")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+
+        assert!(resp.status().is_client_error());
+        assert_eq!(
+            body,
+            "(\n error_type: \"Unknown\",\n error_message: \"Request credentials failed\",\n)"
+        );
     }
 
     trait BodyTest {

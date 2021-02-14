@@ -1,13 +1,15 @@
 use std::{
     fs::OpenOptions,
-    io::{Read, Write},
+    io::{BufRead, BufReader, Write},
 };
 
 use crate::model::error::Error;
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{DateTime, Utc};
+use ron::from_str;
 
-use super::models::{AdminInfo, User};
+use super::models::{AdminInfo, User, UserRegistry};
+use super::schemas;
 
 pub fn read_admin_info() -> Result<AdminInfo, Error> {
     #[cfg(test)]
@@ -48,13 +50,35 @@ pub fn to_users_log(user: &User) -> Result<(), Error> {
     Ok(())
 }
 
+pub async fn find_user(user: schemas::User) -> Result<UserRegistry, Error> {
+    let users_info_log = "data/users_info.log";
+
+    let file = OpenOptions::new().read(true).open(users_info_log)?;
+    let buffer = BufReader::new(file);
+    let uuid = user.id;
+
+    let user_content = buffer
+        .lines()
+        .find(|l| (l.as_ref().unwrap_or(&String::new())).contains(&uuid.to_string()))
+        .ok_or_else(|| Error::Unknown)??;
+
+    let user: Result<UserRegistry, Error> = match from_str(&user_content) {
+        Ok(u) => Ok(u),
+        Err(_) => Err(Error::Unknown),
+    };
+
+    user
+}
+
 #[cfg(test)]
 pub fn assert_users_content(pat: &str) {
     use chrono::prelude::*;
-    let utc: DateTime<Utc> = Utc::now();
-    let date_log = utc.format("data/users_info.log").to_string();
+    use std::io::Read;
 
-    let mut file = OpenOptions::new().read(true).open(date_log).unwrap();
+    let utc: DateTime<Utc> = Utc::now();
+    let user_log = utc.format("data/users_info.log").to_string();
+
+    let mut file = OpenOptions::new().read(true).open(user_log).unwrap();
     let mut s = String::new();
     file.read_to_string(&mut s).unwrap();
 
