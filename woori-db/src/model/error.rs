@@ -1,4 +1,5 @@
 use actix::MailboxError;
+use actix_web::error;
 use std::io;
 
 use uuid::Uuid;
@@ -17,7 +18,7 @@ pub enum Error {
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
-    UnkwonCondition,
+    UnknownCondition,
     FailedMatchCondition,
     DuplicatedUnique(String, String, Types),
     SelectBadRequest,
@@ -30,6 +31,10 @@ pub enum Error {
     CheckNonEncryptedKeys(Vec<String>),
     DateTimeParse(chrono::ParseError),
     FailedToParseDate,
+    AdminNotConfigured,
+    AuthBadRequest,
+    FailedToCreateUser,
+    Unknown,
 }
 
 impl std::fmt::Display for Error {
@@ -80,8 +85,8 @@ impl std::fmt::Display for Error {
                 ),
             )
             .write(f),
-            Error::UnkwonCondition => Response::new(
-                String::from("UnkwonCondition"),
+            Error::UnknownCondition => Response::new(
+                String::from("UnknownCondition"),
                 "UNKNOWN MATCH CONDITION".to_string(),
             )
             .write(f),
@@ -135,6 +140,26 @@ impl std::fmt::Display for Error {
                 "Log date parse error".to_string(),
             )
             .write(f),
+            Error::AdminNotConfigured => Response::new(
+                String::from("AdminNotConfigured"),
+                "Admin credentials not configured".to_string(),
+            )
+            .write(f),
+            Error::AuthBadRequest => Response::new(
+                String::from("AuthBadRequest"),
+                "Bad request at authentication endpoint".to_string(),
+            )
+            .write(f),
+            Error::FailedToCreateUser => Response::new(
+                String::from("FailedToCreateUser"),
+                "Failed to create requested user".to_string(),
+            )
+            .write(f),
+            Error::Unknown => Response::new(
+                String::from("Unknown"),
+                "Request credentials failed".to_string(),
+            )
+            .write(f),
         }
     }
 }
@@ -162,3 +187,5 @@ impl From<uuid::Error> for Error {
         Error::InvalidUuid(error)
     }
 }
+
+impl error::ResponseError for Error {}

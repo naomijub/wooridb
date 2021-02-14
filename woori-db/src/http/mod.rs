@@ -1,9 +1,16 @@
+#[cfg(not(debug_assertions))]
+use crate::auth::middlewares::wql_validator;
+#[cfg(not(debug_assertions))]
+use actix_web_httpauth::middleware::HttpAuthentication;
+
 use crate::{
     actors::wql::Executor,
+    auth::io::read_admin_info,
     io::read::{encryption, local_data, offset, unique_data},
-    repository::local::{LocalContext, UniquenessContext},
+    repository::local::{LocalContext, SessionContext, UniquenessContext},
 };
 use crate::{
+    auth::controllers as auth,
     controllers::{query, tx},
     repository::local::EncryptContext,
 };
@@ -42,10 +49,50 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let env_cost = std::env::var("HASHING_COST").unwrap_or_else(|_| "14".to_owned());
     let cost = env_cost.parse::<u32>().expect("HASHING_COST must be a u32");
 
+    let session_context = Arc::new(Mutex::new(SessionContext::new()));
+
+    let admin_info = read_admin_info().unwrap();
+
     // Deactivate scheduler for now
     // Scheduler.start();
+    #[cfg(not(debug_assertions))]
+    let wql_auth = HttpAuthentication::bearer(wql_validator);
+    // #[cfg(not(debug_assertions))]
+    // let query_auth = HttpAuthentication::bearer(query_validator);
 
+    #[cfg(not(debug_assertions))]
     config
+        .data(session_context)
+        .service(
+            web::scope("/auth")
+                .data(admin_info)
+                .route("/createUser", web::post().to(auth::create_user))
+                .route("/putUserSession", web::put().to(auth::put_user_session)),
+        )
+        .service(
+            web::scope("/wql")
+                .guard(guard::Header("Content-Type", "application/wql"))
+                .data(wql_context)
+                .data(cost)
+                .data(unique_context)
+                .data(encrypt_context)
+                .data(write_offset)
+                .data(actor)
+                .wrap(wql_auth)
+                .route("/tx", web::post().to(tx::wql_handler))
+                .route("/query", web::post().to(query::wql_handler)),
+        )
+        .route("", web::get().to(HttpResponse::NotFound));
+
+    #[cfg(debug_assertions)]
+    config
+        .data(session_context)
+        .service(
+            web::scope("/auth")
+                .data(admin_info)
+                .route("/createUser", web::post().to(auth::create_user))
+                .route("/putUserSession", web::put().to(auth::put_user_session)),
+        )
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))

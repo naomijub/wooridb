@@ -4,6 +4,7 @@ use actix_web::{
 };
 
 mod actors;
+mod auth;
 mod controllers;
 mod core;
 mod http;

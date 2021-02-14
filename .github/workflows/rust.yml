@@ -74,6 +74,9 @@ jobs:
         cargo test --features test_read io::read::test::local_data_test
         cargo test --features test_read io::read::test::offset_test
         cargo test --features test_read io::read::unique_data_test
+    - name: DB-release-tests
+      run: |
+        cargo test --release -- --ignored auth::controllers::routes_test_with_auth::query_and_tx_with_token
     - name: DB-FMT
       run: cargo fmt -- --check
   

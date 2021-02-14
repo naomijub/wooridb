@@ -21,11 +21,49 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 * For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will be done later by using features.
 * **Precise floats** or **number larger than f64::MAX/i128::MAX** can be defined with an UPPERCASE `P` at the end. This type cannot be updated with `UPDATE CONTENT`. Example `INSERT {a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P, } INTO my_entity`.
 * `BLOB` will not be supported. Checkout *To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem*, Russel Sears, Catherine van Ingen, Jim Gray, MSR-TR-2006-45.
-* To configure hashing cost and port define it at a `.env` file:
+* To configure hashing cost and port some environment variables are required:
 ```
 HASHING_COST=16
 PORT=1438
 ```
+
+
+## Authentication and Authorization (SIMPLE implementation)
+Auhtentication and authorization on work with release mode, so `cargo run --release` is required. Some enviroonment variables are also required:
+```
+AUTH_HASHING_COST=8
+ADMIN=your_admin
+ADMIN_PASSWORD=your_password
+```
+
+### Creating new users
+* `ADMIN` is the only user role capable of creating new users. 
+To create a new user POST at `/auth/createUser` with your admin credentials and the new user info as follows (ron format):
+```ron
+(
+  admin_id: "your_admin",
+  admin_password: "your_password",
+  user_info: (
+    user_password: "my_password",
+    role: [User,],
+  ),
+)
+```
+User info are the user password and the user's roles. Remember to always put `,` at the end. Response of this request will be `(user_id: \"<some-uuid>\",)`, which will contain the user id.
+
+* [ ] New admins and remove admins is not yet implemented.
+
+### Getting a session token
+To make a request at WQL endpoints you need a session token, that will expire within 3600 seconds. To retrieve a session token you need to PUT at endpoint `/auth/putUserSession` your user credentials as follows (ron format):
+```ron
+(id: "<user_id>", user_password: "<user_password>",)
+```
+Response will be a plain/text with your token.
+* [ ] Configure session token expiration time.
+
+### Making auth requests to `/wql/tx` and `/wql/query`.
+To avoid authentication and authorization erros add your token to the authorization bearer header `Authorization: Bearer <your session token>`. Your user needs the correct session token and the correct role for this request.
+
 
 ## Parser
 It is evolved as  required by `WooriDB`.
@@ -206,9 +244,8 @@ Checks for encrypted data validity. It requires an entity name after `FROM` and 
 
 
 ## TODOS
-- [ ] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
+- [x] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54)
-- [x] Remove data files from root
 - [ ] Docker
 - [ ] Benchmarks
