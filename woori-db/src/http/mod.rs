@@ -67,7 +67,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
             web::scope("/auth")
                 .data(admin_info)
                 .route("/createUser", web::post().to(auth::create_user))
-                .route("/putUserSession", web::post().to(auth::put_user_session)),
+                .route("/putUserSession", web::put().to(auth::put_user_session)),
         )
         .service(
             web::scope("/wql")
@@ -91,7 +91,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
             web::scope("/auth")
                 .data(admin_info)
                 .route("/createUser", web::post().to(auth::create_user))
-                .route("/putUserSession", web::post().to(auth::put_user_session)),
+                .route("/putUserSession", web::put().to(auth::put_user_session)),
         )
         .service(
             web::scope("/wql")

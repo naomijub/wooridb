@@ -144,7 +144,7 @@ mod test {
             "(id: \"{}\", user_password: \"my_password\",)",
             uuid.user_id
         );
-        let req = test::TestRequest::post()
+        let req = test::TestRequest::put()
             .set_payload(payload)
             .uri("/auth/putUserSession")
             .to_request();
@@ -172,7 +172,7 @@ mod test {
             "(id: \"{}\", user_password: \"another_pswd\",)",
             uuid.user_id
         );
-        let req = test::TestRequest::post()
+        let req = test::TestRequest::put()
             .set_payload(payload)
             .uri("/auth/putUserSession")
             .to_request();
@@ -229,7 +229,7 @@ mod routes_test_with_auth {
             "(id: \"{}\", user_password: \"my_password\",)",
             uuid.user_id
         );
-        let req = test::TestRequest::post()
+        let req = test::TestRequest::put()
             .set_payload(payload)
             .uri("/auth/putUserSession")
             .to_request();
