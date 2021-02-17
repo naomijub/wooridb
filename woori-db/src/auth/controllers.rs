@@ -96,6 +96,7 @@ mod test {
     use actix_http::body::ResponseBody;
     use actix_web::{body::Body, test, App};
 
+    #[ignore]
     #[actix_rt::test]
     async fn create_new_user_ok() {
         let mut app = test::init_service(App::new().configure(routes)).await;
@@ -114,6 +115,7 @@ mod test {
         assert_users_content("id: ");
     }
 
+    #[ignore]
     #[actix_rt::test]
     async fn create_new_user_wrong_admin() {
         let mut app = test::init_service(App::new().configure(routes)).await;
@@ -128,8 +130,9 @@ mod test {
         assert_eq!(body, "(\n error_type: \"AuthBadRequest\",\n error_message: \"Bad request at authentication endpoint\",\n)");
     }
 
+    #[ignore]
     #[actix_rt::test]
-    async fn get_tooken_test() {
+    async fn get_token_test() {
         let mut app = test::init_service(App::new().configure(routes)).await;
         let req = test::TestRequest::post()
             .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
@@ -156,6 +159,7 @@ mod test {
         assert!(body.len() > 20);
     }
 
+    #[ignore]
     #[actix_rt::test]
     async fn bad_request_if_user_password_is_wrong() {
         let mut app = test::init_service(App::new().configure(routes)).await;

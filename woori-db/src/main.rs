@@ -4,6 +4,7 @@ use actix_web::{
 };
 
 mod actors;
+#[allow(dead_code)]
 mod auth;
 mod controllers;
 mod core;

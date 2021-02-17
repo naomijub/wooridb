@@ -16,8 +16,34 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: DB-tests
+      run: cargo test -- --nocapture
+    - name: DB-FMT
+      run: cargo fmt -- --check
+    - name: WQL-install-clippy
+      run: rustup component add clippy
+    - name: WQL-clippy
+      run: cargo clippy -- -W clippy::pedantic
+
+  build_release_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: DB-release-tests
       run: |
-        cargo test -- --nocapture
+        cargo test --release -- --ignored auth::controllers::routes_test_with_auth::query_and_tx_with_token
+        cargo test --release -- --ignored auth::controllers::test::bad_request_if_user_password_is_wrong
+        cargo test --release -- --ignored auth::controllers::test::create_new_user_ok
+        cargo test --release -- --ignored auth::controllers::test::create_new_user_wrong_admin
+        cargo test --release -- --ignored auth::controllers::test::get_token_test
+
+  build_side_effects_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: DB-tests
+      run: |
         rm -rf data/*.log
         cargo test -- --ignored controllers::test::test_update_content_post_ok
         rm -rf data/*.log
@@ -68,18 +94,19 @@ jobs:
         cargo test -- --ignored controllers::clauses_test::clause_ge_le
         rm -rf data/*.log
         cargo test -- --ignored controllers::clauses_test::clause_or
+
+  build_feature_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
     - name: DB-featured-tests
       run: | 
         cargo test --features test_read io::read::test::encryption_test
         cargo test --features test_read io::read::test::local_data_test
         cargo test --features test_read io::read::test::offset_test
         cargo test --features test_read io::read::unique_data_test
-    - name: DB-release-tests
-      run: |
-        cargo test --release -- --ignored auth::controllers::routes_test_with_auth::query_and_tx_with_token
-    - name: DB-FMT
-      run: cargo fmt -- --check
-  
+
   build_wql:
     runs-on: ubuntu-latest
 
