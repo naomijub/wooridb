@@ -1,6 +1,29 @@
 # WooriDB
 
-WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hugely inspired by:
+WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which means it contains all entities registries indexed by DateTime. It is schemaless, key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. Some other features are:
+- Hashing keys content with [`ENCRYPT`](https://github.com/naomijub/wooridb#create-entity) keyword.
+- Hashed values are filtered out and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
+- [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
+  - [ ] JSON to be supported via feature.
+  - [ ] EDN to be supported via feature.
+- Entities are indexed by `entity_name` and `Uuid`. Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
+- Stores persistent data locally.
+  - [ ] `S3` as backend to be devloped.
+  - [ ] `Postgres` as backend to be devloped.
+  - [ ] `DynamoDB` as backend to be devloped.
+- Is able to handle very large numbers when ending with letter `P`, `98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P`.
+- Configuration is done via environment variables.
+  - [ ] Non sensible configurations with `Config.toml`.
+  - [ ] CORS
+- Authentication and Authorization via session token
+  - [ ] Creating and removing ADMINs/new users.
+- [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
+- [ ] Possible Relation Algebra
+
+`Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
+
+
+This project is hugely inspired by:
 - [Crux](https://github.com/juxt/crux); 
 - [Datomic](https://www.datomic.com/); 
 - [Prometheus](https://github.com/prometheus/prometheus) 
@@ -10,11 +33,10 @@ WooriDB is an (EXPERIMENTAL) immutable time serial database. This project is hug
 - [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
 - Professor Andy Pavlo Database classes. 
 
-`Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
 
 ## Installation
 - if you don't have Rust and Cargo installed run `make setup` at root.
-- `make run` at root.
+- `make run` at root for `release mode`, or `make debug` for `debug mode` (Debug mode doesn't have auth system enabled).
 
 ## Usage
 * Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
@@ -244,8 +266,18 @@ Checks for encrypted data validity. It requires an entity name after `FROM` and 
 
 
 ## TODOS
-- [x] Authentication [issue 26](https://github.com/naomijub/wooridb/issues/26)
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54)
 - [ ] Docker
 - [ ] Benchmarks
+
+## Current Benchmarks
+>  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
+
+- `create_entity`           time:   [15.269 ms 15.332 ms 15.396 ms]
+- `insert_entity`           time:   [27.438 ms 28.177 ms 28.958 ms]
+- `update_set_entity`       time:   [39.814 ms 40.054 ms 40.314 ms]
+- `update_content_entity`   time:   [42.359 ms 43.129 ms 43.942 ms]
+- `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
+- `evict_entity_id`         time:   [41.387 ms 42.029 ms 42.731 ms] - Filtered 400s
+- `evict_entity`            time:   [31.582 ms 31.805 ms 32.039 ms] - Filtered 400s

@@ -1,16 +1,14 @@
 #[cfg(not(debug_assertions))]
-use crate::auth::middlewares::wql_validator;
+use crate::auth::{controllers as auth, io::read_admin_info, middlewares::wql_validator};
 #[cfg(not(debug_assertions))]
 use actix_web_httpauth::middleware::HttpAuthentication;
 
 use crate::{
     actors::wql::Executor,
-    auth::io::read_admin_info,
     io::read::{encryption, local_data, offset, unique_data},
     repository::local::{LocalContext, SessionContext, UniquenessContext},
 };
 use crate::{
-    auth::controllers as auth,
     controllers::{query, tx},
     repository::local::EncryptContext,
 };
@@ -51,14 +49,13 @@ pub fn routes(config: &mut web::ServiceConfig) {
 
     let session_context = Arc::new(Mutex::new(SessionContext::new()));
 
+    #[cfg(not(debug_assertions))]
     let admin_info = read_admin_info().unwrap();
 
     // Deactivate scheduler for now
     // Scheduler.start();
     #[cfg(not(debug_assertions))]
     let wql_auth = HttpAuthentication::bearer(wql_validator);
-    // #[cfg(not(debug_assertions))]
-    // let query_auth = HttpAuthentication::bearer(query_validator);
 
     #[cfg(not(debug_assertions))]
     config
@@ -87,12 +84,6 @@ pub fn routes(config: &mut web::ServiceConfig) {
     #[cfg(debug_assertions)]
     config
         .data(session_context)
-        .service(
-            web::scope("/auth")
-                .data(admin_info)
-                .route("/createUser", web::post().to(auth::create_user))
-                .route("/putUserSession", web::put().to(auth::put_user_session)),
-        )
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))
