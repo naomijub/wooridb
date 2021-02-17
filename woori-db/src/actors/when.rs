@@ -54,7 +54,7 @@ impl Handler<ReadEntityRange> for Executor {
             {
                 let state = fractions
                     .last()
-                    .ok_or_else(|| Error::FailedToParseState)?
+                    .ok_or(Error::FailedToParseState)?
                     .to_owned();
                 let date: Result<DateTime<Utc>, Error> = match from_str(fractions[1]) {
                     Ok(x) => Ok(x),
@@ -81,7 +81,7 @@ impl Handler<ReadEntityRange> for Executor {
             {
                 let state = fractions
                     .get(fractions.len() - 2)
-                    .ok_or_else(|| Error::FailedToParseState)?
+                    .ok_or(Error::FailedToParseState)?
                     .to_owned();
                 let date: Result<DateTime<Utc>, Error> = match from_str(fractions[1]) {
                     Ok(x) => Ok(x),
@@ -141,7 +141,7 @@ impl Handler<ReadEntitiesAt> for Executor {
             if fractions[0].eq("INSERT") && fractions[3].eq(&msg.entity_name) {
                 let state = fractions
                     .last()
-                    .ok_or_else(|| Error::FailedToParseState)?
+                    .ok_or(Error::FailedToParseState)?
                     .to_owned();
 
                 let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
@@ -160,7 +160,7 @@ impl Handler<ReadEntitiesAt> for Executor {
             {
                 let state = fractions
                     .get(fractions.len() - 2)
-                    .ok_or_else(|| Error::FailedToParseState)?
+                    .ok_or(Error::FailedToParseState)?
                     .to_owned();
 
                 let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
@@ -219,7 +219,7 @@ impl Handler<ReadEntityIdAt> for Executor {
             {
                 let state = fractions
                     .last()
-                    .ok_or_else(|| Error::FailedToParseState)?
+                    .ok_or(Error::FailedToParseState)?
                     .to_owned();
 
                 let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {
@@ -239,7 +239,7 @@ impl Handler<ReadEntityIdAt> for Executor {
             {
                 let state = fractions
                     .get(fractions.len() - 2)
-                    .ok_or_else(|| Error::FailedToParseState)?
+                    .ok_or(Error::FailedToParseState)?
                     .to_owned();
 
                 let resp: Result<HashMap<String, Types>, Error> = match from_str(state) {

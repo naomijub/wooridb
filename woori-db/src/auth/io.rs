@@ -60,7 +60,7 @@ pub async fn find_user(user: schemas::User) -> Result<UserRegistry, Error> {
     let user_content = buffer
         .lines()
         .find(|l| (l.as_ref().unwrap_or(&String::new())).contains(&uuid.to_string()))
-        .ok_or_else(|| Error::Unknown)??;
+        .ok_or(Error::Unknown)??;
 
     let user: Result<UserRegistry, Error> = match from_str(&user_content) {
         Ok(u) => Ok(u),
