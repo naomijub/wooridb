@@ -14,6 +14,10 @@ lint: fmt clippy
 
 test:
 	cargo test -- --nocapture
+	cargo test --release -- --ignored auth::controllers::test::bad_request_if_user_password_is_wrong
+	cargo test --release -- --ignored auth::controllers::test::create_new_user_ok
+	cargo test --release -- --ignored auth::controllers::test::create_new_user_wrong_admin
+	cargo test --release -- --ignored auth::controllers::test::get_token_test
 	cargo test --features test_read io::read::test::encryption_test
 	cargo test --features test_read io::read::test::local_data_test
 	cargo test --features test_read io::read::test::offset_test
