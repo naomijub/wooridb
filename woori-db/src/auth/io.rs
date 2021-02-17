@@ -45,7 +45,7 @@ pub fn to_users_log(user: &User) -> Result<(), Error> {
         .open(users_info_log)?;
 
     let log = user.format_user_log(utc)?;
-    file.write(log.as_bytes())?;
+    file.write_all(log.as_bytes())?;
 
     Ok(())
 }
