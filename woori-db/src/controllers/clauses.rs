@@ -38,7 +38,7 @@ pub async fn select_where(
 async fn filter_where_clauses(
     states: BTreeMap<Uuid, HashMap<String, Types>>,
     args_to_key: HashMap<String, String>,
-    clauses: &Vec<Clause>,
+    clauses: &[Clause],
 ) -> BTreeMap<Uuid, HashMap<String, Types>> {
     let default = String::new();
     stream::iter(states)
@@ -73,11 +73,11 @@ async fn filter_where_clauses(
                                         if let (Types::String(content), Types::String(regex)) =
                                             (v, value)
                                         {
-                                            if regex.starts_with("%") && regex.ends_with("%") {
+                                            if regex.starts_with('%') && regex.ends_with('%') {
                                                 content.contains(&regex[1..regex.len() - 1])
-                                            } else if regex.starts_with("%") {
+                                            } else if regex.starts_with('%') {
                                                 content.ends_with(&regex[..regex.len() - 1])
-                                            } else if regex.ends_with("%") {
+                                            } else if regex.ends_with('%') {
                                                 content.starts_with(&regex[1..])
                                             } else {
                                                 content.contains(&regex[..])
@@ -124,7 +124,7 @@ async fn filter_where_clauses(
 fn or_clauses(
     state: &HashMap<std::string::String, wql::Types>,
     args_to_key: &HashMap<String, String>,
-    inner_clauses: &Vec<Clause>,
+    inner_clauses: &[Clause],
 ) -> bool {
     let default = String::new();
     inner_clauses
@@ -151,11 +151,11 @@ fn or_clauses(
                         wql::Function::L => v < value,
                         wql::Function::Like => {
                             if let (Types::String(content), Types::String(regex)) = (v, value) {
-                                if regex.starts_with("%") && regex.ends_with("%") {
+                                if regex.starts_with('%') && regex.ends_with('%') {
                                     content.contains(&regex[1..regex.len() - 1])
-                                } else if regex.starts_with("%") {
+                                } else if regex.starts_with('%') {
                                     content.ends_with(&regex[..regex.len() - 1])
-                                } else if regex.ends_with("%") {
+                                } else if regex.ends_with('%') {
                                     content.starts_with(&regex[1..])
                                 } else {
                                     content.contains(&regex[..])

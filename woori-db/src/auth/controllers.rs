@@ -29,7 +29,7 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
             let new_user_id = Uuid::new_v4();
             if let Ok(new_user_hash) = hash(&cred.user_info.user_password, admin.cost()) {
                 let user = User::new(new_user_id, new_user_hash, cred.user_info.role);
-                if let Ok(_) = io::to_users_log(&user) {
+                if io::to_users_log(&user).is_ok() {
                     let user_response = UserId {
                         user_id: new_user_id,
                     };
@@ -70,7 +70,7 @@ pub async fn put_user_session(
                 Ok(true) => {
                     if let Ok(mut session) = session_context.lock() {
                         let token = bcrypt::hash(&Uuid::new_v4().to_string(), 4)
-                            .unwrap_or(Uuid::new_v4().to_string());
+                            .unwrap_or_else(|_| Uuid::new_v4().to_string());
                         let expiration = Utc::now() + chrono::Duration::seconds(3600);
 
                         session.insert(token.clone(), SessionInfo::new(expiration, roles));
