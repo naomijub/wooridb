@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
-use serde::{Serialize, Deserialize};
 
 fn criterion_benchmark(c: &mut Criterion) {
     let entity = get_rand_value();
@@ -42,7 +42,6 @@ fn criterion_benchmark(c: &mut Criterion) {
     //         curl_evict_entity(ent_str);
     //     })
     // });
-    
 }
 
 criterion_group!(benches, criterion_benchmark);
@@ -60,9 +59,7 @@ fn curl_create(entity: &str) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
@@ -78,9 +75,7 @@ fn curl_insert(entity: &str) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
@@ -96,9 +91,7 @@ fn curl_update_set(entity: &str, id: uuid::Uuid) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
@@ -114,9 +107,7 @@ fn curl_update_content(entity: &str, id: uuid::Uuid) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
@@ -133,9 +124,7 @@ fn curl_delete(entity: &str, id: uuid::Uuid) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
@@ -152,15 +141,13 @@ fn curl_evict_id(entity: &str, id: uuid::Uuid) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
 #[allow(dead_code)]
 fn curl_evict_entity(entity: &str) {
-    let action = format!("EVICT {}",entity);
+    let action = format!("EVICT {}", entity);
     let val = Command::new("curl")
         .args(&["-X", "POST"])
         .args(&["-H", "Content-Type: application/wql"])
@@ -171,9 +158,7 @@ fn curl_evict_entity(entity: &str) {
         .stdout;
     match String::from_utf8(val) {
         Ok(_) => (),
-        Err(e) => {
-            panic!("{:?}", e)
-        }
+        Err(e) => panic!("{:?}", e),
     };
 }
 
@@ -187,7 +172,7 @@ fn curl_insert_with_id(entity: &str) -> uuid::Uuid {
         .output()
         .expect("failed to execute process")
         .stdout;
-    let entity =  String::from_utf8(val).unwrap();
+    let entity = String::from_utf8(val).unwrap();
     let inserted: InsertEntityResponse = ron::de::from_str(&entity).unwrap();
     inserted.uuid
 }
@@ -201,7 +186,6 @@ fn get_rand_value() -> String {
 
     rstr
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InsertEntityResponse {
