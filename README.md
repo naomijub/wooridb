@@ -1,6 +1,8 @@
 # WooriDB
 
-WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which means it contains all entities registries indexed by DateTime. It is schemaless, key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. Some other features are:
+WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which means it contains all entities registries indexed by DateTime. It is schemaless, key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. 
+
+Some other features are:
 - Hashing keys content with [`ENCRYPT`](https://github.com/naomijub/wooridb#create-entity) keyword.
 - Hashed values are filtered out and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
 - [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
@@ -8,19 +10,20 @@ WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which mean
   - [ ] EDN to be supported via feature.
 - Entities are indexed by `entity_name` and `Uuid`. Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
-  - [ ] `S3` as backend to be devloped.
-  - [ ] `Postgres` as backend to be devloped.
-  - [ ] `DynamoDB` as backend to be devloped.
-- Is able to handle very large numbers when ending with letter `P`, `98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P`.
+  - [ ] `S3` as a backend is to be developed.
+  - [ ] `Postgres` as a backend is to be developed.
+  - [ ] `DynamoDB` as a backend is to be developed.
+- Able to handle very large numbers when using the `P` suffix.
+  - Ex: `98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P`.
 - Configuration is done via environment variables.
-  - [ ] Non sensible configurations with `Config.toml`.
+  - [ ] Non sensitive configurations are done with `Config.toml`.
   - [ ] CORS
 - Authentication and Authorization via session token
   - [ ] Creating and removing ADMINs/new users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] Possible Relation Algebra
 
-`Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
+`Woori` (우리) means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
 
 
 This project is hugely inspired by:
@@ -31,18 +34,20 @@ This project is hugely inspired by:
 - [Database Internals](https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Database+Internals%3A&qid=1612831621&sr=8-1)
 - [Database System Concept](https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
 - [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
-- Professor Andy Pavlo Database classes. 
+- Professor [Andy Pavlo](http://www.cs.cmu.edu/~pavlo/) Database classes. 
 
 
 ## Installation
-- if you don't have Rust and Cargo installed run `make setup` at root.
+- if you don't have Rust and Cargo installed, run `make setup` at root.
 - `make run` at root for `release mode`, or `make debug` for `debug mode` (Debug mode doesn't have auth system enabled).
 
 ## Usage
-* Responses are in `Ron` format, support for `JSON` and `EDN` will be done later by using features.
-* For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will be done later by using features.
-* **Precise floats** or **number larger than f64::MAX/i128::MAX** can be defined with an UPPERCASE `P` at the end. This type cannot be updated with `UPDATE CONTENT`. Example `INSERT {a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P, } INTO my_entity`.
-* `BLOB` will not be supported. Checkout *To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem*, Russel Sears, Catherine van Ingen, Jim Gray, MSR-TR-2006-45.
+* Responses are in [`RON`](https://github.com/ron-rs/ron) format. Support for `JSON` and `EDN` will be done later by using features.
+* For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will also be done later by using features.
+* **Precise floats** or **numbers larger than f64::MAX/i128::MAX** can be defined with an UPPERCASE `P` at the end. 
+  * _Note_: This type cannot be updated with `UPDATE CONTENT`. 
+  * Ex.: `INSERT {a: 98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P, } INTO my_entity`.
+* `BLOB` will not be supported. Check out [To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem](https://www.microsoft.com/en-us/research/publication/to-blob-or-not-to-blob-large-object-storage-in-a-database-or-a-filesystem/).
 * To configure hashing cost and port some environment variables are required:
 ```
 HASHING_COST=16
@@ -51,7 +56,9 @@ PORT=1438
 
 
 ## Authentication and Authorization (SIMPLE implementation)
-Auhtentication and authorization on work with release mode, so `cargo run --release` is required. Some enviroonment variables are also required:
+Authentication and authorization on work with release mode, so `cargo run --release` is required. 
+
+Some enviroonment variables are also required:
 ```
 AUTH_HASHING_COST=8
 ADMIN=your_admin
@@ -60,7 +67,8 @@ ADMIN_PASSWORD=your_password
 
 ### Creating new users
 * `ADMIN` is the only user role capable of creating new users. 
-To create a new user POST at `/auth/createUser` with your admin credentials and the new user info as follows (ron format):
+
+To create a new user, POST at `/auth/createUser` with your admin credentials and the new user info as follows (in RON format):
 ```ron
 (
   admin_id: "your_admin",
@@ -71,12 +79,13 @@ To create a new user POST at `/auth/createUser` with your admin credentials and 
   ),
 )
 ```
-User info are the user password and the user's roles. Remember to always put `,` at the end. Response of this request will be `(user_id: \"<some-uuid>\",)`, which will contain the user id.
+User information consists of the user's password and the user's roles. Remember to always put `,` at the end. 
+Response to this request will be `(user_id: \"<some-uuid>\",)`, containing the user's unique ID.
 
-* [ ] New admins and remove admins is not yet implemented.
+* [ ] Adding and removing admins is not yet implemented.
 
 ### Getting a session token
-To make a request at WQL endpoints you need a session token, that will expire within 3600 seconds. To retrieve a session token you need to PUT at endpoint `/auth/putUserSession` your user credentials as follows (ron format):
+To make a request at WQL endpoints you need a session token that will expire within 3600 seconds. To retrieve a session token you need to PUT at endpoint `/auth/putUserSession` your user credentials as follows (in RON format):
 ```ron
 (id: "<user_id>", user_password: "<user_password>",)
 ```
@@ -84,28 +93,36 @@ Response will be a plain/text with your token.
 * [ ] Configure session token expiration time.
 
 ### Making auth requests to `/wql/tx` and `/wql/query`.
-To avoid authentication and authorization erros add your token to the authorization bearer header `Authorization: Bearer <your session token>`. Your user needs the correct session token and the correct role for this request.
+
+To avoid authentication and authorization errors, add your token to the authorization bearer header, `Authorization: Bearer <your session token>`. 
+Your user needs the correct session token and the correct role for this request.
 
 
 ## Parser
-It is evolved as  required by `WooriDB`.
-[Woori Query language parser](https://github.com/naomijub/wooridb/tree/main/wql)
+
+WooriDB uses the [Woori Query language parser](https://github.com/naomijub/wooridb/tree/main/wql), evolving as required.
 
 
 ## Transactions:
 > **Reminder**
-> At the end of every data structure representation a `,` (comma) is required. `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. No need for `;` at the end of each expression.
+> A comma is required at the end of every data structure representation.
+> Ex.: `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. 
+> No need for `;` at the end of each expression.
 
-*  Endpoint for `CREATE, INSERT, UPDATE, MATCH`: `<ip>:1438/wql/tx`
+* Endpoint for `CREATE, INSERT, UPDATE, MATCH`: `<ip>:1438/wql/tx`
 * Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d`
 
 
 ### `CREATE ENTITY`:
-It is similar to `CREATE TABLE` in SQL. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `'CREATE ENTITY my_entity_name'`. 
 
-  * **CREATE ENTITY with UNIQUE IDENTIFIERS**: This prevents duplicated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. Example request: `'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`.
-  * **CREATE ENTITY with ENCRYPTED KEYS**: Encrypts entities keys. Example request: `'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
+Similar to `CREATE TABLE` in SQL. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `'CREATE ENTITY my_entity_name'`. 
+
+  * **CREATE ENTITY with UNIQUE IDENTIFIERS**: This prevents duplicated unique key values, for example if you insert an entity with key `id` containing `123usize` for entity `my_entity` there can be only one entity `id` with value `123` in `my_entity`. 
+    * Example request: `'CREATE ENTITY my_entity_name UNIQUES #{name, ssn,}'`.
+  * **CREATE ENTITY with ENCRYPTED KEYS**: Encrypts entities keys. 
+    * Example request: `'CREATE ENTITY my_entity_name ENCRYPT #{password, ssn,}'`
   * It is possible to create entities with uniques and encryption. `CREATE ENTITY my_entity_name ENCRYPT #{password,} UNIQUES #{name, ssn,}`
+    * Example request: `CREATE ENTITY my_entity_name ENCRYPT #{password,} UNIQUES #{name, ssn,}`
   * When the system has encrypted keys, the requests take longer due to hashing function and the verify function. This is determined by the hashing cost:
   ```
   bench_cost_10      ... bench:  51,474,665 ns/iter (+/- 16,006,581)
@@ -117,7 +134,12 @@ It is similar to `CREATE TABLE` in SQL. It requires an entity name like `my_enti
 
 
 ### `INSERT ENTITY`:
-It inserts a **HashMap<String, [Types](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78)>**  into the entity created (`my_entity_name`). This request returns a `Uuid`. Example request `'insert {a: 123,  c: \"hello\", d: \"world\",} INTO my_entity_name'`. This will insert an entity as follows:
+Inserts a **HashMap<String, [Types](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78)>**  into the entity created (`my_entity_name`). This request returns a `Uuid`. 
+
+Example request: 
+```'insert {a: 123,  c: \"hello\", d: \"world\",} INTO my_entity_name'``` 
+The request above will insert an entity as follows:
+
 ```
 {"my_entity_name": {
   48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, c: \"hello\", d: \"world\",},
@@ -126,7 +148,7 @@ It inserts a **HashMap<String, [Types](https://github.com/naomijub/wooridb/blob/
 
 
 ### `UPDATE ENTITY`: 
-There are 2 updates possible.
+There are two possible updates.
 
 #### `UPDATE SET ENTITY`:
 `SET` updates defines the current value of the entity to the ones being passed, so if your entity is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state value will be `{a: 432, b: 12.5, c: \"hello\",}`. Example request:  `'UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
@@ -136,7 +158,10 @@ There are 2 updates possible.
 
 
 ### `MATCH UPDATE ENTITY`:
-Updates only if precondition is matched, this transaction is significantly slower than others. Example request `'MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. Possible preconditions:
+Updates only if precondition is matched. This transaction is significantly slower than others. 
+Example request: `'MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. 
+
+Possible preconditions:
   - `ALL` or `ANY` are required to set preconditions. `ALL` means that a logical `AND`/`&&` will be applied to all conditions and `ANY` means that a logical `OR`/`||` will be applied to all conditions. They contain a series of preconditions separated by `,`. For example `ALL(a > 100, b <= 20.0)` or `ANY(a == "hello", b != true)`.
   - **NULL KEYS**, `ALL` returns an error if a null key is present and `ANY` just ignores null keys.
   - `==` means equals, so if `a == 100`, this means that the entity key `a` must equals to `100`.
@@ -149,17 +174,27 @@ Updates only if precondition is matched, this transaction is significantly slowe
 
 
 ### `DELETE ENTITY with ID`:
-Deletes the last entity event: This is pretty simple, it deletes the last state of an entity. So if you have one update on your entity it will roll back to the `INSERT` event. However, if you have only an `INSERT` event you state will become an empty hashmap. Example request: `'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
+Deletes the last entity event, that is, it deletes the last state of an entity. 
+
+If you have, for example, one update on your entity, it will roll back to the `INSERT` event. 
+However, if you have only an `INSERT` event then your state will become an empty hashmap. 
+
+Example request: `'delete 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`
   - [ ] Delete entity with ID at transaction-time
 
 
 ### `EVICT ENTITY`:
 
 #### `EVICT ENTITY ID`:
-Removes all occurrences of an entity with the specific ID. Example request `'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. For now it only deletes the access to the entity history.
+Removes all occurrences of an entity with the given ID. 
+
+Example request `'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name'`. 
+
+For now it only deletes the access to the entity history.
 
 #### `EVICT ENTITY`:
-Evicts all registries from entity and removes entity: Similar to SQL `DROP TABLE <entity>`. `EVICT my_entity`.
+Evicts all registries from entity and removes entity: Similar to SQL `DROP TABLE <entity>`. 
+Example request: `EVICT my_entity`.
 
 
 
@@ -168,7 +203,9 @@ Evicts all registries from entity and removes entity: Similar to SQL `DROP TABLE
 > 
 > Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/query -d`
 
-The basic read operation. Endpoint is `/wql/query`. To better understand the next sub-items, lets say the entity `my_entity_name` has the following values:
+The basic read operation. Its endpoint is `/wql/query`. 
+
+To better understand the next sub-items, lets say the entity `my_entity_name` has the following values:
 ```rust
 {"my_entity_name": {
   48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\", d: \"world\",},
@@ -179,7 +216,10 @@ The basic read operation. Endpoint is `/wql/query`. To better understand the nex
 
 
 ### SELECTS all keys FROM ENTITY:
-Select All entities from `my_entity` with all keys for each entity. It is equivalent to `Select * From table`. Example request `'SELECT * from my_entity_name'`. This query will return a `BTreeMap<Uuid, HashMap<String, Types>>`:
+Select All entities from `my_entity` with all keys for each entity. 
+It is equivalent to SQL's `Select * From table`. 
+
+Example request: `'SELECT * from my_entity_name'`. This query will return a `BTreeMap<Uuid, HashMap<String, Types>>`:
 ```
 {
   48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\", d: \"world\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\", d: \"brasil\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\", d: \"korea\",},
