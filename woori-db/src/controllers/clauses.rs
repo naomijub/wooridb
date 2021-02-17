@@ -60,7 +60,7 @@ async fn filter_where_clauses(
                             }
                         }
                         Clause::SimpleComparisonFunction(f, key, value) => {
-                            let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                            let key = args_to_key.get(key).unwrap_or(&default);
                             if let Some(v) = state.get(key) {
                                 match f {
                                     wql::Function::Eq => v == value,
@@ -93,7 +93,7 @@ async fn filter_where_clauses(
                             }
                         }
                         Clause::ComplexComparisonFunctions(wql::Function::In, key, set) => {
-                            let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                            let key = args_to_key.get(key).unwrap_or(&default);
                             if let Some(v) = state.get(key) {
                                 set.contains(v)
                             } else {
@@ -105,7 +105,7 @@ async fn filter_where_clauses(
                             key,
                             start_end,
                         ) => {
-                            let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                            let key = args_to_key.get(key).unwrap_or(&default);
                             if let Some(v) = state.get(key) {
                                 v >= &start_end[0] && v <= &start_end[1]
                             } else {
@@ -171,7 +171,7 @@ fn or_clauses(
                 }
             }
             Clause::ComplexComparisonFunctions(wql::Function::In, key, set) => {
-                let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                let key = args_to_key.get(key).unwrap_or(&default);
                 if let Some(v) = state.get(key) {
                     set.contains(v)
                 } else {
@@ -179,7 +179,7 @@ fn or_clauses(
                 }
             }
             Clause::ComplexComparisonFunctions(wql::Function::Between, key, start_end) => {
-                let key = args_to_key.get(key).unwrap_or_else(|| &default);
+                let key = args_to_key.get(key).unwrap_or(&default);
                 if let Some(v) = state.get(key) {
                     v >= &start_end[0] && v <= &start_end[1]
                 } else {
