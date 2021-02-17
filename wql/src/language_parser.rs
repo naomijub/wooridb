@@ -36,60 +36,46 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     let next_symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
     if next_symbol.to_uppercase() == "UNIQUES" {
-        let mut encrypts = Vec::new();
-        if chars.next() != Some('#') {
-            return Err(String::from(
-                "Arguments set should start with `#{` and end with `}`",
-            ));
-        }
-        let unique_vec = read_args(chars)?;
-        let encrypt_symbol = chars
-            .skip_while(|c| c.is_whitespace())
-            .take_while(|c| !c.is_whitespace())
-            .collect::<String>();
-        if encrypt_symbol.to_uppercase() == "ENCRYPT" {
-            if chars.next() != Some('#') {
-                return Err(String::from(
-                    "Arguments set should start with `#{` and end with `}`",
-                ));
-            }
-            encrypts = read_args(chars)?;
-        }
+        let (uniques, encrypts) = create_uniques_and_encrypts(chars, "ENCRYPT")?;
 
-        if encrypts.iter().any(|e| unique_vec.contains(e)) {
-            return Err(String::from("Encrypted arguments cannot be set to UNIQUE"));
-        }
-
-        Ok(Wql::CreateEntity(entity_name, unique_vec, encrypts))
+        Ok(Wql::CreateEntity(entity_name, uniques, encrypts))
     } else if next_symbol.to_uppercase() == "ENCRYPT" {
-        let mut unique_vec = Vec::new();
-        if chars.next() != Some('#') {
-            return Err(String::from(
-                "Arguments set should start with `#{` and end with `}`",
-            ));
-        }
-        let encrypt_vec = read_args(chars)?;
-        let unique_symbol = chars
-            .skip_while(|c| c.is_whitespace())
-            .take_while(|c| !c.is_whitespace())
-            .collect::<String>();
-        if unique_symbol.to_uppercase() == "UNIQUES" {
-            if chars.next() != Some('#') {
-                return Err(String::from(
-                    "Arguments set should start with `#{` and end with `}`",
-                ));
-            }
-            unique_vec = read_args(chars)?;
-        }
+        let (encrypts, uniques) = create_uniques_and_encrypts(chars, "UNIQUES")?;
 
-        if encrypt_vec.iter().any(|e| unique_vec.contains(e)) {
-            return Err(String::from("Encrypted arguments cannot be set to UNIQUE"));
-        }
-
-        Ok(Wql::CreateEntity(entity_name, unique_vec, encrypt_vec))
+        Ok(Wql::CreateEntity(entity_name, uniques, encrypts))
     } else {
         Ok(Wql::CreateEntity(entity_name, Vec::new(), Vec::new()))
     }
+}
+
+fn create_uniques_and_encrypts(
+    chars: &mut std::str::Chars,
+    next_element: &str,
+) -> Result<(Vec<String>, Vec<String>), String> {
+    let mut aux_vec = Vec::new();
+    if chars.next() != Some('#') {
+        return Err(String::from(
+            "Arguments set should start with `#{` and end with `}`",
+        ));
+    }
+    let main_vec = read_args(chars)?;
+    let encrypt_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+    if encrypt_symbol.to_uppercase() == next_element {
+        if chars.next() != Some('#') {
+            return Err(String::from(
+                "Arguments set should start with `#{` and end with `}`",
+            ));
+        }
+        aux_vec = read_args(chars)?;
+    }
+
+    if aux_vec.iter().any(|e| main_vec.contains(e)) {
+        return Err(String::from("Encrypted arguments cannot be set to UNIQUE"));
+    }
+    Ok((main_vec, aux_vec))
 }
 
 fn select(chars: &mut std::str::Chars) -> Result<Wql, String> {
@@ -320,7 +306,7 @@ fn match_update(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     match &entity_symbol.to_uppercase()[..] {
         "SET" => Ok(Wql::MatchUpdate(entity_name, entity_map, uuid, match_args?)),
-        _ => Err("Couldn't parse UPDATE query".to_string()),
+        _ => Err("Couldn't parse MATCH UPDATE query".to_string()),
     }
 }
 

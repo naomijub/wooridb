@@ -96,7 +96,6 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
     } else if !next_symbol.is_empty()
         && (next_symbol.to_uppercase() != "ID" || next_symbol.to_uppercase() != "IDS")
     {
-        println!("{:?}", next_symbol);
         Err(String::from(
             "ID/IDS keyword is required to set an uuid in SELECT",
         ))
