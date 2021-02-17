@@ -1,6 +1,6 @@
 [package]
 name = "wql"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Julia Naomi <jnboeira@outlook.com>"]
 description = "Crate to parse WQL"
 readme = "../README.md"
