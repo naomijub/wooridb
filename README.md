@@ -269,7 +269,7 @@ Checks for encrypted data validity. It requires an entity name after `FROM` and 
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
 - [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54)
 - [ ] Docker
-- [ ] Benchmarks
+- [ ] Benchmarks. PRs [61](https://github.com/naomijub/wooridb/pull/61)
 
 ## Current Benchmarks
 >  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
