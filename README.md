@@ -216,7 +216,7 @@ To better understand the next sub-items, lets say the entity `my_entity_name` ha
 
 
 ### SELECTS all keys FROM ENTITY:
-Select sll entities from `my_entity` with all the keys from each entity. 
+Select all entities from `my_entity` with all the keys from each entity. 
 It is equivalent to SQL's `Select * From table`. 
 
 Example request: `'SELECT * from my_entity_name'`. This query will return a `BTreeMap<Uuid, HashMap<String, Types>>`:
