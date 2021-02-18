@@ -23,7 +23,7 @@ Some other features are:
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] Possible Relation Algebra
 
-`Woori` (우리) means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
+`Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
 
 
 This project is hugely inspired by:
@@ -82,7 +82,7 @@ To create a new user, POST at `/auth/createUser` with your admin credentials and
 User information consists of the user's password and the user's roles. Remember to always put `,` at the end. 
 Response to this request will be `(user_id: \"<some-uuid>\",)`, containing the user's unique ID.
 
-* [ ] Adding and removing admins is not yet implemented.
+* [ ] Adding other admins and removing admins is not yet implemented.
 
 ### Getting a session token
 To make a request at WQL endpoints you need a session token that will expire within 3600 seconds. To retrieve a session token you need to PUT at endpoint `/auth/putUserSession` your user credentials as follows (in RON format):
@@ -216,7 +216,7 @@ To better understand the next sub-items, lets say the entity `my_entity_name` ha
 
 
 ### SELECTS all keys FROM ENTITY:
-Select All entities from `my_entity` with all keys for each entity. 
+Select sll entities from `my_entity` with all the keys from each entity. 
 It is equivalent to SQL's `Select * From table`. 
 
 Example request: `'SELECT * from my_entity_name'`. This query will return a `BTreeMap<Uuid, HashMap<String, Types>>`:
@@ -228,48 +228,94 @@ Example request: `'SELECT * from my_entity_name'`. This query will return a `BTr
 
 
 ### SELECTS a set of keys FROM ENTITY:
-Select All entities from `my_entity` with a set of keys for each entity. This operation only returns the keys defined by the set. It is equivalent to `SELECT a, b, c FROM table`.  Example request `'SELECT #{a, b, c,} from my_entity_name'`. This query will return `48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\",},` 
+Select all entities from `my_entity` with a set of keys for each entity. This operation only returns the keys defined by the set. 
+
+It is equivalent to `SELECT a, b, c FROM table`. 
+
+Example request: `'SELECT #{a, b, c,} from my_entity_name'`. 
+
+This query will return `48c7640e-9287-468a-a07c-2fb00da5eaed: {a: 123, b: 43.3, c: \"hello\",}, 57c7640e-9287-448a-d07c-3db01da5earg: {a: 456, b: 73.3, c: \"hello\",}, 54k6640e-5687-445a-d07c-5hg61da5earg: {a: 789, b: 93.3, c: \"hello\",},` 
 
 
 ### SELECT one entity with all keys FROM ENTITY:
 - Key `ID` is the Uuid.
-Select one entity (by its Uuid) from `my_entity` with all keys. This operation selects one entity defined by its `ID`. It is equivalent to `Select * From table WHERE id = <uuid>`. Example request `'SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
+
+Select one entity (by its Uuid) from `my_entity` with all of its keys. 
+
+This operation selects one entity defined by its `ID`. 
+
+It is equivalent to SQL's `Select * From table WHERE id = <uuid>`. 
+
+Example request `'SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. 
+
+This query will return `{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
 
 
 ### SELECT one entity with a set of keys FROM ENTITY:
 - Key `ID` is the Uuid.
-Select one entity (by its Uuid) from `my_entity` with a set of keys. This operation selects one entity defined by its `ID` with restricted keys set. It is equivalent to `SELECT a, b, c FROM table WHERE id = <uuid>`.  Example request `'SELECT #{a, b, c,} from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. This query will return `{a: 123, b: 43.3, c: \"hello\",}`
+Select one entity (by its Uuid) from `my_entity` with a set of keys. 
+
+This operation selects one entity defined by its `ID` with restricted keys set. It is equivalent to SQL's `SELECT a, b, c FROM table WHERE id = <uuid>`. 
+
+Example request: `'SELECT #{a, b, c,} from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`. 
+
+This query will return `{a: 123, b: 43.3, c: \"hello\",}`
 
 
 ### SELECT a set of entities FROM ENTITY:
 - Key `IN` receives a set of Uuids
-Select a few entities from `my_entity`, knowing their IDs. Example request `'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
+Select a few entities from `my_entity`, knowing their IDs. 
+
+Example request: `'SELECT #{a, b, c,} from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'` or `'SELECT * from my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}'`.
   
 
 ### SELECTs last entity BY ID FROM ENTITY AT DATETIME<UTC>:
 - Key `WHEN AT` is the date to search. Time will be discarded. 
-Select an entity on a defined past day. `ID` field can be used before `WHEN` to define a specific entity. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. Example request `'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00'` or something like `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
+
+Select an entity on a defined past day. The `ID` field can be used before `WHEN` to define a specific entity. 
+Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. 
+  
+Example request: `'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00'` 
+Example request: `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
   
 
 ### SELECTs all entities BY ID FROM ENTITY between two DATETIME<UTC>:
 - Key `WHEN` defines it as a temporal query.
 - Key `START` is the `DateTime<Utc>` to start the range query.
 - Key `END` is the `DateTime<Utc>` to end the range query.
-Select all occurrences of a specific entity in a time range. The time range must be on the same day as `START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. Example request: `'SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z'`. 
+
+Select all occurrences of a specific entity in a time range. The time range must be on the same day as `START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. 
+  
+Example request: `'SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z'`. 
   
 
 ### SELECT entities FROM ENTITY WHERE conditions
 - Key `WHERE` receives all clauses inside a `{...}` block.
-Selects entities with WHERE clauses. This is probably the most different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. To use select with the where clause you can use the following expressions `SELECT * FROM my_entity WHERE {<clauses>}` or  `SELECT #{key_1, key_2, key_3,} FROM my_entity WHERE {<clauses>}`. All clauses should be ended with/separated by `,` and the available functions are `==, !=, >, <, >=, <=, like, between, in, or`. To use the functions you need to attribute a key content to a variable, this is done by `?* my_entity:key_1 ?k1` and then `?k1` can be used as follows:
-    - `in`: `(in ?k1 123 34543 7645 435)`, where arguments after `?k1` are turned into a set. **for now please don't use `,`**.
-    - `between`: `(between ?k1 0 435)`, after `?k1` the first argument is the `start` value and the second argument is the `end` value.  If you set more than 2 arguments it will return a `ClauseError`.
-    - `like`: `(like ?k2 "%naomi%")`, like is comparing `?k2` with the string `"%naomi%"` considering that `%` are wildcards. `"%naomi"` means `end_with("naomi")`, `"naomi%"` means `starts_with("naomi")` and `"%naomi%"` means `contains("naomi")` In the future this will be replaced by regex.
-    - `==`, `>=`, `>`, `<`, `<=`, `!=` -> `(>= ?k1 0)` which means *all values that `?k1` is greater than or equal to `0`*.
-    - `or`: All arguments inside the `or` function call will be evaluated to `true` if any of them is `true`. Example 
-    - Every function will be added as logical `and` unless they are inside a function `or`. Example: `"Select * From test_or WHERE { ?* test_or:a ?a, ?* test_or:c ?c, (== ?a 123), (or (>= c 4300.0) (< c 6.9) ), }`, this means that `?a` needs to be equal to 123 **and** `?c` is greater or equal to 4300.0 `or` `?c` is less than 6.9.
-    Missing features: 
-    - `and` inside `or` block.
-    - [ ] ?Temporality?
+Selects entities with WHERE clauses. 
+
+This is probably the most different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. 
+
+To use `select` with the `where` clause you can use the following expressions:
+* `SELECT * FROM my_entity WHERE {<clauses>}` 
+* `SELECT #{key_1, key_2, key_3,} FROM my_entity WHERE {<clauses>}` 
+
+All clauses should be ended with/separated by `,` and the available functions are `==, !=, >, <, >=, <=, like, between, in, or`. 
+
+To use the functions you need to attribute a key content to a variable, this is done by `?* my_entity:key_1 ?k1` and then `?k1` can be used as follows:
+* `in`: `(in ?k1 123 34543 7645 435)`, where arguments after `?k1` are turned into a set. 
+    * Note: **for now, please don't use `,`**.
+* `between`: `(between ?k1 0 435)`, after `?k1` the first argument is the `start` value and the second argument is the `end` value.  If you set more than 2 arguments it will return a `ClauseError`.
+* `like`: `(like ?k2 "%naomi%")`, like is comparing `?k2` with the string `"%naomi%"` considering that `%` are wildcards. `"%naomi"` means `end_with("naomi")`, `"naomi%"` means `starts_with("naomi")` and `"%naomi%"` means `contains("naomi")`. In the future this will be replaced by regex.
+* `==`, `>=`, `>`, `<`, `<=`, `!=` -> `(>= ?k1 0)` which means *all values that `?k1` is greater than or equal to `0`*.
+* `or`: All arguments inside the `or` function call will be evaluated to `true` if any of them is `true`. 
+    * Example: 
+* Every function will be added as logical `and` unless they are inside an `or` function. 
+    * Example: `"Select * From test_or WHERE { ?* test_or:a ?a, ?* test_or:c ?c, (== ?a 123), (or (>= c 4300.0) (< c 6.9) ), }`
+    * This means that `?a` needs to be equal to 123 **and** `?c` to be greater or equal to 4300.0 `or` `?c` to be lesser than 6.9.
+* Missing features: 
+    * An `and` inside an `or` block.
+    * [ ] Temporality?
+
 ```
 Select * 
 FROM my_entity 
@@ -285,10 +331,11 @@ WHERE {
 ```
 
 
-### CHECKs validity of of an encrypted key
+### CHECKs validity of an encrypted key
 Checks for encrypted data validity. It requires an entity name after `FROM` and an Uuid after `ID`. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false` against encrypted data. Example request: `'CHECK {pswd: \"my-password\", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed'`.
   
-#### SELECT = Functions that could be implemented from Relation Algebra:
+#### SELECT - Functions that could be implemented from Relation Algebra:
+
 - [x] Select
 - [ ] Projection
 - [ ] Union
@@ -302,8 +349,6 @@ Checks for encrypted data validity. It requires an entity name after `FROM` and 
 - [ ] Sort
 - [ ] Aggregate
 - [ ] Division
-
-
 
 ## TODOS
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
