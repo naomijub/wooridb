@@ -193,9 +193,9 @@ pub async fn create_controller(
         };
         if local_data.contains_key(&entity) {
             return Err(Error::EntityAlreadyCreated(entity));
-        } else {
-            local_data.insert(entity.clone(), BTreeMap::new());
         }
+
+        local_data.insert(entity.clone(), BTreeMap::new());
         local_data.clone()
     };
     actor.send(LocalData::new(local_data)).await??;
