@@ -109,7 +109,7 @@ WooriDB uses the [Woori Query language parser](https://github.com/naomijub/woori
 > Ex.: `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. 
 > No need for `;` at the end of each expression.
 
-* Endpoint for `CREATE, INSERT, UPDATE, MATCH`: `<ip>:1438/wql/tx`
+* Endpoint for `CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT`: `<ip>:1438/wql/tx`
 * Example request: `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d`
 
 
