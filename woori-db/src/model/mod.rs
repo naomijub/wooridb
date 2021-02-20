@@ -6,6 +6,7 @@ use actix_web::web;
 use serde::{Deserialize, Serialize};
 use std::{
     io::Error,
+    path::Path,
     sync::{atomic::AtomicUsize, Arc, Mutex},
 };
 
@@ -26,6 +27,25 @@ pub struct DataRegister {
     pub file_name: String,
     pub offset: usize,
     pub bytes_length: usize,
+}
+
+impl DataRegister {
+    pub fn new(file_name: String, offset: usize, bytes_length: usize) -> (Self, usize) {
+        let offset = if Path::new(&file_name).exists() {
+            offset
+        } else {
+            0
+        };
+
+        (
+            Self {
+                file_name,
+                offset,
+                bytes_length,
+            },
+            offset,
+        )
+    }
 }
 
 impl Message for DataRegister {

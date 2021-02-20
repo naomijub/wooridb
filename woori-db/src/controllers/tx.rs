@@ -377,11 +377,12 @@ pub async fn insert_controller(
     let content_value = actor
         .send(InsertEntityContent::new(&args.entity, &content_log))
         .await??;
-    let local_data_register = DataRegister {
+
+    let (local_data_register, offset) = DataRegister::new(
+        content_value.0.format("data/%Y_%m_%d.log").to_string(),
         offset,
-        bytes_length: content_value.2,
-        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
-    };
+        content_value.2,
+    );
 
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
@@ -397,10 +398,15 @@ pub async fn insert_controller(
 
     actor.send(LocalData::new(local_data)).await??;
 
-    bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
-    actor
-        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
-        .await??;
+    if offset == 0 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        actor.send(OffsetCounter::new(0)).await??;
+    } else {
+        bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
+    }
 
     let message = format!(
         "Entity {} inserted with Uuid {}",
@@ -486,11 +492,11 @@ pub async fn update_set_controller(
         ))
         .await??;
 
-    let local_data_register = DataRegister {
+    let (local_data_register, offset) = DataRegister::new(
+        content_value.0.format("data/%Y_%m_%d.log").to_string(),
         offset,
-        bytes_length: content_value.1,
-        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
-    };
+        content_value.1,
+    );
 
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
@@ -507,10 +513,16 @@ pub async fn update_set_controller(
     };
     actor.send(LocalData::new(local_data)).await??;
 
-    bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-    actor
-        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
-        .await??;
+    if offset == 0 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        actor.send(OffsetCounter::new(0)).await??;
+    } else {
+        bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
+    }
+
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
     Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
 }
@@ -594,11 +606,11 @@ pub async fn update_content_controller(
         ))
         .await??;
 
-    let local_data_register = DataRegister {
+    let (local_data_register, offset) = DataRegister::new(
+        content_value.0.format("data/%Y_%m_%d.log").to_string(),
         offset,
-        bytes_length: content_value.1,
-        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
-    };
+        content_value.1,
+    );
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -614,11 +626,15 @@ pub async fn update_content_controller(
     };
     actor.send(LocalData::new(local_data)).await??;
 
-    bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-    actor
-        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
-        .await??;
-
+    if offset == 0 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        actor.send(OffsetCounter::new(0)).await??;
+    } else {
+        bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
+    }
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
     Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
 }
@@ -683,11 +699,11 @@ pub async fn delete_controller(
         ))
         .await??;
 
-    let local_data_register = DataRegister {
+    let (local_data_register, offset) = DataRegister::new(
+        content_value.0.format("data/%Y_%m_%d.log").to_string(),
         offset,
-        bytes_length: content_value.1,
-        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
-    };
+        content_value.1,
+    );
 
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
@@ -705,10 +721,15 @@ pub async fn delete_controller(
 
     actor.send(LocalData::new(local_data)).await??;
 
-    bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-    actor
-        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
-        .await??;
+    if offset == 0 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        actor.send(OffsetCounter::new(0)).await??;
+    } else {
+        bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
+    }
 
     Ok(DeleteOrEvictEntityResponse::new(entity, Some(uuid), message).write())
 }
@@ -790,11 +811,11 @@ pub async fn match_update_set_controller(
         })
         .await??;
 
-    let local_data_register = DataRegister {
+    let (local_data_register, offset) = DataRegister::new(
+        content_value.0.format("data/%Y_%m_%d.log").to_string(),
         offset,
-        bytes_length: content_value.1,
-        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
-    };
+        content_value.1,
+    );
 
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
@@ -812,10 +833,15 @@ pub async fn match_update_set_controller(
 
     actor.send(LocalData::new(local_data)).await??;
 
-    bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
-    actor
-        .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
-        .await??;
+    if offset == 0 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        actor.send(OffsetCounter::new(0)).await??;
+    } else {
+        bytes_counter.fetch_add(content_value.1, Ordering::SeqCst);
+        actor
+            .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
+            .await??;
+    }
 
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
     Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
