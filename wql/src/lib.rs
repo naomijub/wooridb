@@ -154,10 +154,11 @@ impl PartialOrd for Types {
                 Ordering::Less
             }),
             (Types::Char(a), Types::Char(b)) => Some(a.cmp(b)),
-            (Types::String(a), Types::String(b)) => Some(a.cmp(b)),
+            (Types::String(a), Types::String(b)) | (Types::Precise(a), Types::Precise(b)) => {
+                Some(a.cmp(b))
+            }
             (Types::Uuid(a), Types::Uuid(b)) => Some(a.cmp(b)),
             (Types::Boolean(a), Types::Boolean(b)) => Some(a.cmp(b)),
-            (Types::Precise(a), Types::Precise(b)) => Some(a.cmp(b)),
             (Types::Vector(a), Types::Vector(b)) => Some(a.len().cmp(&b.len())),
             _ => None,
         }

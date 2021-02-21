@@ -65,8 +65,7 @@ pub async fn put_user_session(
         if let Ok(reg) = user_registry {
             let (hash, roles) = reg.context();
             match bcrypt::verify(&(user.user_password), &hash) {
-                Err(_) => (),
-                Ok(false) => (),
+                Err(_) | Ok(false) => (),
                 Ok(true) => {
                     if let Ok(mut session) = session_context.lock() {
                         let token = bcrypt::hash(&Uuid::new_v4().to_string(), 4)

@@ -33,7 +33,10 @@ impl Scheduler {
         use glob::glob;
         log::debug!("schedule_task event - {:?}", Local::now());
         let date_to_clear = Utc::now() + chrono::Duration::days(10);
-        let files: Vec<PathBuf> = glob("*").unwrap().map(|r| r.unwrap()).collect();
+        let files: Vec<PathBuf> = glob("*")
+            .unwrap()
+            .map(std::result::Result::unwrap)
+            .collect();
 
         files.iter().for_each(|f| {
             if let Some(file_name) = f.to_str() {
