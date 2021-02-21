@@ -1,4 +1,5 @@
 # WooriDB
+[USER GUIDE](https://naomijub.github.io/wooridb/)
 
 WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which means it contains all entities registries indexed by DateTime. It is schemaless, key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. 
 
@@ -24,7 +25,6 @@ Some other features are:
 - [ ] Possible Relation Algebra
 
 `Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
-
 
 This project is hugely inspired by:
 - [Crux](https://github.com/juxt/crux); 
