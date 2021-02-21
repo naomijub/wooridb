@@ -1,20 +1,20 @@
 use chrono::{DateTime, Utc};
-use std::io::{BufRead, BufReader, Error, Seek, SeekFrom};
+use std::io::{Error, Seek, SeekFrom};
 use std::{fs::OpenOptions, io::Write};
+use std::path::Path;
 
 pub fn write_to_log(log: &str) -> Result<(usize, bool), Error> {
     let utc: DateTime<Utc> = Utc::now();
     let date_log = utc.format("data/%Y_%m_%d.log").to_string();
+    let is_empty = !Path::new(&date_log).exists();
 
     let mut file = OpenOptions::new()
         .append(true)
         .create(true)
-        .read(true)
         .open(date_log)?;
-    let buff = BufReader::new(file.try_clone()?);
     let written_bytes = file.write(log.as_bytes())?;
 
-    Ok((written_bytes, buff.lines().count() == 0))
+    Ok((written_bytes, is_empty))
 }
 pub fn write_to_uniques(log: &str) -> Result<(), Error> {
     let mut file = OpenOptions::new()
