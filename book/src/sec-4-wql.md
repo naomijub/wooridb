@@ -62,3 +62,56 @@ Similar to SET, but it requires a pre-condition to be satisfied.
         - `>` means greater, so if `a > 100`, this means that the entity map key `a` must be greater than `100`. 
         - `<` means lesser, so if `a < 100`, this means that the entity map key `a` must be lesser than `100`.
 
+### DELETE
+Deletes the last entity map event for an entity ID in entity tree key, that is, it deletes the last state of an entity map.
+
+* `DELETE 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name` this will delete the last state of entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` in entity tree key `my_entity_name` from entity history.
+
+### EVICT
+Removes all occurrences of an entity from the entity tree. It can be just the entity id or the whole entity tree key.
+
+* `EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name` removes all occurrences of the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` from the entity tree key `my_entity_name`, they cannot be queried anymore.
+* `EVICT my_entity` removes the key `my_entity` from the entity tree. It cannot be queried anymore. It is similar to SQL's `DROP TABLE my_entity`.
+
+### CHECK
+Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves  as a way to verify if the passed values are `true` of `false` against encrypted data. 
+
+* `CHECK {pswd: "my-password", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed` this will check if keys `psdw` and `ssn` from entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` in entity tree key `my_entity_name` have the values `"my-password"` for pswd and `3948453` for ssn.
+
+### SELECT
+This is the way to query entities from WooriDB. Similar to SQL and SparQL `SELECT`.
+
+Possible `SELECT`  combinantions:
+* `SELECT * FROM my_entity_name` selects all entity ids and entity maps for the entity tree key `my_entity_name` with all the possible entities map keys.
+* `SELECT #{name, last_name, age,} FROM my_entity_name` selects all entity ids and entity maps for the entity tree key `my_entity_name` with only the keys `name, last_name, age` for the entities map.
+* `SELECT * FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed` selects the entity map containing the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` from the entity tree key `my_entity_name` with all the possible entities map keys.
+* `SELECT #{name, last_name, age,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed` selects the entity map containing the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` from the entity tree key `my_entity_name` with only the keys `name, last_name, age` for the entities map.
+* `SELECT * FROM my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}` this will return the entities map containing the entities ids `#{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}` from entity tree key `my_entity_name`. Keys set is available.
+* `Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00` this will select the last entity map state for the entity id `0a1b16ed-886c-4c99-97c9-0b977778ec13` in entity tree key `my_entity` at date `2014-11-28`. Requires to use DateTime UTC, for now.
+* `SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z` this will select the all entity map states for the entity id `0a1b16ed-886c-4c99-97c9-0b977778ec13` in entity tree key `my_entity` in the time range starting at `2014-11-28T09:00:09Z` and ending at `2014-11-28T21:00:09Z`.
+* `SELECT * FROM my_entity WHERE { ?* my_entity:a ?a, ?* my_entity:c ?c, (== ?a 123),(or (>= ?c 4300.0), (< ?c 6.9),),}` this will select all enitities ids and entities maps from entity tree key `my_entity` that satisfy the where clause.
+     - `?* my_entity:a ?a` and `?* my_entity:c ?c` define that the entity keys `a` and `c` from entity tree key `my_entity` will receive the attributed value `?a` and `?c` repectively.
+     - `(== ?a 123)` selects all entities which entity map key `a` is equal to `123`.
+     - `(or (>= ?c 4300.0), (< ?c 6.9),)` selects all entities which entity map key `c` is greater or equal to `4300.0` **or** is smaller than `6.9`.
+
+#### WHERE Clause
+Possible functions for the where clause:
+* `in`: `(in ?k1 123 34543 7645 435)`, `?k1` must be present in the set containing `123 34543 7645 435`. NOTE: **for now, please don't use `,`**.
+* `between`: `(between ?k1 0 435)`, `?k1`  must be between starting value `0` and ending value `435`. If you set more than 2 arguments it will return a `ClauseError`.
+* `like`: `(like ?k2 "%naomi%")`, like is comparing `?k2` with the string `"%naomi%"` considering that `%` are wildcards. `"%naomi"` means `end_with("naomi")`, `"naomi%"` means `starts_with("naomi")` and `"%naomi%"` means `contains("naomi")`. Possible regex support in the future.
+* `==`, `>=`, `>`, `<`, `<=`, `!=` -> `(>= ?k1 0)` which means *get all values that `?k1` is greater than or equal to `0`*.
+* `or`: All arguments inside the `or` function call will be evaluated to `true` if any of them is `true`. 
+
+#### Relation Algebra
+Some relation algebra may be implemented:
+- [ ] Projection
+- [ ] Union
+- [ ] Intersection
+- [ ] Difference (SQL's EXCEPT?)
+- [ ] Join
+- [ ] Product (SQL's CROSS JOIN?)
+- [ ] Assign
+- [ ] Dedup
+- [ ] Sort
+- [ ] Aggregate
+- [ ] Division

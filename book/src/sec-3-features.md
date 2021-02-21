@@ -24,6 +24,7 @@
   - [ ] Creating and removing ADMINs/new users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] File compression done with `zstd`.
+- [ ] Entity id history
 - [ ] Possible Relation Algebra
     - [ ] Projection
     - [ ] Union

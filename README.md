@@ -334,7 +334,6 @@ WHERE {
 
 #### SELECT - Functions that could/will be implemented from Relation Algebra:
 
-- [x] Select
 - [ ] Projection
 - [ ] Union
 - [ ] Intersection
