@@ -56,9 +56,9 @@ PORT=1438
 
 
 ## Authentication and Authorization (SIMPLE implementation)
-Authentication and authorization on work with release mode, so `cargo run --release` is required. 
+Authentication and authorization only work with release mode, so `cargo run --release` is required. 
 
-Some enviroonment variables are also required:
+Some environment variables are also required:
 ```
 AUTH_HASHING_COST=8
 ADMIN=your_admin
