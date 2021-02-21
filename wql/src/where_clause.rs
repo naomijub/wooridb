@@ -24,9 +24,8 @@ pub fn where_selector(
                 clauses.push(clause);
                 clause = String::new();
             }
-            Some('}') => break,
+            Some('}') | None => break,
             Some(c) => clause.push(c),
-            None => break,
         }
     }
 
@@ -52,7 +51,7 @@ fn set_clause(entity_name: &str, chs: &mut std::str::Chars) -> Clause {
         .collect();
 
     if c_str.starts_with("?*") {
-        clause_entity_definition(entity_name, c_str)
+        clause_entity_definition(entity_name, &c_str)
     } else if c_str.starts_with('(') && c_str.ends_with(')') {
         clause_function(entity_name, &c_str[1..c_str.len() - 1])
     } else {
@@ -63,7 +62,7 @@ fn clause_function(entity_name: &str, clause: &str) -> Clause {
     let args: Vec<&str> = clause
         .split(' ')
         .filter(|c| !c.is_empty())
-        .map(|c| c.trim())
+        .map(str::trim)
         .collect();
     if args.len() < 3 {
         return Clause::Error;
@@ -138,11 +137,11 @@ fn or_clauses(entity_name: &str, clause: &str) -> Vec<Clause> {
         .collect::<Vec<Clause>>()
 }
 
-fn clause_entity_definition(entity_name: &str, clause: String) -> Clause {
+fn clause_entity_definition(entity_name: &str, clause: &str) -> Clause {
     let elements = clause
         .split(' ')
         .filter(|c| !c.is_empty())
-        .map(|c| c.trim())
+        .map(str::trim)
         .collect::<Vec<&str>>();
     if elements.len() != 3 {
         return Clause::Error;
@@ -164,7 +163,7 @@ fn clause_entity_definition(entity_name: &str, clause: String) -> Clause {
         Clause::ValueAttribution(
             entity.to_owned(),
             key.to_owned(),
-            Value(last_element.to_string()),
+            Value((*last_element).to_string()),
         )
     } else if let Ok(value) = parse_value(last.next().unwrap(), &mut last) {
         Clause::ContainsKeyValue(entity.to_owned(), key.to_owned(), value)
@@ -208,8 +207,7 @@ impl FromStr for Function {
             ">" => Function::G,
             "<=" => Function::LEq,
             "<" => Function::L,
-            "!=" => Function::NotEq,
-            "<>" => Function::NotEq,
+            "!=" | "<>" => Function::NotEq,
             "like" => Function::Like,
             "between" => Function::Between,
             "in" => Function::In,
