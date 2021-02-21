@@ -193,9 +193,9 @@ pub async fn create_controller(
         };
         if local_data.contains_key(&entity) {
             return Err(Error::EntityAlreadyCreated(entity));
-        } else {
-            local_data.insert(entity.clone(), BTreeMap::new());
         }
+
+        local_data.insert(entity.clone(), BTreeMap::new());
         local_data.clone()
     };
     actor.send(LocalData::new(local_data)).await??;
@@ -204,11 +204,9 @@ pub async fn create_controller(
     let (offset, is_empty) = actor.send(CreateEntity::new(&entity)).await??;
 
     if is_empty {
-        bytes_counter.fetch_add(offset, Ordering::SeqCst);
-    } else {
-        bytes_counter.store(0, Ordering::SeqCst)
+        bytes_counter.store(0, Ordering::SeqCst);
     }
-
+    bytes_counter.fetch_add(offset, Ordering::SeqCst);
     actor
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
@@ -226,12 +224,11 @@ pub async fn evict_controller(
     if uuid.is_none() {
         let message = format!("Entity {} evicted", &entity);
         let (offset, is_empty) = actor.send(EvictEntity::new(&entity)).await??;
-        if is_empty {
-            bytes_counter.fetch_add(offset, Ordering::SeqCst);
-        } else {
-            bytes_counter.store(0, Ordering::SeqCst)
-        }
 
+        if is_empty {
+            bytes_counter.store(0, Ordering::SeqCst);
+        }
+        bytes_counter.fetch_add(offset, Ordering::SeqCst);
         actor
             .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
             .await??;
@@ -251,12 +248,12 @@ pub async fn evict_controller(
     } else {
         let id = uuid.unwrap();
         let (offset, is_empty) = actor.send(EvictEntityId::new(&entity, id)).await??;
+
         if is_empty {
-            bytes_counter.fetch_add(offset, Ordering::SeqCst);
-        } else {
-            bytes_counter.store(0, Ordering::SeqCst)
+            bytes_counter.store(0, Ordering::SeqCst);
         }
 
+        bytes_counter.fetch_add(offset, Ordering::SeqCst);
         actor
             .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
             .await??;
@@ -342,7 +339,7 @@ pub async fn insert_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let offset = bytes_counter.load(Ordering::SeqCst);
+    let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
             &args.entity,
@@ -377,6 +374,12 @@ pub async fn insert_controller(
     let content_value = actor
         .send(InsertEntityContent::new(&args.entity, &content_log))
         .await??;
+
+    if content_value.3 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        offset = 0;
+    }
+
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.2,
@@ -418,7 +421,7 @@ pub async fn update_set_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let offset = bytes_counter.load(Ordering::SeqCst);
+    let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
             &args.entity,
@@ -486,6 +489,11 @@ pub async fn update_set_controller(
         ))
         .await??;
 
+    if content_value.2 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        offset = 0;
+    }
+
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
@@ -523,7 +531,7 @@ pub async fn update_content_controller(
     encryption: DataEncryptContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let offset = bytes_counter.load(Ordering::SeqCst);
+    let mut offset = bytes_counter.load(Ordering::SeqCst);
     if let Ok(guard) = encryption.lock() {
         if guard.contains_key(&args.entity) {
             let keys = args
@@ -594,6 +602,10 @@ pub async fn update_content_controller(
         ))
         .await??;
 
+    if content_value.2 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        offset = 0;
+    }
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
@@ -632,7 +644,7 @@ pub async fn delete_controller(
 ) -> Result<String, Error> {
     let uuid = Uuid::from_str(&id)?;
     let message = format!("Entity {} with Uuid {} deleted", &entity, id);
-    let offset = bytes_counter.load(Ordering::SeqCst);
+    let mut offset = bytes_counter.load(Ordering::SeqCst);
 
     let previous_entry = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -683,6 +695,10 @@ pub async fn delete_controller(
         ))
         .await??;
 
+    if content_value.2 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        offset = 0;
+    }
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
@@ -749,7 +765,7 @@ pub async fn match_update_set_controller(
         })
         .await??;
 
-    let offset = bytes_counter.load(Ordering::SeqCst);
+    let mut offset = bytes_counter.load(Ordering::SeqCst);
 
     let encrypted_content = actor
         .send(EncryptContent::new(
@@ -790,6 +806,10 @@ pub async fn match_update_set_controller(
         })
         .await??;
 
+    if content_value.2 {
+        bytes_counter.store(0, Ordering::SeqCst);
+        offset = 0;
+    }
     let local_data_register = DataRegister {
         offset,
         bytes_length: content_value.1,
