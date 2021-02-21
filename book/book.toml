@@ -1,0 +1,11 @@
+[book]
+title = "WooriDB"
+description = "WooriDB is a general purpose time serial database with some relation algebra"
+authors = ["Julia Naomi <jnboeira@outlook.com>"]
+
+[output.html]
+git-repository-url = "https://github.com/naomijub/wooridb/tree/main/book"
+
+[output.linkcheck]
+follow-web-links = true
+warning-policy = "error"

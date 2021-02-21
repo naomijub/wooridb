@@ -1,0 +1,13 @@
+[package]
+name = "wooridb-book"
+version = "0.1.0"
+authors = ["Julia Naomi <jnboeira@outlook.com>"]
+description = "WooriDB is a general purpose time serial database with some relation algebra"
+readme = "../README.md"
+documentation = "https://github.com/naomijub/wooridb/README.md"
+repository = "https://github.com/naomijub/wooridb/tree/main/book"
+keywords = ["woori", "database", "time serial", "book"]
+license = "MIT"
+edition = "2018"
+
+[dependencies]
