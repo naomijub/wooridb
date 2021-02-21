@@ -14,3 +14,8 @@ WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which mean
 - [Database System Concept](https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
 - [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
 - Professor [Andy Pavlo](http://www.cs.cmu.edu/~pavlo/) Database Design Course. 
+
+## Naming conventios:
+- Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.
+- Entity ID is the id of an entity inside Entity tree.
+- Entity map is the content of and entity associated with the entity id.

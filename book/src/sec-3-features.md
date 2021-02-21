@@ -3,14 +3,14 @@
 - Sintax inspired by SparQL and Crux's datalog.
 - Entities are indexed by date(time).
 - Schemaless.
-- Deep Key-value storage, which means that you can have key values inside key values.
-- Hashing keys content with [`ENCRYPT`](https://github.com/naomijub/wooridb#create-entity) keyword.
-- Unique keys content with [`UNIQUE`](https://github.com/naomijub/wooridb#create-entity) keyword.
+- Deep Key-value storage, which means that you can have key values inside hashmap values.
+- Hashing entity map keys content with [`ENCRYPT`](https://github.com/naomijub/wooridb#create-entity).
+- Unique entity maps keys content with [`UNIQUE`](https://github.com/naomijub/wooridb#create-entity) for an entity tree.
 - Hashed values are filtered out of `SELECT` and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
 - [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
   - [ ] JSON to be supported via feature.
   - [ ] EDN to be supported via feature.
-- Entities are indexed by `entity_name` and `Uuid`. Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
+- Entities are also indexed by `entity_name` (entity tree key) and `Uuid` (entity id). Entity map format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
   - [ ] `S3` as a backend is to be developed.
   - [ ] `Postgres` as a backend is to be developed.
