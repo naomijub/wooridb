@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use std::io::{Error, Seek, SeekFrom};
-use std::{fs::OpenOptions, io::Write};
 use std::path::Path;
+use std::{fs::OpenOptions, io::Write};
 
 pub fn write_to_log(log: &str) -> Result<(usize, bool), Error> {
     let utc: DateTime<Utc> = Utc::now();
