@@ -194,6 +194,7 @@ Example request `'EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed from my_entity_name
 
 #### `EVICT ENTITY`:
 Evicts all registries from entity and removes entity, which means entity tree does not contain the key for the evicted entity: Similar to SQL `DROP TABLE <entity>`. 
+
 Example request: `EVICT my_entity`.
 
 
