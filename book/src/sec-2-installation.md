@@ -11,7 +11,7 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 ### Executing WooriDB
 
 - `Release mode`: `make run` in project root.
-- `Debug mode`: `make debuf` in project root.
+- `Debug mode`: `make debug` in project root.
 
 ## Important Information
 
