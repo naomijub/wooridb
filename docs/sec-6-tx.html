@@ -1,0 +1,412 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Transactions - WooriDB</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="WooriDB is a general purpose time serial database with some relation algebra">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html" class="active"><strong aria-hidden="true">6.</strong> Transactions</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">WooriDB</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/naomijub/wooridb/tree/main/book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#transactions" id="transactions">Transactions</a></h1>
+<p>Transactions is the name of all operations that change the database state, like <code>CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/tx</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/tx -d 'CREATE ENTITY my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
+<blockquote>
+<p><strong>Reminder</strong>
+A comma is required at the end of every data structure representation.
+Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>. 
+No need for <code>;</code> at the end of each expression.</p>
+</blockquote>
+<h2><a class="header" href="#create-entity" id="create-entity"><code>CREATE ENTITY</code></a></h2>
+<p><a href="./sec-4-wql.html#create">CREATE WQL Reference</a></p>
+<p>Similar to <code>CREATE TABLE</code> in SQL, it creates an entity tree which matches the table name. It requires an entity name like <code>my_entity_name</code> after <code>CREATE ENTITY</code>. Example request: <code>'CREATE ENTITY my_entity_name'</code>. </p>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity_name&quot;,
+ message: &quot;Entity `my_entity_name` created&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><code>CREATE ENTITY &lt;entity&gt; ENCRYPT #{keys...}</code>: When the system has encrypted keys, the <code>insert</code> and <code>upload</code> requests take longer due to hashing function and the verify function. This is determined by the hashing cost:</li>
+</ul>
+<pre><code>bench_cost_10      ... bench:  51,474,665 ns/iter (+/- 16,006,581)
+bench_cost_14      ... bench: 839,109,086 ns/iter (+/- 274,507,463)
+bench_cost_4       ... bench:     795,814 ns/iter (+/- 42,838)
+bench_cost_default ... bench: 195,344,338 ns/iter (+/- 8,329,675)
+* Note that I don't go above 14 as it takes too long. However, it is way safer, it is a trade-off. 
+</code></pre>
+<h2><a class="header" href="#insert" id="insert"><code>INSERT</code></a></h2>
+<p><a href="./sec-4-wql.html#insert">INSERT WQL Reference</a></p>
+<p>Inserts a <strong>HashMap&lt;String, <a href="./sec-4-wql.html#entity-map-value-types">Types</a>&gt;</strong>  into the entity tree key previously created (<code>my_entity_name</code>). This request returns a <code>Uuid</code> containing the entity id. </p>
+<p>Example request: </p>
+<pre><code>'INSERT {a: 123,  c: \&quot;hello\&quot;, d: \&quot;world\&quot;,} 
+INTO my_entity_name'
+</code></pre>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity_name&quot;,
+ uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+ message: &quot;Entity my_entity_name inserted with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<p>The request above will insert an entity with the following structure in <code>my_entity_name</code>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;my_entity_name&quot;: {
+    Uuid(00d025c9-eda8-4190-a33a-29998bd77bd3): {a: 123, c: &quot;hello&quot;, d: &quot;world&quot;,},
+}}
+<span class="boring">}
+</span></code></pre></pre>
+<h2><a class="header" href="#update" id="update"><code>UPDATE</code></a></h2>
+<p>Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:</p>
+<h3><a class="header" href="#update-set" id="update-set"><code>UPDATE SET</code></a></h3>
+<p><a href="./sec-4-wql.html#update-set">UPDATE SET WQL Reference</a>
+<code>SET</code> updates defines the current value of the entity map to the ones being passed, so if your entity map is <code>{a: 123, b: 12.5,}</code> and your set update has the hashmap <code>{a: 432, c: \&quot;hello\&quot;,}</code>, the current state of the entity map will be <code>{a: 432, b: 12.5, c: \&quot;hello\&quot;,}</code>. </p>
+<p>Example request:</p>
+<pre><code>'UPDATE my_entity_name 
+SET {a: -4, b: 32,} 
+INTO 00d025c9-eda8-4190-a33a-29998bd77bd3'
+</code></pre>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity_name&quot;,
+ uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+ state: &quot;{\&quot;b\&quot;: Integer(32),\&quot;a\&quot;: Integer(-4),}&quot;,
+ message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#update-content" id="update-content"><code>UPDATE CONTENT</code></a></h3>
+<p><a href="./sec-4-wql.html#update-content">UPDATE CONTENT WQL Reference</a>
+<code>CONTENT</code> updates are a way to add numerical values and concatenate Strings, so if your entity map is <code>{a: 432, c: \&quot;hello\&quot;,}</code> and your content update has the hashmap <code>{a: -5, c: \&quot;world\&quot;, b: 12.5}</code> the current state of the entity map will be <code>{a: 427, c: \&quot;helloworld\&quot;, b: 12.5}</code>. </p>
+<p>Example request:</p>
+<pre><code>'UPDATE my_entity_name 
+CONTENT {a: -34, b: 7,} 
+INTO 00d025c9-eda8-4190-a33a-29998bd77bd3'
+</code></pre>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity_name&quot;,
+ uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+ state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(-38),}&quot;,
+ message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<h2><a class="header" href="#match-update" id="match-update"><code>MATCH UPDATE</code></a></h2>
+<p><a href="./sec-4-wql.html#match-update">MATCH UPDATE WQL Reference</a></p>
+<p>Updates entity only if precondition condition is matched. This transaction is significantly slower than other updates.</p>
+<p>Example request:</p>
+<pre><code>MATCH ALL(a &lt; 0, b &gt;= 3) 
+UPDATE my_entity_name 
+SET {a: 123, g: NiL,} 
+INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
+</code></pre>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity_name&quot;,
+ uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+ state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(123),\&quot;g\&quot;: Nil,}&quot;,
+ message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#issues" id="issues">Issues:</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<a href="https://github.com/naomijub/wooridb/issues/74">Last argument does not support ending comma</a></li>
+</ul>
+<h2><a class="header" href="#delete" id="delete"><code>DELETE</code></a></h2>
+<p><a href="./sec-4-wql.html#delete">DELETE WQL Reference</a></p>
+<p>Deletes the last entity event for an ID, that is, it deletes the last state of an entity map. The deleted state is preserved in the database but cannot be queried anymore.</p>
+<p>If you have, for example, one update on your entity, it will roll back to the <code>INSERT</code> event. 
+However, if you have only an <code>INSERT</code> event then your state will become an empty hashmap. </p>
+<p>Example request: </p>
+<pre><code>DELETE 00d025c9-eda8-4190-a33a-29998bd77bd3 FROM my_entity_name
+</code></pre>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity&quot;,
+ uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
+ message: &quot;Entity my_entity with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 deleted&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#todos" id="todos">TODOs:</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"/>
+Delete entity with ID at transaction-time</li>
+</ul>
+<h2><a class="header" href="#evict" id="evict"><code>EVICT</code></a></h2>
+<p><a href="./sec-4-wql.html#evict">EVICT WQL Reference</a></p>
+<h3><a class="header" href="#evict-entity-id" id="evict-entity-id"><code>EVICT ENTITY ID</code>:</a></h3>
+<p>Removes all occurrences of an entity map with the given ID. </p>
+<p>Example request <code>'EVICT 00d025c9-eda8-4190-a33a-29998bd77bd3 from my_entity_name'</code>. </p>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity&quot;,
+ uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
+ message: &quot;Entity my_entity with id 6ac9d1bb-2b0c-4631-bc05-682ab4ae8306 evicted&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<blockquote>
+<p>For now it only deletes the access to the entity history.</p>
+</blockquote>
+<h3><a class="header" href="#evict-entity" id="evict-entity"><code>EVICT ENTITY</code>:</a></h3>
+<p>Evicts all entity ids registries from entity tree and removes entity tree key, which means entity tree does not contain the key for the evicted entity: Similar to SQL <code>DROP TABLE &lt;entity&gt;</code>. </p>
+<p>Example request: <code>EVICT my_entity</code>.</p>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ entity: &quot;my_entity&quot;,
+ uuid: None,
+ message: &quot;Entity my_entity evicted&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="sec-5-auth.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="sec-5-auth.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
