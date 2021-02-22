@@ -3,6 +3,10 @@ setup:
 
 run:
 	cargo package --manifest-path wql/Cargo.toml
+	cargo run --manifest-path woori-db/Cargo.toml --release -- -C opt-level="s" 
+
+release:
+	cargo package --manifest-path wql/Cargo.toml
 	cargo run --manifest-path woori-db/Cargo.toml --release
 
 debug:

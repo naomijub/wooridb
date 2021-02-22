@@ -52,3 +52,7 @@ rand = "*"
 # [[bench]]
 # name = "tx"
 # harness = false
+
+[profile.release]
+panic = 'unwind'
+opt-level = 3
