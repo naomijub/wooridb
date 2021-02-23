@@ -282,7 +282,7 @@ Example request: `'Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec
 Example request: `'Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z'`.
   
 
-#### SELECTs all entities ids and maps BY ID FROM ENTITY between two DATETIME<UTC>:
+#### SELECTs all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:
 - Key `WHEN` defines it as a temporal query.
 - Key `START` is the `DateTime<Utc>` to start the range query.
 - Key `END` is the `DateTime<Utc>` to end the range query.
@@ -327,8 +327,8 @@ WHERE {
   ?* my_entity:c ?c, // `,` <-
   (== ?a 123), // `,` <-
   (or
-      (>= c 4300.0),  // `,` <-
-      (< c 6.9), // `,` <-
+      (>= c 4300.0)  // `,` <-
+      (< c 6.9) // `,` <-
   ), // `,` <-
 }
 ```
