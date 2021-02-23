@@ -1,0 +1,369 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Errors Messages - WooriDB</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="WooriDB is a general purpose time serial database with some relation algebra">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-errors.html" class="active"><strong aria-hidden="true">8.</strong> Errors Messages</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">WooriDB</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/naomijub/wooridb/tree/main/book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#error-messages" id="error-messages">Error Messages</a></h1>
+<p>Woori DB has a variety of Error messages, from WQL when parsing the transaction or the query to some internal database errors. Here are listed expected messages:</p>
+<h2><a class="header" href="#wooridb-errors" id="wooridb-errors">WooriDB Errors:</a></h2>
+<h3><a class="header" href="#example-errors-as-response" id="example-errors-as-response">Example errors as response:</a></h3>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+ error_type: &quot;CheckNonEncryptedKeys&quot;,
+ error_message: &quot;CHECK can only verify encrypted keys: [\&quot;ssn\&quot;]&quot;,
+)
+<span class="boring">}
+</span></code></pre></pre>
+<h3><a class="header" href="#error-types" id="error-types">Error types:</a></h3>
+<ul>
+<li><code>Io(io::Error)</code> - Failed to read or write file.</li>
+<li><code>QueryFormat(String)</code> - WQL error.</li>
+<li><code>EntityAlreadyCreated(&lt;entity_name&gt;)</code> - Entity <code>entity_name</code> already created in the database.</li>
+<li><code>EntityNotCreated(&lt;entity_name&gt;)</code> - tx or query at entity tree dooes not contain key <code>entity_name</code>.</li>
+<li><code>EntityNotCreatedWithUniqueness(&lt;entity_name&gt;)</code> - this error only occurs if a failed write to the bank happened. Migration to fix data inconsistency may be needed.</li>
+<li><code>Serialization(ron::Error)</code> - Ron serialization error in wql context.</li>
+<li><code>UuidNotCreatedForEntity(&lt;entity_name&gt;, Uuid)</code> - If you try to <code>UPDATE/DELETE/EVICT/SELECT</code> an Uuid that <code>entity_name</code> does not contain.</li>
+<li><code>FailedToParseState</code> - Failed to read log file state/entity map.</li>
+<li><code>FailedToParseRegistry</code> - Failed to read log file registry information</li>
+<li><code>UnknownCondition</code> - <code>MATCH UPDATE</code> has an unknown condition (<code>==</code>, <code>&gt;=</code>, <code>&lt;</code>, etc).</li>
+<li><code>FailedMatchCondition</code> - <code>MATCH UPDATE</code> internal service error while processing conditions.</li>
+<li><code>DuplicatedUnique(&lt;entity_name&gt;, &lt;entity_map_key&gt;, Types)</code> - This means that <code>Types</code> is already present at <code>entity_map_key</code> for entity tree <code>entity_name</code>.</li>
+<li><code>SelectBadRequest</code> - Select operation done at <code>/wql/tx</code>. Select operations are done at <code>/wql/query</code>.</li>
+<li><code>NonSelectQuery</code> - Tx operation done at <code>/wql/query</code>. Tx operations are done at <code>/wql/tx</code>.</li>
+<li><code>ActixMailbox(MailboxError)</code> - Internal server error meaning that some actor mailbox crashed.</li>
+<li><code>LockData</code> - Failed to get a lock on Data</li>
+<li><code>Ron(ron::Error)</code> - Ron serialization error that occured in user creation.</li>
+<li><code>InvalidUuid(uuid::Error)</code> - Uuid could not be parsed.</li>
+<li><code>UpdateContentEncryptKeys(Vec&lt;keys&gt;)</code> - <code>UPDATE CONTENT</code> cannot update encrypted <code>keys</code>.</li>
+<li><code>CheckNonEncryptedKeys(Vec&lt;keys&gt;)</code> - Cannot <code>CHECK</code> non encrypted <code>keys</code>.</li>
+<li><code>DateTimeParse(chrono::ParseError)</code> - failed to parse input <code>DateTime&lt;UTC&gt;</code>.</li>
+<li><code>FailedToParseDate</code> - failed to parse log file saved date.</li>
+<li><code>AdminNotConfigured</code> - Admin is not configured at release mode, please check <a href="./sec-5-auth.html">auth section</a> for more info.</li>
+<li><code>AuthBadRequest</code> - Authentication &amp; Authorization error.</li>
+<li><code>FailedToCreateUser</code> - Failed to create new user.</li>
+<li><code>Unknown</code> - Unknown error.</li>
+</ul>
+<h2><a class="header" href="#wql-parsing" id="wql-parsing">WQL Parsing</a></h2>
+<ul>
+<li>
+<p><code>Query symbol error</code>: </p>
+<ul>
+<li>&quot;Symbol <code>{symbol_name}</code> not implemented&quot;. Symbol name are the start of the query, like <code>SELECT, CHECK, CREATE, ISNERT</code>.</li>
+</ul>
+</li>
+<li>
+<p><code>Keyword error</code>:</p>
+<ul>
+<li><code>CREATE</code>: Keyword ENTITY is required for CREATE&quot;
+<ul>
+<li>&quot;Correct wording is ENCRYPT&quot; for <code>CREATE ENTITY ENCRYPT</code></li>
+<li>&quot;Correct wording is UNIQUES&quot; for <code>CREATE ENTITY UNIQUES</code>.</li>
+</ul>
+</li>
+<li><code>UPDATE</code>: &quot;UPDATE type is required after entity. Keywords are SET or CONTENT&quot;
+<ul>
+<li>&quot;Keyword INTO is required for UPDATE&quot;</li>
+<li>&quot;Keyword INTO is required for MATCH UPDATE&quot;</li>
+<li>&quot;UPDATE keyword is required for MATCH UPDATE&quot;</li>
+<li>&quot;MATCH UPDATE type is required after entity. Keyword is SET&quot;. Use <code>SET</code> as update type in <code>MATCH</code>.</li>
+</ul>
+</li>
+<li><code>SELECT/CHECK</code>: &quot;Keyword FROM is required for CHECK&quot;
+<ul>
+<li>&quot;Keyword FROM is required for SELECT&quot;</li>
+<li>&quot;WHEN not allowed after IDS IN&quot;</li>
+<li>&quot;Keyword AT is required after WHEN&quot;</li>
+<li>&quot;Keyword IN is required after IDS to define a set of uuids&quot;</li>
+<li>&quot;Keyword ID/IDS is required to set an uuid in SELECT&quot;.</li>
+</ul>
+</li>
+<li><code>EVICT/DELETE/INSERT</code>: &quot;Keyword FROM is required for DELETE&quot;
+<ul>
+<li>&quot;Keyword INTO is required for INSERT&quot;</li>
+<li>&quot;Keyword FROM is required to EVICT an UUID&quot;.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>Argument format error</code>:</p>
+<ul>
+<li>&quot;Arguments set should start with <code>#{</code> and end with <code>}</code>&quot;</li>
+<li>&quot;Entity map should start with <code>{</code> and end with <code>}</code>&quot; occurs mostly with <code>INSERT and UPDATE</code>.</li>
+<li>&quot;Field ID must be a UUID v4&quot;</li>
+<li><code>SELECT</code>: &quot;Encrypted arguments cannot be set to UNIQUE&quot;
+<ul>
+<li>&quot;SELECT expression should be followed by <code>*</code> for ALL keys or <code>#{key_names...}</code> for some keys&quot; and &quot;SELECT arguments set should start with <code>#{</code> and end with <code>}</code>&quot;</li>
+<li>&quot;Uuids in <code>IDS IN</code> are reuired to be inside a <code>#{</code> and <code>}</code>&quot;</li>
+<li>&quot;START date and END date should be the same date.&quot;</li>
+<li>&quot;WHERE clauses must be contained inside <code> {...}</code>&quot;</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>Required content</code>:</p>
+<ul>
+<li>&quot;MATCH requires ALL or ANY symbols&quot;. It is necessary to include <code>ANY</code> or <code>ALL</code> conditions after <code>MATCH</code> keyword.</li>
+<li>&quot;Entity UUID is required for DELETE&quot;</li>
+<li><code>Entity name</code>: 
+<ul>
+<li>&quot;Entity name is required after FROM&quot;</li>
+<li>&quot;Entity name is required for SELECT&quot;</li>
+<li>&quot;Entity name is required after INTO&quot;</li>
+<li>&quot;Entity name is required for UPDATE&quot;</li>
+<li>&quot;Entity name is required for EVICT&quot;</li>
+<li>&quot;Entity name is required for MATCH UPDATE&quot;</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>Parse error</code>:</p>
+<ul>
+<li>&quot;Couldn't create uuid from {some-text}. Error: {Uuid::Error}&quot;</li>
+<li>&quot;Couldn't parse UPDATE query&quot;. <code>SET</code> or <code>CONTENT</code> were not found after <code>UPDATE</code></li>
+<li>&quot;Couldn't parse MATCH UPDATE query&quot;</li>
+<li>&quot;Entity name cannot contain <code>-</code>&quot;. Entity name should contain only alphanumeric and <code>_</code> chars.</li>
+<li>&quot;Key must be an alphanumeric value&quot; or contain <code>_</code>.</li>
+<li>&quot;Hash cannot be hashed&quot; and &quot;Nil cannot be hashed&quot;. <code>Types::Hash</code> and <code>Types::Nil</code> cannot be hashed.</li>
+<li>&quot;Not able to parse match argument&quot;. Match condition has wrong argument type.</li>
+<li>&quot;Unidentified Match Condition&quot;. Could not identify match condition.</li>
+<li>&quot;Entity HashMap could not be created&quot;</li>
+<li>&quot;Value Type could not be created from {some value}&quot;. Could not create <code>Types</code> from <code>some value</code>.</li>
+<li>&quot;WHERE clause cannot be empty&quot;</li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#issues" id="issues">Issues:</a></h2>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<a href="https://github.com/naomijub/wooridb/issues/79">Split <code>AuthBadRequest</code> into <code>AuthenticationBadRequest</code> and <code>AuthorizationBadRequest</code></a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="sec-7-queries.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="sec-7-queries.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

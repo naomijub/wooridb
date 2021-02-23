@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html" class="active"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html" class="active"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-errors.html"><strong aria-hidden="true">8.</strong> Errors Messages</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -195,10 +195,6 @@ ADMIN_PASSWORD=your_password
 </code></pre>
 <p>User information consists of the user's password to be used and the user's roles. Remember to always put <code>,</code> at the end. 
 Response to this request will be <code>(user_id: \&quot;&lt;some-uuid&gt;\&quot;,)</code>, containing the user's unique ID.</p>
-<ul>
-<li><input disabled="" type="checkbox"/>
-Adding other admins and removing admins is not yet implemented.</li>
-</ul>
 <h3><a class="header" href="#available-user-roles-are" id="available-user-roles-are">Available user roles are:</a></h3>
 <ul>
 <li><code>ADMIN</code> - works primarily at <code>/auth/createUser</code>.</li>
@@ -212,13 +208,16 @@ Adding other admins and removing admins is not yet implemented.</li>
 <pre><code class="language-ron">(id: &quot;&lt;user_id&gt;&quot;, user_password: &quot;&lt;user_password&gt;&quot;,)
 </code></pre>
 <p>Response will be a plain/text with your token.</p>
-<ul>
-<li><input disabled="" type="checkbox"/>
-Configure session token expiration time.</li>
-</ul>
 <h3><a class="header" href="#making-auth-requests-to-wqltx-and-wqlquery" id="making-auth-requests-to-wqltx-and-wqlquery">Making auth requests to <code>/wql/tx</code> and <code>/wql/query</code>.</a></h3>
 <p>To avoid authentication and authorization errors, add your token to the authorization bearer header, <code>Authorization: Bearer &lt;your session token&gt;</code>. 
 Your user needs the correct session token and the correct role for this request.</p>
+<h3><a class="header" href="#todos" id="todos">TODOs:</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"/>
+Adding other admins and removing admins is not yet implemented.</li>
+<li><input disabled="" type="checkbox"/>
+Configure session token expiration time.</li>
+</ul>
 
                     </main>
 
