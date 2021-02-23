@@ -1,6 +1,6 @@
 # Transactions
 
-Transactions is the name of all operations that change the database state, like `CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT`. This is done by sending a `POST` request to endpoint `<ip>:1438/wql/tx`. An example request would be `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity'`. In `release mode` it is necessary to use header `Authorization: Bearer <your session token>` for this endpoint.
+Transaction is the name of all operations that change the database state, like `CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT`. This is done by sending a `POST` request to endpoint `<ip>:1438/wql/tx`. An example request would be `curl -X POST -H "Content-Type: application/wql" <ip>:1438/wql/tx -d 'CREATE ENTITY my_entity'`. In `release mode` it is necessary to use header `Authorization: Bearer <your session token>` for this endpoint.
 
 > **Reminder**
 > A comma is required at the end of every data structure representation.
@@ -10,7 +10,12 @@ Transactions is the name of all operations that change the database state, like 
 ## `CREATE ENTITY`
 [CREATE WQL Reference](./sec-4-wql.md#create)
 
-Similar to `CREATE TABLE` in SQL, it creates an entity tree which matches the table name. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. Example request: `'CREATE ENTITY my_entity_name'`. 
+Similar to `CREATE TABLE` in SQL, it creates an entity tree which matches the table name. It requires an entity name like `my_entity_name` after `CREATE ENTITY`. 
+
+Example request: 
+```sql
+CREATE ENTITY my_entity_name
+``` 
 
 Example response:
 ```rust
@@ -35,9 +40,9 @@ bench_cost_default ... bench: 195,344,338 ns/iter (+/- 8,329,675)
 Inserts a **HashMap<String, [Types](./sec-4-wql.md#entity-map-value-types)>**  into the entity tree key previously created (`my_entity_name`). This request returns a `Uuid` containing the entity id. 
 
 Example request: 
-```
-'INSERT {a: 123,  c: \"hello\", d: \"world\",} 
-INTO my_entity_name'
+```sql
+INSERT {a: 123,  c: \"hello\", d: \"world\",} 
+INTO my_entity_name
 ``` 
 
 Example response:
@@ -65,10 +70,10 @@ Updates the content of an entity map for an entity tree key and an entity id. Th
 `SET` updates defines the current value of the entity map to the ones being passed, so if your entity map is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state of the entity map will be `{a: 432, b: 12.5, c: \"hello\",}`. 
 
 Example request:  
-```
-'UPDATE my_entity_name 
+```sql
+UPDATE my_entity_name 
 SET {a: -4, b: 32,} 
-INTO 00d025c9-eda8-4190-a33a-29998bd77bd3'
+INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 ```
 
 Example response:
@@ -86,10 +91,10 @@ Example response:
 `CONTENT` updates are a way to add numerical values and concatenate Strings, so if your entity map is `{a: 432, c: \"hello\",}` and your content update has the hashmap `{a: -5, c: \"world\", b: 12.5}` the current state of the entity map will be `{a: 427, c: \"helloworld\", b: 12.5}`. 
 
 Example request:
-```
-'UPDATE my_entity_name 
+```sql
+UPDATE my_entity_name 
 CONTENT {a: -34, b: 7,} 
-INTO 00d025c9-eda8-4190-a33a-29998bd77bd3'
+INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 ```
 
 Example response:
@@ -108,7 +113,7 @@ Example response:
 Updates entity only if precondition condition is matched. This transaction is significantly slower than other updates.
 
 Example request:
-```
+```sql
 MATCH ALL(a < 0, b >= 3) 
 UPDATE my_entity_name 
 SET {a: 123, g: NiL,} 
@@ -137,7 +142,7 @@ If you have, for example, one update on your entity, it will roll back to the `I
 However, if you have only an `INSERT` event then your state will become an empty hashmap. 
 
 Example request: 
-```
+```sql
 DELETE 00d025c9-eda8-4190-a33a-29998bd77bd3 FROM my_entity_name
 ```
   
@@ -159,7 +164,10 @@ Example response:
 ### `EVICT ENTITY ID`:
 Removes all occurrences of an entity map with the given ID. 
 
-Example request `'EVICT 00d025c9-eda8-4190-a33a-29998bd77bd3 from my_entity_name'`. 
+Example request 
+```sql
+EVICT 00d025c9-eda8-4190-a33a-29998bd77bd3 from my_entity_name
+``` 
 
 Example response:
 ```rust
@@ -175,7 +183,10 @@ Example response:
 ### `EVICT ENTITY`:
 Evicts all entity ids registries from entity tree and removes entity tree key, which means entity tree does not contain the key for the evicted entity: Similar to SQL `DROP TABLE <entity>`. 
 
-Example request: `EVICT my_entity`.
+Example request: 
+```sql
+EVICT my_entity
+```
 
 Example response:
 ```rust

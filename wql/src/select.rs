@@ -86,7 +86,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             Ok(Wql::SelectIds(entity_name, arg, uuids))
         } else {
             Err(String::from(
-                "IN keyword is required after IDS to define a set of uuids",
+                "Keyword IN is required after IDS to define a set of uuids",
             ))
         }
     } else if next_symbol.to_uppercase() == "WHEN" {
@@ -97,7 +97,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         && (next_symbol.to_uppercase() != "ID" || next_symbol.to_uppercase() != "IDS")
     {
         Err(String::from(
-            "ID/IDS keyword is required to set an uuid in SELECT",
+            "Keyword ID/IDS is required to set an uuid in SELECT",
         ))
     } else {
         Ok(Wql::Select(entity_name, arg, None))
@@ -121,7 +121,7 @@ fn when_selector(
         return when_time_range(entity_name, uuid, chars);
     }
     if next_symbol.to_uppercase() != "AT" {
-        return Err(String::from("AT is required after WHEN"));
+        return Err(String::from("Keyword AT is required after WHEN"));
     };
 
     let date = chars
@@ -149,7 +149,7 @@ fn when_time_range(
         .to_uppercase();
     if next_symbol.to_uppercase() != "END" {
         return Err(String::from(
-            "END is required after START date for SELECT WHEN",
+            "Keyword END is required after START date for SELECT WHEN",
         ));
     };
 
@@ -266,7 +266,7 @@ mod test {
         assert_eq!(
             wql.err(),
             Some(String::from(
-                "ID/IDS keyword is required to set an uuid in SELECT"
+                "Keyword ID/IDS is required to set an uuid in SELECT"
             ))
         );
     }
@@ -306,7 +306,7 @@ mod test {
         assert_eq!(
             wql.err(),
             Some(String::from(
-                "IN keyword is required after IDS to define a set of uuids"
+                "Keyword IN is required after IDS to define a set of uuids"
             ))
         );
     }
@@ -378,7 +378,7 @@ mod test {
         assert_eq!(
             wql.err(),
             Some(String::from(
-                "END is required after START date for SELECT WHEN"
+                "Keyword END is required after START date for SELECT WHEN"
             ))
         );
     }

@@ -43,6 +43,10 @@ fn create_entity(chars: &mut std::str::Chars) -> Result<Wql, String> {
         let (encrypts, uniques) = create_uniques_and_encrypts(chars, "UNIQUES")?;
 
         Ok(Wql::CreateEntity(entity_name, uniques, encrypts))
+    } else if next_symbol.to_uppercase() == "ENCRYPTS" {
+        Err(String::from("Correct wording is ENCRYPT"))
+    } else if next_symbol.to_uppercase() == "UNIQUE" {
+        Err(String::from("Correct wording is UNIQUES"))
     } else {
         Ok(Wql::CreateEntity(entity_name, Vec::new(), Vec::new()))
     }
@@ -332,7 +336,7 @@ fn evict(chars: &mut std::str::Chars) -> Result<Wql, String> {
             .to_string();
 
         if from_symbol.to_uppercase() != "FROM" {
-            return Err(String::from("FROM keyword is required to EVICT an UUID"));
+            return Err(String::from("Keyword FROM is required to EVICT an UUID"));
         }
         let name = chars
             .take_while(|c| c.is_alphanumeric() || c == &'_')
@@ -341,7 +345,7 @@ fn evict(chars: &mut std::str::Chars) -> Result<Wql, String> {
             .to_string();
 
         if name.is_empty() {
-            return Err(String::from("Entity name is required"));
+            return Err(String::from("Entity name is required for EVICT"));
         }
 
         Ok(Wql::Evict(name, uuid.ok()))

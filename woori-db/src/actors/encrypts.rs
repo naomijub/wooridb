@@ -140,13 +140,14 @@ impl Handler<VerifyEncryption> for Executor {
     type Result = Result<String, Error>;
 
     fn handle(&mut self, msg: VerifyEncryption, _: &mut Self::Context) -> Self::Result {
+        let type_nil = Types::Nil;
         let results = msg
             .content
             .clone()
             .into_iter()
             .map(|(k, v)| {
                 let original = msg.filtered.clone();
-                let original_hash = original.get(&k).unwrap();
+                let original_hash = original.get(&k).unwrap_or(&type_nil);
                 let result = if let Types::Hash(hash) = original_hash {
                     bcrypt::verify(v, hash).unwrap()
                 } else {
