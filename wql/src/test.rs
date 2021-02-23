@@ -613,7 +613,7 @@ mod evict {
 
         assert_eq!(
             wql.err(),
-            Some(String::from("FROM keyword is required to EVICT an UUID"))
+            Some(String::from("Keyword FROM is required to EVICT an UUID"))
         );
     }
 
@@ -621,7 +621,10 @@ mod evict {
     fn evict_entity_without_entity_name() {
         let wql = Wql::from_str("EVICT d6ca73c0-41ff-4975-8a60-fc4a061ce536 FROM");
 
-        assert_eq!(wql.err(), Some(String::from("Entity name is required")));
+        assert_eq!(
+            wql.err(),
+            Some(String::from("Entity name is required for EVICT"))
+        );
     }
 }
 

@@ -29,8 +29,6 @@ To create a new user, POST at `/auth/createUser` with your admin credentials and
 User information consists of the user's password to be used and the user's roles. Remember to always put `,` at the end. 
 Response to this request will be `(user_id: \"<some-uuid>\",)`, containing the user's unique ID.
 
-* [ ] Adding other admins and removing admins is not yet implemented.
-
 ### Available user roles are:
 - `ADMIN` - works primarily at `/auth/createUser`.
 - `USER` - works on all `/wql/query`, `/wql/tx` and `/auth/putUserSession`.
@@ -44,9 +42,12 @@ To make a request at WQL endpoints you need a session token that will expire wit
 (id: "<user_id>", user_password: "<user_password>",)
 ```
 Response will be a plain/text with your token.
-* [ ] Configure session token expiration time.
 
 ### Making auth requests to `/wql/tx` and `/wql/query`.
 
 To avoid authentication and authorization errors, add your token to the authorization bearer header, `Authorization: Bearer <your session token>`. 
 Your user needs the correct session token and the correct role for this request.
+
+### TODOs:
+* [ ] Adding other admins and removing admins is not yet implemented.
+* [ ] Configure session token expiration time.

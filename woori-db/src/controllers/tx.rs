@@ -141,7 +141,7 @@ pub async fn check_value_controller(
             let non_encrypt_keys = content
                 .iter()
                 .filter(|(k, _)| !encrypts.contains(&(*k).to_string()))
-                .map(|(_, v)| v.to_owned())
+                .map(|(k, _)| k.to_owned())
                 .collect::<Vec<String>>();
 
             if !non_encrypt_keys.is_empty() {

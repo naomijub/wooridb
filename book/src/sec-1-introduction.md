@@ -10,9 +10,9 @@ WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which mean
 - [Datomic](https://www.datomic.com/) is a transactional database with a flexible data model, temporality and rich queries. I worked with Datomic at [Nubank](https://nubank.com.br/sobre-nos/) and it is the reason I found Juxt/Crux. 
 - [Prometheus](https://github.com/prometheus/prometheus) An open-source monitoring system with a dimensional data model, flexible query language, efficient **time series database** and modern alerting approach.
 - [SparQL](https://en.wikipedia.org/wiki/SPARQL) SPARQL is a query language for  RDF graph databases, it is flexible enough for query information based on datetime indexes. 
-- [Database Internals](https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Database+Internals%3A&qid=1612831621&sr=8-1)
-- [Database System Concept](https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
-- [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
+- Book [Database Internals](https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Database+Internals%3A&qid=1612831621&sr=8-1)
+- Book [Database System Concept](https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
+- Book [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
 - Professor [Andy Pavlo](http://www.cs.cmu.edu/~pavlo/) Database Design Course. 
 
 ## Naming conventios:
