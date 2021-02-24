@@ -53,9 +53,6 @@ Example  response:
 {"pswd": false,}
 ```
 
-### Issues:
-- [ ] [CHECK endpoint is currently using endpoint `/wql/tx`](https://github.com/naomijub/wooridb/issues/76)
-
 ## `SELECT`
 [SELECT WQL Reference](./sec-4-wql.md#select)
 

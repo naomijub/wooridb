@@ -1,12 +1,12 @@
 use crate::{
     actors::{
-        encrypts::{CreateWithEncryption, EncryptContent, VerifyEncryption, WriteWithEncryption},
+        encrypts::{CreateWithEncryption, EncryptContent, WriteWithEncryption},
         recovery::{LocalData, OffsetCounter},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateWithUniqueKeys, WriteWithUniqueKeys},
         wql::{DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
     },
-    core::wql::update_content_state,
+    core::{pretty_config_inner, wql::update_content_state},
     model::{
         wql::{InsertArgs, MatchUpdateArgs, UpdateArgs},
         DataAtomicUsize, DataEncryptContext, DataExecutor, DataLocalContext, DataU32,
@@ -30,20 +30,14 @@ use crate::{
 };
 
 use actix_web::{HttpResponse, Responder};
-use ron::ser::{to_string_pretty, PrettyConfig};
+use ron::ser::to_string_pretty;
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, HashMap},
     str::FromStr,
     sync::{atomic::Ordering, Arc, Mutex},
 };
 use uuid::Uuid;
-use wql::{Types, Wql};
-
-fn pretty_config() -> PrettyConfig {
-    PrettyConfig::new()
-        .with_indentor("".to_string())
-        .with_new_line("".to_string())
-}
+use wql::Wql;
 
 pub async fn wql_handler(
     body: String,
@@ -114,9 +108,6 @@ pub async fn wql_handler(
         Ok(Wql::Evict(entity, uuid)) => {
             evict_controller(entity, uuid, local_data.into_inner(), bytes_counter, actor).await
         }
-        Ok(Wql::CheckValue(entity, uuid, content)) => {
-            check_value_controller(entity, uuid, content, local_data, encryption, actor).await
-        }
         Ok(_) => Err(Error::SelectBadRequest),
         Err(e) => Err(Error::QueryFormat(e)),
     };
@@ -125,58 +116,6 @@ pub async fn wql_handler(
         Err(e) => HttpResponse::BadRequest().body(e.to_string()),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
-}
-
-pub async fn check_value_controller(
-    entity: String,
-    uuid: Uuid,
-    content: HashMap<String, String>,
-    local_data: DataLocalContext,
-    encryption: DataEncryptContext,
-    actor: DataExecutor,
-) -> Result<String, Error> {
-    if let Ok(guard) = encryption.lock() {
-        if guard.contains_key(&entity) {
-            let encrypts = guard.get(&entity).unwrap();
-            let non_encrypt_keys = content
-                .iter()
-                .filter(|(k, _)| !encrypts.contains(&(*k).to_string()))
-                .map(|(k, _)| k.to_owned())
-                .collect::<Vec<String>>();
-
-            if !non_encrypt_keys.is_empty() {
-                return Err(Error::CheckNonEncryptedKeys(non_encrypt_keys));
-            }
-        }
-    };
-
-    let local_data = {
-        let local_data = if let Ok(guard) = local_data.lock() {
-            guard
-        } else {
-            return Err(Error::LockData);
-        };
-        if !local_data.contains_key(&entity) {
-            return Err(Error::EntityNotCreated(entity));
-        }
-        local_data.clone()
-    };
-
-    let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
-    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
-    let state = actor.send(State(previous_state_str)).await??;
-    let keys = content
-        .keys()
-        .map(ToOwned::to_owned)
-        .collect::<HashSet<String>>();
-    let filtered_state: HashMap<String, Types> = state
-        .into_iter()
-        .filter(|(k, _)| keys.contains(k))
-        .collect();
-    let results = actor
-        .send(VerifyEncryption::new(filtered_state, content))
-        .await??;
-    Ok(results)
 }
 
 pub async fn create_controller(
@@ -348,8 +287,8 @@ pub async fn insert_controller(
             *hashing_cost.into_inner(),
         ))
         .await??;
-    let content_log =
-        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
+    let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
+        .map_err(Error::Serialization)?;
 
     {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -430,8 +369,8 @@ pub async fn update_set_controller(
             *hashing_cost.into_inner(),
         ))
         .await??;
-    let content_log =
-        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
+    let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
+        .map_err(Error::Serialization)?;
 
     {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -476,7 +415,7 @@ pub async fn update_set_controller(
     });
 
     let state_log =
-        to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
+        to_string_pretty(&previous_state, pretty_config_inner()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent::new(
@@ -484,7 +423,7 @@ pub async fn update_set_controller(
             &state_log,
             &content_log,
             args.id,
-            &to_string_pretty(&previous_entry.clone(), pretty_config())
+            &to_string_pretty(&previous_entry.clone(), pretty_config_inner())
                 .map_err(Error::Serialization)?,
         ))
         .await??;
@@ -546,7 +485,7 @@ pub async fn update_content_controller(
         return Err(Error::LockData);
     };
     let content_log =
-        to_string_pretty(&args.content, pretty_config()).map_err(Error::Serialization)?;
+        to_string_pretty(&args.content, pretty_config_inner()).map_err(Error::Serialization)?;
 
     {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -590,7 +529,7 @@ pub async fn update_content_controller(
         .for_each(|(k, v)| update_content_state(&mut previous_state, k, v));
 
     let state_log =
-        to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
+        to_string_pretty(&previous_state, pretty_config_inner()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(UpdateContentEntityContent::new(
@@ -598,7 +537,8 @@ pub async fn update_content_controller(
             &state_log,
             &content_log,
             args.id,
-            &to_string_pretty(&previous_entry, pretty_config()).map_err(Error::Serialization)?,
+            &to_string_pretty(&previous_entry, pretty_config_inner())
+                .map_err(Error::Serialization)?,
         ))
         .await??;
 
@@ -681,10 +621,10 @@ pub async fn delete_controller(
     };
 
     let content_log =
-        to_string_pretty(&state_to_be.0, pretty_config()).map_err(Error::Serialization)?;
+        to_string_pretty(&state_to_be.0, pretty_config_inner()).map_err(Error::Serialization)?;
 
     let previous_register_log =
-        to_string_pretty(&state_to_be.1, pretty_config()).map_err(Error::Serialization)?;
+        to_string_pretty(&state_to_be.1, pretty_config_inner()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(DeleteId::new(
@@ -775,8 +715,8 @@ pub async fn match_update_set_controller(
             *hashing_cost.into_inner(),
         ))
         .await??;
-    let content_log =
-        to_string_pretty(&encrypted_content, pretty_config()).map_err(Error::Serialization)?;
+    let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
+        .map_err(Error::Serialization)?;
 
     let uniqueness = uniqueness.into_inner();
     actor
@@ -793,7 +733,7 @@ pub async fn match_update_set_controller(
     });
 
     let state_log =
-        to_string_pretty(&previous_state, pretty_config()).map_err(Error::Serialization)?;
+        to_string_pretty(&previous_state, pretty_config_inner()).map_err(Error::Serialization)?;
 
     let content_value = actor
         .send(UpdateSetEntityContent {
@@ -801,7 +741,7 @@ pub async fn match_update_set_controller(
             current_state: state_log.clone(),
             content_log,
             id: args.id,
-            previous_registry: to_string_pretty(&previous_entry, pretty_config())
+            previous_registry: to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
         })
         .await??;
