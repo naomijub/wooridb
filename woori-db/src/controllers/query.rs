@@ -10,11 +10,12 @@ use wql::{ToSelect, Types, Wql};
 
 use crate::{
     actors::{
+        encrypts::VerifyEncryption,
         state::State,
         when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange},
     },
     core::pretty_config_output,
-    model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
+    model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
 };
 
 use super::clauses::select_where;
@@ -22,6 +23,7 @@ use super::clauses::select_where;
 pub async fn wql_handler(
     body: String,
     local_data: DataLocalContext,
+    encryption: DataEncryptContext,
     actor: DataExecutor,
 ) -> impl Responder {
     let query = Wql::from_str(&body);
@@ -60,6 +62,9 @@ pub async fn wql_handler(
         Ok(Wql::SelectWhere(entity_name, args_to_select, clauses)) => {
             select_where(entity_name, args_to_select, clauses, local_data, actor).await
         }
+        Ok(Wql::CheckValue(entity, uuid, content)) => {
+            check_value_controller(entity, uuid, content, local_data, encryption, actor).await
+        }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
     };
@@ -68,6 +73,58 @@ pub async fn wql_handler(
         Err(e) => HttpResponse::BadRequest().body(e.to_string()),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
+}
+
+pub async fn check_value_controller(
+    entity: String,
+    uuid: Uuid,
+    content: HashMap<String, String>,
+    local_data: DataLocalContext,
+    encryption: DataEncryptContext,
+    actor: DataExecutor,
+) -> Result<String, Error> {
+    if let Ok(guard) = encryption.lock() {
+        if guard.contains_key(&entity) {
+            let encrypts = guard.get(&entity).unwrap();
+            let non_encrypt_keys = content
+                .iter()
+                .filter(|(k, _)| !encrypts.contains(&(*k).to_string()))
+                .map(|(k, _)| k.to_owned())
+                .collect::<Vec<String>>();
+
+            if !non_encrypt_keys.is_empty() {
+                return Err(Error::CheckNonEncryptedKeys(non_encrypt_keys));
+            }
+        }
+    };
+
+    let local_data = {
+        let local_data = if let Ok(guard) = local_data.lock() {
+            guard
+        } else {
+            return Err(Error::LockData);
+        };
+        if !local_data.contains_key(&entity) {
+            return Err(Error::EntityNotCreated(entity));
+        }
+        local_data.clone()
+    };
+
+    let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let state = actor.send(State(previous_state_str)).await??;
+    let keys = content
+        .keys()
+        .map(ToOwned::to_owned)
+        .collect::<HashSet<String>>();
+    let filtered_state: HashMap<String, Types> = state
+        .into_iter()
+        .filter(|(k, _)| keys.contains(k))
+        .collect();
+    let results = actor
+        .send(VerifyEncryption::new(filtered_state, content))
+        .await??;
+    Ok(results)
 }
 
 async fn select_all_when_range_controller(

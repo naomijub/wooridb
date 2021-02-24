@@ -13,6 +13,7 @@ clippy:
 lint: fmt clippy
 
 test:
+	rm -rf data/*.log
 	cargo test -- --nocapture
 	cargo test --release -- --ignored auth::controllers::test::bad_request_if_user_password_is_wrong
 	cargo test --release -- --ignored auth::controllers::test::create_new_user_ok
@@ -61,7 +62,7 @@ test:
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_update_content_encrypt_post_err
 	rm -rf data/*.log
-	cargo test -- --ignored controllers::tx_test::test_check_encrypt_post_ok
+	cargo test -- --ignored controllers::query_test::test_check_encrypt_post_ok
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::clauses_test::simple_where_clause_eq
 	rm -rf data/*.log
