@@ -415,7 +415,7 @@ mod test_match {
     #[test]
     fn match_update_set_entity() {
         let wql = Wql::from_str(
-            " MATCH ALL(a == 1, b >= 3, c != \"hello\", d < 7)
+            " MATCH ALL(a == 1, b >= 3, c != \"hello\", d < 7,)
         UPDATE this_entity 
         SET {
             a: 123,
