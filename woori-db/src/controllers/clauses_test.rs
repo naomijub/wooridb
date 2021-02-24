@@ -344,6 +344,75 @@ async fn clause_or() {
     clear();
 }
 
+#[ignore]
+#[actix_rt::test]
+async fn clause_like() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_like")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 3, b: \"hello world\", c: 45.6,} INTO test_like")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: \"Julia Naomi\", c: 57.6,} INTO test_like")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: \"Otavio Pace\", c: 5.6,} INTO test_like")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("INSERT {a: 123, b: \"hello johnny\", c: 4345.6,} INTO test_like")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(
+            "Select * From test_like WHERE {
+            ?* test_like:b ?b,
+            (like ?b \"hello%\"),
+        }",
+        )
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+    let body = resp.take_body().as_str().to_string();
+    let result: BTreeMap<Uuid, HashMap<String, Types>> = ron::de::from_str(&body).unwrap();
+
+    assert!(result.iter().count() == 2);
+    if let Some((_, map)) = result.iter().last() {
+        assert!(match map["b"].clone() {
+            Types::String(s) => s.starts_with("hello"),
+            _ => false,
+        })
+    } else {
+        assert!(false);
+    }
+
+    clear();
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

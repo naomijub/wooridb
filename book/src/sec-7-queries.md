@@ -230,7 +230,6 @@ Example response:
 
 #### Issues:
 - [ ] [Something wrong with `or`](https://github.com/naomijub/wooridb/issues/77)
-- [ ] [Like is failing for non perfect matches](https://github.com/naomijub/wooridb/issues/78)
 
 ### SELECT TODOs - Functions that could/will be implemented from Relation Algebra:
 
