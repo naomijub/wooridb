@@ -67,14 +67,15 @@ async fn filter_where_clauses(
                                     if let (Types::String(content), Types::String(regex)) =
                                         (v, value)
                                     {
+                                        let pattern = regex.replace("%", "");
                                         if regex.starts_with('%') && regex.ends_with('%') {
-                                            content.contains(&regex[1..regex.len() - 1])
+                                            content.contains(&pattern)
                                         } else if regex.starts_with('%') {
-                                            content.ends_with(&regex[..regex.len() - 1])
+                                            content.ends_with(&pattern)
                                         } else if regex.ends_with('%') {
-                                            content.starts_with(&regex[1..])
+                                            content.starts_with(&pattern)
                                         } else {
-                                            content.contains(&regex[..])
+                                            content.contains(&pattern)
                                         }
                                     } else {
                                         false

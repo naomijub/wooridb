@@ -94,6 +94,8 @@ jobs:
         cargo test -- --ignored controllers::clauses_test::clause_ge_le
         rm -rf data/*.log
         cargo test -- --ignored controllers::clauses_test::clause_or
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::clauses_test::clause_like
 
   build_feature_tests:
     runs-on: ubuntu-latest
