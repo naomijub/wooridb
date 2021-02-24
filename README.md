@@ -354,7 +354,7 @@ Checks for encrypted data validity. It requires an entity tree name after `FROM`
 
 ## TODOS
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
-- [ ] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54) [First book chapters](https://github.com/naomijub/wooridb/pull/71)
+- [x] Docs [issue 31](https://github.com/naomijub/wooridb/issues/31). PRs [README](https://github.com/naomijub/wooridb/pull/54) [First book chapters](https://github.com/naomijub/wooridb/pull/71)
 - [ ] Docker
 - [ ] Benchmarks. PRs [61](https://github.com/naomijub/wooridb/pull/61)
 
