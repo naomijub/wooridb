@@ -11,6 +11,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
         .to_string();
     let mut conditions: Vec<MatchCondition> = Vec::new();
     base.split(',')
+        .filter(|l| !l.is_empty())
         .map(|l| {
             let k = l
                 .split(' ')
