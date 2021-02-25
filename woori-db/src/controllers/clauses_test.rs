@@ -317,12 +317,12 @@ async fn clause_or() {
         .header("Content-Type", "application/wql")
         .set_payload(
             "Select * From test_or WHERE {
-            ?* test_or:a ?a,
+            ?* test_or:b ?b,
             ?* test_or:c ?c,
-            (== ?a 123),
             (or
-                (>= c 4300.0)
-                (< c 6.9)
+                (>= ?c 4300.0)
+                (< ?c 6.9)
+                (like ?b \"%Naomi\")
             ),
         }",
         )
@@ -333,13 +333,28 @@ async fn clause_or() {
     let body = resp.take_body().as_str().to_string();
     let result: BTreeMap<Uuid, HashMap<String, Types>> = ron::de::from_str(&body).unwrap();
 
-    assert!(result.iter().count() == 2);
+    assert!(result.iter().count() == 3);
     if let Some((_, map)) = result.iter().last() {
-        assert_eq!(map["a"], Types::Integer(123));
-        assert!(map["c"] == Types::Float(5.6) || map["c"] == Types::Float(4345.6));
+        assert!(
+            map["c"] == Types::Float(5.6)
+                || map["c"] == Types::Float(4345.6)
+                || map["c"] == Types::Float(57.6)
+        );
     } else {
         assert!(false);
     }
+
+    assert!(
+        result
+            .iter()
+            .filter(|(_, c)| if let Some(Types::String(s)) = c.get("b") {
+                s.starts_with("Julia")
+            } else {
+                false
+            })
+            .count()
+            == 1
+    );
 
     clear();
 }

@@ -130,9 +130,6 @@ Example response:
 )
 ```
 
-### Issues:
-- [ ] [Last argument does not support ending comma](https://github.com/naomijub/wooridb/issues/74)
-
 ## `DELETE`
 [DELETE WQL Reference](./sec-4-wql.md#delete)
 

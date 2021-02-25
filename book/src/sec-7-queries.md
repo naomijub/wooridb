@@ -228,9 +228,6 @@ Example response:
 #### TODOs:
 - [ ] Support temporality for where clause
 
-#### Issues:
-- [ ] [Something wrong with `or`](https://github.com/naomijub/wooridb/issues/77)
-
 ### SELECT TODOs - Functions that could/will be implemented from Relation Algebra:
 
 - [ ] Projection
