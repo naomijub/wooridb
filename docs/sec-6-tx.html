@@ -167,7 +167,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#transactions" id="transactions">Transactions</a></h1>
+                        <h1 id="transactions"><a class="header" href="#transactions">Transactions</a></h1>
 <p>Transaction is the name of all operations that change the database state, like <code>CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/tx</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/tx -d 'CREATE ENTITY my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
 <blockquote>
 <p><strong>Reminder</strong>
@@ -175,7 +175,7 @@ A comma is required at the end of every data structure representation.
 Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>. 
 No need for <code>;</code> at the end of each expression.</p>
 </blockquote>
-<h2><a class="header" href="#create-entity" id="create-entity"><code>CREATE ENTITY</code></a></h2>
+<h2 id="create-entity"><a class="header" href="#create-entity"><code>CREATE ENTITY</code></a></h2>
 <p><a href="./sec-4-wql.html#create">CREATE WQL Reference</a></p>
 <p>Similar to <code>CREATE TABLE</code> in SQL, it creates an entity tree which matches the table name. It requires an entity name like <code>my_entity_name</code> after <code>CREATE ENTITY</code>. </p>
 <p>Example request: </p>
@@ -200,7 +200,7 @@ bench_cost_4       ... bench:     795,814 ns/iter (+/- 42,838)
 bench_cost_default ... bench: 195,344,338 ns/iter (+/- 8,329,675)
 * Note that I don't go above 14 as it takes too long. However, it is way safer, it is a trade-off. 
 </code></pre>
-<h2><a class="header" href="#insert" id="insert"><code>INSERT</code></a></h2>
+<h2 id="insert"><a class="header" href="#insert"><code>INSERT</code></a></h2>
 <p><a href="./sec-4-wql.html#insert">INSERT WQL Reference</a></p>
 <p>Inserts a <strong>HashMap&lt;String, <a href="./sec-4-wql.html#entity-map-value-types">Types</a>&gt;</strong>  into the entity tree key previously created (<code>my_entity_name</code>). This request returns a <code>Uuid</code> containing the entity id. </p>
 <p>Example request: </p>
@@ -227,9 +227,9 @@ INTO my_entity_name
 }}
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#update" id="update"><code>UPDATE</code></a></h2>
+<h2 id="update"><a class="header" href="#update"><code>UPDATE</code></a></h2>
 <p>Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:</p>
-<h3><a class="header" href="#update-set" id="update-set"><code>UPDATE SET</code></a></h3>
+<h3 id="update-set"><a class="header" href="#update-set"><code>UPDATE SET</code></a></h3>
 <p><a href="./sec-4-wql.html#update-set">UPDATE SET WQL Reference</a>
 <code>SET</code> updates defines the current value of the entity map to the ones being passed, so if your entity map is <code>{a: 123, b: 12.5,}</code> and your set update has the hashmap <code>{a: 432, c: \&quot;hello\&quot;,}</code>, the current state of the entity map will be <code>{a: 432, b: 12.5, c: \&quot;hello\&quot;,}</code>. </p>
 <p>Example request:</p>
@@ -249,7 +249,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#update-content" id="update-content"><code>UPDATE CONTENT</code></a></h3>
+<h3 id="update-content"><a class="header" href="#update-content"><code>UPDATE CONTENT</code></a></h3>
 <p><a href="./sec-4-wql.html#update-content">UPDATE CONTENT WQL Reference</a>
 <code>CONTENT</code> updates are a way to add numerical values and concatenate Strings, so if your entity map is <code>{a: 432, c: \&quot;hello\&quot;,}</code> and your content update has the hashmap <code>{a: -5, c: \&quot;world\&quot;, b: 12.5}</code> the current state of the entity map will be <code>{a: 427, c: \&quot;helloworld\&quot;, b: 12.5}</code>. </p>
 <p>Example request:</p>
@@ -269,7 +269,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#match-update" id="match-update"><code>MATCH UPDATE</code></a></h2>
+<h2 id="match-update"><a class="header" href="#match-update"><code>MATCH UPDATE</code></a></h2>
 <p><a href="./sec-4-wql.html#match-update">MATCH UPDATE WQL Reference</a></p>
 <p>Updates entity only if precondition condition is matched. This transaction is significantly slower than other updates.</p>
 <p>Example request:</p>
@@ -290,12 +290,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#issues" id="issues">Issues:</a></h3>
-<ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/74">Last argument does not support ending comma</a></li>
-</ul>
-<h2><a class="header" href="#delete" id="delete"><code>DELETE</code></a></h2>
+<h2 id="delete"><a class="header" href="#delete"><code>DELETE</code></a></h2>
 <p><a href="./sec-4-wql.html#delete">DELETE WQL Reference</a></p>
 <p>Deletes the last entity event for an ID, that is, it deletes the last state of an entity map. The deleted state is preserved in the database but cannot be queried anymore.</p>
 <p>If you have, for example, one update on your entity, it will roll back to the <code>INSERT</code> event. 
@@ -314,14 +309,14 @@ However, if you have only an <code>INSERT</code> event then your state will beco
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#todos" id="todos">TODOs:</a></h3>
+<h3 id="todos"><a class="header" href="#todos">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Delete entity with ID at transaction-time</li>
 </ul>
-<h2><a class="header" href="#evict" id="evict"><code>EVICT</code></a></h2>
+<h2 id="evict"><a class="header" href="#evict"><code>EVICT</code></a></h2>
 <p><a href="./sec-4-wql.html#evict">EVICT WQL Reference</a></p>
-<h3><a class="header" href="#evict-entity-id" id="evict-entity-id"><code>EVICT ENTITY ID</code>:</a></h3>
+<h3 id="evict-entity-id"><a class="header" href="#evict-entity-id"><code>EVICT ENTITY ID</code>:</a></h3>
 <p>Removes all occurrences of an entity map with the given ID. </p>
 <p>Example request </p>
 <pre><code class="language-sql">EVICT 00d025c9-eda8-4190-a33a-29998bd77bd3 from my_entity_name
@@ -340,7 +335,7 @@ Delete entity with ID at transaction-time</li>
 <blockquote>
 <p>For now it only deletes the access to the entity history.</p>
 </blockquote>
-<h3><a class="header" href="#evict-entity" id="evict-entity"><code>EVICT ENTITY</code>:</a></h3>
+<h3 id="evict-entity"><a class="header" href="#evict-entity"><code>EVICT ENTITY</code>:</a></h3>
 <p>Evicts all entity ids registries from entity tree and removes entity tree key, which means entity tree does not contain the key for the evicted entity: Similar to SQL <code>DROP TABLE &lt;entity&gt;</code>. </p>
 <p>Example request: </p>
 <pre><code class="language-sql">EVICT my_entity

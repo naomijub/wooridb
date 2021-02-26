@@ -167,7 +167,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#queries" id="queries">Queries</a></h1>
+                        <h1 id="queries"><a class="header" href="#queries">Queries</a></h1>
 <p>Query is the name of all operations that read the database, like <code>SELECT, CHECK</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/query</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/query -d 'SELECT * FROM my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
 <blockquote>
 <p><strong>Reminder</strong>
@@ -175,11 +175,11 @@ A comma is required at the end of every data structure representation.
 Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>. 
 No need for <code>;</code> at the end of each expression.</p>
 </blockquote>
-<h2><a class="header" href="#check" id="check"><code>CHECK</code></a></h2>
+<h2 id="check"><a class="header" href="#check"><code>CHECK</code></a></h2>
 <p><a href="./sec-4-wql.html#check">CHECK WQL Reference</a></p>
 <p>Checks for encrypted data, in entity map, validity. It requires an entity tree name after <code>FROM</code> and an entity id as Uuid after <code>ID</code>. This transaction only works with keys that are encrypted and it serves to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data. </p>
 <p>Considering entity tree key <code>my_entity_name</code> with entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> with entity map <code>{pswd: Hash(&quot;my-password&quot;), name: &quot;Julia&quot;}</code></p>
-<h3><a class="header" href="#example-1" id="example-1">Example 1:</a></h3>
+<h3 id="example-1"><a class="header" href="#example-1">Example 1:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;my-password\&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
@@ -191,7 +191,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </span>{&quot;pswd&quot;: true,}
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#exmample-2" id="exmample-2">Exmample 2:</a></h3>
+<h3 id="exmample-2"><a class="header" href="#exmample-2">Exmample 2:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;my-password\&quot;, ssn: &quot;1234&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
@@ -206,7 +206,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#example-3" id="example-3">Example 3:</a></h3>
+<h3 id="example-3"><a class="header" href="#example-3">Example 3:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;your-password\&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
@@ -218,13 +218,13 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </span>{&quot;pswd&quot;: false,}
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#select" id="select"><code>SELECT</code></a></h2>
+<h2 id="select"><a class="header" href="#select"><code>SELECT</code></a></h2>
 <p><a href="./sec-4-wql.html#select">SELECT WQL Reference</a></p>
 <p>This is the way to query entities from WooriDB. Similar to SQL and SparQL <code>SELECT</code>. There are several different keywords that can be combined with <code>SELECT</code>, a few examples are:</p>
 <blockquote>
 <p><code>*</code> and <code>#{keys...}</code> can be used in all select modes.</p>
 </blockquote>
-<h3><a class="header" href="#selecting-all-entity-map-keys-from-entity-tree-key" id="selecting-all-entity-map-keys-from-entity-tree-key">SELECTing all entity map keys FROM entity tree key:</a></h3>
+<h3 id="selecting-all-entity-map-keys-from-entity-tree-key"><a class="header" href="#selecting-all-entity-map-keys-from-entity-tree-key">SELECTing all entity map keys FROM entity tree key:</a></h3>
 <p>Same as SQL using the token <code>*</code> will defined that all keys in the entity map will be returned. The query <code>SELECT * FROM entity_name</code> selects  all entity ids and entity maps found inside entity tree key <code>entity_name</code>. It is equivalent to SQL's <code>Select * From table</code>. </p>
 <p>Example request: <code>SELECT * from my_entity_name</code>. </p>
 <p>Example response:</p>
@@ -244,7 +244,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-a-set-of-entity-map-keys-from-entity-tree-key" id="selecting-a-set-of-entity-map-keys-from-entity-tree-key">SELECTing a set of entity map keys FROM entity tree key:</a></h3>
+<h3 id="selecting-a-set-of-entity-map-keys-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entity-map-keys-from-entity-tree-key">SELECTing a set of entity map keys FROM entity tree key:</a></h3>
 <p>Differently from SQL, WQL requires the keys to be inside a set like <code>#{a, b, c,}</code>, which will return only the keys <code>a, b, c</code>. It is equivalent to <code>SELECT a, b, c FROM table</code>. </p>
 <p>Example request: <code>SELECT #{a, b, c,} FROM my_entity_name</code>. </p>
 <p>Example response:</p>
@@ -261,7 +261,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-one-entity-map-from-entity-tree-key" id="selecting-one-entity-map-from-entity-tree-key">SELECTing one entity map FROM entity tree key:</a></h3>
+<h3 id="selecting-one-entity-map-from-entity-tree-key"><a class="header" href="#selecting-one-entity-map-from-entity-tree-key">SELECTing one entity map FROM entity tree key:</a></h3>
 <p>Select one entity map (by its ID) from entity tree <code>my_entity</code>. By including the key <code>ID</code> after the <code>FROM entity_name</code> it is possible to select a single entity. The content for <code>ID</code>is the entity id's Uuid. It is equivalent to SQL's <code>Select * From table WHERE id = &lt;uuid&gt;</code>. </p>
 <p>Example request <code>SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code>. </p>
 <p>Example response:</p>
@@ -269,7 +269,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <p>It will return only the entity map contained inside inside entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.
 <code>{a: 123, b: 43.3, c: \&quot;hello\&quot;, d: \&quot;world\&quot;,}</code>.</p>
 </blockquote>
-<h3><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key" id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
+<h3 id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
 <p>Select a few entities maps (by their IDs) from entity tree <code>my_entity</code>. Key <code>IN</code> receives a set of Uuids</p>
 <p>Example request: </p>
 <pre><code class="language-sql">SELECT #{a, b, c,} 
@@ -288,7 +288,7 @@ IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5e
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key" id="selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key">SELECTing the last entity map for entity id at DATETIME<UTC> FROM entity tree key:</a></h3>
+<h3 id="selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key"><a class="header" href="#selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key">SELECTing the last entity map for entity id at DATETIME<UTC> FROM entity tree key:</a></h3>
 <p>Select an entity on a defined past day using the <code>WHEN AT</code> keys.  Key <code>WHEN AT</code> is the date to search. Time will be discarded. The <code>ID</code> field can be used before <code>WHEN</code> to define a specific entity id, <code>IDS IN</code> is not supported. Date format should be <code>&quot;2014-11-28T21:00:09+09:00&quot;</code> or <code>&quot;2014-11-28T21:00:09Z&quot;</code>. </p>
 <p>Example requests: </p>
 <ul>
@@ -297,12 +297,12 @@ IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5e
 </ul>
 <p>Example response:
 <code>{a: 34, b: 4.3, c: \&quot;hello\&quot;, d: \&quot;Julia\&quot;,}</code></p>
-<h3><a class="header" href="#todos" id="todos">TODOs:</a></h3>
+<h3 id="todos"><a class="header" href="#todos">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Support <code>IDS IN</code></li>
 </ul>
-<h3><a class="header" href="#selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc" id="selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc">SELECTing all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:</a></h3>
+<h3 id="selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc"><a class="header" href="#selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc">SELECTing all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:</a></h3>
 <p>Select all occurrences of an entity id from entity tree <code>entity_name</code> in a time range. The time range must be on the same day as <code>WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z</code>. </p>
 <ul>
 <li>Key <code>WHEN</code> defines it as a temporal query.</li>
@@ -333,13 +333,13 @@ WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied" id="selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied">SELECTing entities ids and maps FROM entity tree key WHERE conditions are satisfied</a></h3>
+<h3 id="selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied"><a class="header" href="#selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied">SELECTing entities ids and maps FROM entity tree key WHERE conditions are satisfied</a></h3>
 <p>This is probably the most different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. Selects entities ids and maps with positive WHERE clauses. Key <code>WHERE</code> receives all clauses inside a <code>{...}</code> block.</p>
 <p>To use <code>select</code> with the <code>where</code> clause you can use the following expression:</p>
 <ul>
 <li><code>SELECT * FROM my_entity WHERE {&lt;clauses&gt;}</code> </li>
 </ul>
-<h4><a class="header" href="#example-1-1" id="example-1-1">Example 1:</a></h4>
+<h4 id="example-1-1"><a class="header" href="#example-1-1">Example 1:</a></h4>
 <p>Example Request:</p>
 <pre><code class="language-sql">SELECT * FROM test_entity 
 WHERE {
@@ -369,7 +369,7 @@ WHERE {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h4><a class="header" href="#example-2" id="example-2">Example 2:</a></h4>
+<h4 id="example-2"><a class="header" href="#example-2">Example 2:</a></h4>
 <p>Example request:</p>
 <pre><code class="language-sql">SELECT * FROM test_entity 
 WHERE {
@@ -391,17 +391,12 @@ WHERE {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h4><a class="header" href="#todos-1" id="todos-1">TODOs:</a></h4>
+<h4 id="todos-1"><a class="header" href="#todos-1">TODOs:</a></h4>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Support temporality for where clause</li>
 </ul>
-<h4><a class="header" href="#issues" id="issues">Issues:</a></h4>
-<ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/77">Something wrong with <code>or</code></a></li>
-</ul>
-<h3><a class="header" href="#select-todos---functions-that-couldwill-be-implemented-from-relation-algebra" id="select-todos---functions-that-couldwill-be-implemented-from-relation-algebra">SELECT TODOs - Functions that could/will be implemented from Relation Algebra:</a></h3>
+<h3 id="select-todos---functions-that-couldwill-be-implemented-from-relation-algebra"><a class="header" href="#select-todos---functions-that-couldwill-be-implemented-from-relation-algebra">SELECT TODOs - Functions that could/will be implemented from Relation Algebra:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Projection</li>

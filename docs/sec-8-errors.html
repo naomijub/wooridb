@@ -167,10 +167,10 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#error-messages" id="error-messages">Error Messages</a></h1>
+                        <h1 id="error-messages"><a class="header" href="#error-messages">Error Messages</a></h1>
 <p>Woori DB has a variety of Error messages, from WQL when parsing the transaction or the query to some internal database errors. Here are listed expected messages:</p>
-<h2><a class="header" href="#wooridb-errors" id="wooridb-errors">WooriDB Errors:</a></h2>
-<h3><a class="header" href="#example-errors-as-response" id="example-errors-as-response">Example errors as response:</a></h3>
+<h2 id="wooridb-errors"><a class="header" href="#wooridb-errors">WooriDB Errors:</a></h2>
+<h3 id="example-errors-as-response"><a class="header" href="#example-errors-as-response">Example errors as response:</a></h3>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -180,7 +180,7 @@
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#error-types" id="error-types">Error types:</a></h3>
+<h3 id="error-types"><a class="header" href="#error-types">Error types:</a></h3>
 <ul>
 <li><code>Io(io::Error)</code> - Failed to read or write file.</li>
 <li><code>QueryFormat(String)</code> - WQL error.</li>
@@ -209,7 +209,7 @@
 <li><code>FailedToCreateUser</code> - Failed to create new user.</li>
 <li><code>Unknown</code> - Unknown error.</li>
 </ul>
-<h2><a class="header" href="#wql-parsing" id="wql-parsing">WQL Parsing</a></h2>
+<h2 id="wql-parsing"><a class="header" href="#wql-parsing">WQL Parsing</a></h2>
 <ul>
 <li>
 <p><code>Query symbol error</code>: </p>
@@ -301,7 +301,7 @@
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#issues" id="issues">Issues:</a></h2>
+<h2 id="issues"><a class="header" href="#issues">Issues:</a></h2>
 <ul>
 <li><input disabled="" type="checkbox"/>
 <a href="https://github.com/naomijub/wooridb/issues/79">Split <code>AuthBadRequest</code> into <code>AuthenticationBadRequest</code> and <code>AuthorizationBadRequest</code></a></li>

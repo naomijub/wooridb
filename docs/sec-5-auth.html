@@ -167,7 +167,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#authorization-and-authentication" id="authorization-and-authentication">Authorization and Authentication</a></h1>
+                        <h1 id="authorization-and-authentication"><a class="header" href="#authorization-and-authentication">Authorization and Authentication</a></h1>
 <p>Authentication and authorization only work with release mode, so <code>cargo run --release</code> is required. </p>
 <p>Some environment variables are also required:</p>
 <pre><code>AUTH_HASHING_COST=8 
@@ -179,7 +179,7 @@ ADMIN_PASSWORD=your_password
 <li><code>ADMIN</code> is the admin's user id.</li>
 <li><code>ADMIN_PASSWORD</code> is the admin's user password.</li>
 </ul>
-<h2><a class="header" href="#creating-new-users" id="creating-new-users">Creating new users</a></h2>
+<h2 id="creating-new-users"><a class="header" href="#creating-new-users">Creating new users</a></h2>
 <ul>
 <li><code>ADMIN</code> is the only user role capable of creating new users. For now there can only be one <code>ADMIN</code>.</li>
 </ul>
@@ -195,7 +195,7 @@ ADMIN_PASSWORD=your_password
 </code></pre>
 <p>User information consists of the user's password to be used and the user's roles. Remember to always put <code>,</code> at the end. 
 Response to this request will be <code>(user_id: \&quot;&lt;some-uuid&gt;\&quot;,)</code>, containing the user's unique ID.</p>
-<h3><a class="header" href="#available-user-roles-are" id="available-user-roles-are">Available user roles are:</a></h3>
+<h3 id="available-user-roles-are"><a class="header" href="#available-user-roles-are">Available user roles are:</a></h3>
 <ul>
 <li><code>ADMIN</code> - works primarily at <code>/auth/createUser</code>.</li>
 <li><code>USER</code> - works on all <code>/wql/query</code>, <code>/wql/tx</code> and <code>/auth/putUserSession</code>.</li>
@@ -203,15 +203,15 @@ Response to this request will be <code>(user_id: \&quot;&lt;some-uuid&gt;\&quot;
 <li><code>READ</code> - only works on <code>/wql/query</code> and <code>/auth/putUserSession</code>.</li>
 <li>New roles to be added as needed.</li>
 </ul>
-<h3><a class="header" href="#getting-a-session-token" id="getting-a-session-token">Getting a session token</a></h3>
+<h3 id="getting-a-session-token"><a class="header" href="#getting-a-session-token">Getting a session token</a></h3>
 <p>To make a request at WQL endpoints you need a session token that will expire within 3600 seconds. To retrieve a session token you need to <code>PUT</code> at endpoint <code>/auth/putUserSession</code> your user credentials as follows (in RON format):</p>
 <pre><code class="language-ron">(id: &quot;&lt;user_id&gt;&quot;, user_password: &quot;&lt;user_password&gt;&quot;,)
 </code></pre>
 <p>Response will be a plain/text with your token.</p>
-<h3><a class="header" href="#making-auth-requests-to-wqltx-and-wqlquery" id="making-auth-requests-to-wqltx-and-wqlquery">Making auth requests to <code>/wql/tx</code> and <code>/wql/query</code>.</a></h3>
+<h3 id="making-auth-requests-to-wqltx-and-wqlquery"><a class="header" href="#making-auth-requests-to-wqltx-and-wqlquery">Making auth requests to <code>/wql/tx</code> and <code>/wql/query</code>.</a></h3>
 <p>To avoid authentication and authorization errors, add your token to the authorization bearer header, <code>Authorization: Bearer &lt;your session token&gt;</code>. 
 Your user needs the correct session token and the correct role for this request.</p>
-<h3><a class="header" href="#todos" id="todos">TODOs:</a></h3>
+<h3 id="todos"><a class="header" href="#todos">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Adding other admins and removing admins is not yet implemented.</li>

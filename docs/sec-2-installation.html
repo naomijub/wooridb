@@ -167,24 +167,24 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#installation-and-important-information" id="installation-and-important-information">Installation and Important Information</a></h1>
-<h2><a class="header" href="#installation" id="installation">Installation</a></h2>
+                        <h1 id="installation-and-important-information"><a class="header" href="#installation-and-important-information">Installation and Important Information</a></h1>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
 <p>To run WooriDB it is necessary to have Rust installed in the machine. There are two ways to do this:</p>
 <ol>
 <li>Go to rustup.rs and copy the command there, for unix it is <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code>.</li>
 <li>Clone WooriDB and execute <code>make setup</code>.</li>
 </ol>
-<h3><a class="header" href="#executing-wooridb" id="executing-wooridb">Executing WooriDB</a></h3>
+<h3 id="executing-wooridb"><a class="header" href="#executing-wooridb">Executing WooriDB</a></h3>
 <ul>
 <li><code>Release mode</code>: <code>make run</code> in project root.</li>
 <li><code>Debug mode</code>: <code>make debug</code> in project root.</li>
 </ul>
-<h2><a class="header" href="#important-information" id="important-information">Important Information</a></h2>
+<h2 id="important-information"><a class="header" href="#important-information">Important Information</a></h2>
 <ul>
 <li>Responses are in <a href="https://github.com/ron-rs/ron"><code>RON</code></a> format.</li>
 <li><code>BLOB</code> will not be supported. Check out <a href="https://www.microsoft.com/en-us/research/publication/to-blob-or-not-to-blob-large-object-storage-in-a-database-or-a-filesystem/">To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem</a>.</li>
 </ul>
-<h3><a class="header" href="#configurations" id="configurations">Configurations</a></h3>
+<h3 id="configurations"><a class="header" href="#configurations">Configurations</a></h3>
 <ul>
 <li>To run the project in <code>debug</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT</code>. Default values are:</li>
 </ul>

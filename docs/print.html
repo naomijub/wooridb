@@ -169,11 +169,11 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>WooriDB is a general purpose (<strong>EXPERIMENTAL</strong>) time serial database, which means it contains all entities registries indexed by DateTime and <code>Uuid</code>. It is schemaless, deep key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. </p>
-<h2><a class="header" href="#name-origin" id="name-origin">Name origin</a></h2>
+<h2 id="name-origin"><a class="header" href="#name-origin">Name origin</a></h2>
 <p><code>Woori</code> means <code>our</code>, in Korean, and although I developed this DB initially alone, it is in my culture and my hunsband's culture to call everything that is done for our communities and by our communities <strong>ours</strong>. I chose <em>Woori</em> instead of <em>shelanu</em> or <em>bizdin</em> because it easier to pronunce.</p>
-<h2><a class="header" href="#project-inspirations" id="project-inspirations">Project inspirations</a></h2>
+<h2 id="project-inspirations"><a class="header" href="#project-inspirations">Project inspirations</a></h2>
 <ul>
 <li><a href="https://github.com/juxt/crux">Crux</a> a general purpose bitemporal graph query database with support for SQL and Datalog. It was the ideallogical source of WooriDB. I had developed a rust client called <a href="https://github.com/naomijub/transistor">Transistor</a> which gave me the basis of what I wanted to have in WooriDB.</li>
 <li><a href="https://www.datomic.com/">Datomic</a> is a transactional database with a flexible data model, temporality and rich queries. I worked with Datomic at <a href="https://nubank.com.br/sobre-nos/">Nubank</a> and it is the reason I found Juxt/Crux. </li>
@@ -184,30 +184,30 @@
 <li>Book <a href="https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&amp;dchild=1&amp;keywords=Designing+Data%E2%80%93Intensive+Applications&amp;qid=1612831724&amp;s=books&amp;sr=1-1">Designing Data Intensive Application</a></li>
 <li>Professor <a href="http://www.cs.cmu.edu/%7Epavlo/">Andy Pavlo</a> Database Design Course. </li>
 </ul>
-<h2><a class="header" href="#naming-conventios" id="naming-conventios">Naming conventios:</a></h2>
+<h2 id="naming-conventios"><a class="header" href="#naming-conventios">Naming conventios:</a></h2>
 <ul>
 <li>Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.</li>
 <li>Entity ID is the id of an entity inside Entity tree.</li>
 <li>Entity map is the content of and entity associated with the entity id.</li>
 </ul>
-<h1><a class="header" href="#installation-and-important-information" id="installation-and-important-information">Installation and Important Information</a></h1>
-<h2><a class="header" href="#installation" id="installation">Installation</a></h2>
+<h1 id="installation-and-important-information"><a class="header" href="#installation-and-important-information">Installation and Important Information</a></h1>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
 <p>To run WooriDB it is necessary to have Rust installed in the machine. There are two ways to do this:</p>
 <ol>
 <li>Go to rustup.rs and copy the command there, for unix it is <code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh</code>.</li>
 <li>Clone WooriDB and execute <code>make setup</code>.</li>
 </ol>
-<h3><a class="header" href="#executing-wooridb" id="executing-wooridb">Executing WooriDB</a></h3>
+<h3 id="executing-wooridb"><a class="header" href="#executing-wooridb">Executing WooriDB</a></h3>
 <ul>
 <li><code>Release mode</code>: <code>make run</code> in project root.</li>
 <li><code>Debug mode</code>: <code>make debug</code> in project root.</li>
 </ul>
-<h2><a class="header" href="#important-information" id="important-information">Important Information</a></h2>
+<h2 id="important-information"><a class="header" href="#important-information">Important Information</a></h2>
 <ul>
 <li>Responses are in <a href="https://github.com/ron-rs/ron"><code>RON</code></a> format.</li>
 <li><code>BLOB</code> will not be supported. Check out <a href="https://www.microsoft.com/en-us/research/publication/to-blob-or-not-to-blob-large-object-storage-in-a-database-or-a-filesystem/">To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem</a>.</li>
 </ul>
-<h3><a class="header" href="#configurations" id="configurations">Configurations</a></h3>
+<h3 id="configurations"><a class="header" href="#configurations">Configurations</a></h3>
 <ul>
 <li>To run the project in <code>debug</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT</code>. Default values are:</li>
 </ul>
@@ -217,7 +217,7 @@ PORT=1438
 <ul>
 <li>To run the project in <code>release</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD</code>. There are no default values for <code>AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD</code>.</li>
 </ul>
-<h1><a class="header" href="#features" id="features">Features</a></h1>
+<h1 id="features"><a class="header" href="#features">Features</a></h1>
 <ul>
 <li>Sintax inspired by SparQL and Crux's datalog.</li>
 <li>Entities are indexed by date(time).</li>
@@ -299,13 +299,13 @@ Division</li>
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#naming-conventios-1" id="naming-conventios-1">Naming conventios:</a></h2>
+<h2 id="naming-conventios-1"><a class="header" href="#naming-conventios-1">Naming conventios:</a></h2>
 <ul>
 <li>Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.</li>
 <li>Entity ID is the id of an entity inside Entity tree.</li>
 <li>Entity map is the content of and entity associated with the entity id.</li>
 </ul>
-<h1><a class="header" href="#woori-query-language" id="woori-query-language">Woori Query Language</a></h1>
+<h1 id="woori-query-language"><a class="header" href="#woori-query-language">Woori Query Language</a></h1>
 <p><a href="https://github.com/naomijub/wooridb/tree/main/wql">Woori Query language</a> or <code>WQL</code> is WooriDB's Query Language and it is inspired by SparQL, Datalog and SQL. Its main features are:</p>
 <p><strong>Transactions</strong></p>
 <ul>
@@ -339,8 +339,8 @@ Division</li>
 <blockquote>
 <p>ALL DATA STRUCTURES HASHMAPS, HASHSETS AND LIST MUST CONTAIN A <code>,</code> AFTER EACH ELEMENT. Example <code>#{name, ssn,}</code> is valid but <code>#{name, ssn}</code> is not valid.</p>
 </blockquote>
-<h2><a class="header" href="#examples" id="examples">Examples</a></h2>
-<h3><a class="header" href="#create" id="create">CREATE</a></h3>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="create"><a class="header" href="#create">CREATE</a></h3>
 <p>Creates an entity tree key.</p>
 <ul>
 <li><code>CREATE ENTITY my_entity</code> this will create an entity tree key named <code>my_entity</code>, in SQL terms it means <code>CREATE TABLE my_entity</code>.</li>
@@ -348,22 +348,22 @@ Division</li>
 <li><code>CREATE ENTITY my_entity ENCRYPTS #{pswd,}</code> the entity tree key named <code>my_entity</code> will encrypt the entities keys that are <code>pswd</code>. The hashing cost of the encrypt is defined by the environment variable <code>HASHING_COST</code>, recommended is between 10 and 14.</li>
 <li>Encryted keys cannot be uniques so <code>CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}</code> is invalid but <code>CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}</code> is valid.</li>
 </ul>
-<h3><a class="header" href="#insert" id="insert">INSERT</a></h3>
+<h3 id="insert"><a class="header" href="#insert">INSERT</a></h3>
 <p>Inserts an entity id and an entity map into entity tree key.</p>
 <ul>
 <li><code>INSERT {a: 123, b: &quot;hello julia&quot;,} INTO entity_key</code> this will insert the entity map <code>{a: 123, b: &quot;hello julia&quot;,}</code> (key <code>a</code> containing as <code>Type::Integer(123)</code> and key <code>b</code> containing a <code>Type::String(&quot;hello julia&quot;)</code>) and a random Uuid for entity ID into entity tree key <code>entity_key</code>.</li>
 </ul>
-<h3><a class="header" href="#update-set" id="update-set">UPDATE SET</a></h3>
+<h3 id="update-set"><a class="header" href="#update-set">UPDATE SET</a></h3>
 <p>Updates the content by replacing the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</p>
 <ul>
 <li><code>UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will replace the current entity map stored in entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</li>
 </ul>
-<h3><a class="header" href="#update-content" id="update-content">UPDATE CONTENT</a></h3>
+<h3 id="update-content"><a class="header" href="#update-content">UPDATE CONTENT</a></h3>
 <p>Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>. Non numerical or non string value will just be replaced. If key doesn't  exist it will be created.</p>
 <ul>
 <li><code>UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will add <code>-4</code> to entity map key <code>a</code> and add <code>32</code> to entity map key <code>b</code> in the current entity map stored in entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</li>
 </ul>
-<h3><a class="header" href="#match-update" id="match-update">MATCH UPDATE</a></h3>
+<h3 id="match-update"><a class="header" href="#match-update">MATCH UPDATE</a></h3>
 <p>Similar to SET, but it requires a pre-condition to be satisfied.</p>
 <ul>
 <li><code>MATCH ALL(a == 1, b &gt;= 3, c != \&quot;hello\&quot;, d &lt; 7,) UPDATE this_entity SET {a: 123, g: NiL,} INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536</code> if all conditions defined inside <code>ALL</code> are satisfied the set update will happen.
@@ -384,23 +384,23 @@ Division</li>
 </ul>
 </li>
 </ul>
-<h3><a class="header" href="#delete" id="delete">DELETE</a></h3>
+<h3 id="delete"><a class="header" href="#delete">DELETE</a></h3>
 <p>Deletes the last entity map event for an entity ID in entity tree key, that is, it deletes the last state of an entity map.</p>
 <ul>
 <li><code>DELETE 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name</code> this will delete the last state of entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> in entity tree key <code>my_entity_name</code> from entity history.</li>
 </ul>
-<h3><a class="header" href="#evict" id="evict">EVICT</a></h3>
+<h3 id="evict"><a class="header" href="#evict">EVICT</a></h3>
 <p>Removes all occurrences of an entity from the entity tree. It can be just the entity id or the whole entity tree key.</p>
 <ul>
 <li><code>EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name</code> removes all occurrences of the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> from the entity tree key <code>my_entity_name</code>, they cannot be queried anymore.</li>
 <li><code>EVICT my_entity</code> removes the key <code>my_entity</code> from the entity tree. It cannot be queried anymore. It is similar to SQL's <code>DROP TABLE my_entity</code>.</li>
 </ul>
-<h3><a class="header" href="#check" id="check">CHECK</a></h3>
+<h3 id="check"><a class="header" href="#check">CHECK</a></h3>
 <p>Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves  as a way to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data. </p>
 <ul>
 <li><code>CHECK {pswd: &quot;my-password&quot;, ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will check if keys <code>psdw</code> and <code>ssn</code> from entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> in entity tree key <code>my_entity_name</code> have the values <code>&quot;my-password&quot;</code> for pswd and <code>3948453</code> for ssn.</li>
 </ul>
-<h3><a class="header" href="#select" id="select">SELECT</a></h3>
+<h3 id="select"><a class="header" href="#select">SELECT</a></h3>
 <p>This is the way to query entities from WooriDB. Similar to SQL and SparQL <code>SELECT</code>.</p>
 <p>Possible <code>SELECT</code>  combinantions:</p>
 <ul>
@@ -419,7 +419,7 @@ Division</li>
 </ul>
 </li>
 </ul>
-<h4><a class="header" href="#where-clause" id="where-clause">WHERE Clause</a></h4>
+<h4 id="where-clause"><a class="header" href="#where-clause">WHERE Clause</a></h4>
 <p>Possible functions for the where clause:</p>
 <ul>
 <li><code>in</code>: <code>(in ?k1 123 34543 7645 435)</code>, <code>?k1</code> must be present in the set containing <code>123 34543 7645 435</code>. NOTE: <strong>for now, please don't use <code>,</code></strong>.</li>
@@ -428,7 +428,7 @@ Division</li>
 <li><code>==</code>, <code>&gt;=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>!=</code> -&gt; <code>(&gt;= ?k1 0)</code> which means <em>get all values that <code>?k1</code> is greater than or equal to <code>0</code></em>.</li>
 <li><code>or</code>: All arguments inside the <code>or</code> function call will be evaluated to <code>true</code> if any of them is <code>true</code>. </li>
 </ul>
-<h4><a class="header" href="#relation-algebra" id="relation-algebra">Relation Algebra</a></h4>
+<h4 id="relation-algebra"><a class="header" href="#relation-algebra">Relation Algebra</a></h4>
 <p>Some relation algebra may be implemented:</p>
 <ul>
 <li><input disabled="" type="checkbox"/>
@@ -454,7 +454,7 @@ Aggregate</li>
 <li><input disabled="" type="checkbox"/>
 Division</li>
 </ul>
-<h3><a class="header" href="#entity-map-value-types" id="entity-map-value-types">Entity map value TYPES</a></h3>
+<h3 id="entity-map-value-types"><a class="header" href="#entity-map-value-types">Entity map value TYPES</a></h3>
 <blockquote>
 <p><strong>Types Notes</strong></p>
 <ol>
@@ -496,7 +496,7 @@ Division</li>
 <li><input disabled="" type="checkbox"/>
 <code>DateTime</code> to be added.</li>
 </ul>
-<h1><a class="header" href="#authorization-and-authentication" id="authorization-and-authentication">Authorization and Authentication</a></h1>
+<h1 id="authorization-and-authentication"><a class="header" href="#authorization-and-authentication">Authorization and Authentication</a></h1>
 <p>Authentication and authorization only work with release mode, so <code>cargo run --release</code> is required. </p>
 <p>Some environment variables are also required:</p>
 <pre><code>AUTH_HASHING_COST=8 
@@ -508,7 +508,7 @@ ADMIN_PASSWORD=your_password
 <li><code>ADMIN</code> is the admin's user id.</li>
 <li><code>ADMIN_PASSWORD</code> is the admin's user password.</li>
 </ul>
-<h2><a class="header" href="#creating-new-users" id="creating-new-users">Creating new users</a></h2>
+<h2 id="creating-new-users"><a class="header" href="#creating-new-users">Creating new users</a></h2>
 <ul>
 <li><code>ADMIN</code> is the only user role capable of creating new users. For now there can only be one <code>ADMIN</code>.</li>
 </ul>
@@ -524,7 +524,7 @@ ADMIN_PASSWORD=your_password
 </code></pre>
 <p>User information consists of the user's password to be used and the user's roles. Remember to always put <code>,</code> at the end. 
 Response to this request will be <code>(user_id: \&quot;&lt;some-uuid&gt;\&quot;,)</code>, containing the user's unique ID.</p>
-<h3><a class="header" href="#available-user-roles-are" id="available-user-roles-are">Available user roles are:</a></h3>
+<h3 id="available-user-roles-are"><a class="header" href="#available-user-roles-are">Available user roles are:</a></h3>
 <ul>
 <li><code>ADMIN</code> - works primarily at <code>/auth/createUser</code>.</li>
 <li><code>USER</code> - works on all <code>/wql/query</code>, <code>/wql/tx</code> and <code>/auth/putUserSession</code>.</li>
@@ -532,22 +532,22 @@ Response to this request will be <code>(user_id: \&quot;&lt;some-uuid&gt;\&quot;
 <li><code>READ</code> - only works on <code>/wql/query</code> and <code>/auth/putUserSession</code>.</li>
 <li>New roles to be added as needed.</li>
 </ul>
-<h3><a class="header" href="#getting-a-session-token" id="getting-a-session-token">Getting a session token</a></h3>
+<h3 id="getting-a-session-token"><a class="header" href="#getting-a-session-token">Getting a session token</a></h3>
 <p>To make a request at WQL endpoints you need a session token that will expire within 3600 seconds. To retrieve a session token you need to <code>PUT</code> at endpoint <code>/auth/putUserSession</code> your user credentials as follows (in RON format):</p>
 <pre><code class="language-ron">(id: &quot;&lt;user_id&gt;&quot;, user_password: &quot;&lt;user_password&gt;&quot;,)
 </code></pre>
 <p>Response will be a plain/text with your token.</p>
-<h3><a class="header" href="#making-auth-requests-to-wqltx-and-wqlquery" id="making-auth-requests-to-wqltx-and-wqlquery">Making auth requests to <code>/wql/tx</code> and <code>/wql/query</code>.</a></h3>
+<h3 id="making-auth-requests-to-wqltx-and-wqlquery"><a class="header" href="#making-auth-requests-to-wqltx-and-wqlquery">Making auth requests to <code>/wql/tx</code> and <code>/wql/query</code>.</a></h3>
 <p>To avoid authentication and authorization errors, add your token to the authorization bearer header, <code>Authorization: Bearer &lt;your session token&gt;</code>. 
 Your user needs the correct session token and the correct role for this request.</p>
-<h3><a class="header" href="#todos" id="todos">TODOs:</a></h3>
+<h3 id="todos"><a class="header" href="#todos">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Adding other admins and removing admins is not yet implemented.</li>
 <li><input disabled="" type="checkbox"/>
 Configure session token expiration time.</li>
 </ul>
-<h1><a class="header" href="#transactions" id="transactions">Transactions</a></h1>
+<h1 id="transactions"><a class="header" href="#transactions">Transactions</a></h1>
 <p>Transaction is the name of all operations that change the database state, like <code>CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/tx</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/tx -d 'CREATE ENTITY my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
 <blockquote>
 <p><strong>Reminder</strong>
@@ -555,7 +555,7 @@ A comma is required at the end of every data structure representation.
 Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>. 
 No need for <code>;</code> at the end of each expression.</p>
 </blockquote>
-<h2><a class="header" href="#create-entity" id="create-entity"><code>CREATE ENTITY</code></a></h2>
+<h2 id="create-entity"><a class="header" href="#create-entity"><code>CREATE ENTITY</code></a></h2>
 <p><a href="./sec-4-wql.html#create">CREATE WQL Reference</a></p>
 <p>Similar to <code>CREATE TABLE</code> in SQL, it creates an entity tree which matches the table name. It requires an entity name like <code>my_entity_name</code> after <code>CREATE ENTITY</code>. </p>
 <p>Example request: </p>
@@ -580,7 +580,7 @@ bench_cost_4       ... bench:     795,814 ns/iter (+/- 42,838)
 bench_cost_default ... bench: 195,344,338 ns/iter (+/- 8,329,675)
 * Note that I don't go above 14 as it takes too long. However, it is way safer, it is a trade-off. 
 </code></pre>
-<h2><a class="header" href="#insert-1" id="insert-1"><code>INSERT</code></a></h2>
+<h2 id="insert-1"><a class="header" href="#insert-1"><code>INSERT</code></a></h2>
 <p><a href="./sec-4-wql.html#insert">INSERT WQL Reference</a></p>
 <p>Inserts a <strong>HashMap&lt;String, <a href="./sec-4-wql.html#entity-map-value-types">Types</a>&gt;</strong>  into the entity tree key previously created (<code>my_entity_name</code>). This request returns a <code>Uuid</code> containing the entity id. </p>
 <p>Example request: </p>
@@ -607,9 +607,9 @@ INTO my_entity_name
 }}
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#update" id="update"><code>UPDATE</code></a></h2>
+<h2 id="update"><a class="header" href="#update"><code>UPDATE</code></a></h2>
 <p>Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:</p>
-<h3><a class="header" href="#update-set-1" id="update-set-1"><code>UPDATE SET</code></a></h3>
+<h3 id="update-set-1"><a class="header" href="#update-set-1"><code>UPDATE SET</code></a></h3>
 <p><a href="./sec-4-wql.html#update-set">UPDATE SET WQL Reference</a>
 <code>SET</code> updates defines the current value of the entity map to the ones being passed, so if your entity map is <code>{a: 123, b: 12.5,}</code> and your set update has the hashmap <code>{a: 432, c: \&quot;hello\&quot;,}</code>, the current state of the entity map will be <code>{a: 432, b: 12.5, c: \&quot;hello\&quot;,}</code>. </p>
 <p>Example request:</p>
@@ -629,7 +629,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#update-content-1" id="update-content-1"><code>UPDATE CONTENT</code></a></h3>
+<h3 id="update-content-1"><a class="header" href="#update-content-1"><code>UPDATE CONTENT</code></a></h3>
 <p><a href="./sec-4-wql.html#update-content">UPDATE CONTENT WQL Reference</a>
 <code>CONTENT</code> updates are a way to add numerical values and concatenate Strings, so if your entity map is <code>{a: 432, c: \&quot;hello\&quot;,}</code> and your content update has the hashmap <code>{a: -5, c: \&quot;world\&quot;, b: 12.5}</code> the current state of the entity map will be <code>{a: 427, c: \&quot;helloworld\&quot;, b: 12.5}</code>. </p>
 <p>Example request:</p>
@@ -649,7 +649,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#match-update-1" id="match-update-1"><code>MATCH UPDATE</code></a></h2>
+<h2 id="match-update-1"><a class="header" href="#match-update-1"><code>MATCH UPDATE</code></a></h2>
 <p><a href="./sec-4-wql.html#match-update">MATCH UPDATE WQL Reference</a></p>
 <p>Updates entity only if precondition condition is matched. This transaction is significantly slower than other updates.</p>
 <p>Example request:</p>
@@ -670,12 +670,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#issues" id="issues">Issues:</a></h3>
-<ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/74">Last argument does not support ending comma</a></li>
-</ul>
-<h2><a class="header" href="#delete-1" id="delete-1"><code>DELETE</code></a></h2>
+<h2 id="delete-1"><a class="header" href="#delete-1"><code>DELETE</code></a></h2>
 <p><a href="./sec-4-wql.html#delete">DELETE WQL Reference</a></p>
 <p>Deletes the last entity event for an ID, that is, it deletes the last state of an entity map. The deleted state is preserved in the database but cannot be queried anymore.</p>
 <p>If you have, for example, one update on your entity, it will roll back to the <code>INSERT</code> event. 
@@ -694,14 +689,14 @@ However, if you have only an <code>INSERT</code> event then your state will beco
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#todos-1" id="todos-1">TODOs:</a></h3>
+<h3 id="todos-1"><a class="header" href="#todos-1">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Delete entity with ID at transaction-time</li>
 </ul>
-<h2><a class="header" href="#evict-1" id="evict-1"><code>EVICT</code></a></h2>
+<h2 id="evict-1"><a class="header" href="#evict-1"><code>EVICT</code></a></h2>
 <p><a href="./sec-4-wql.html#evict">EVICT WQL Reference</a></p>
-<h3><a class="header" href="#evict-entity-id" id="evict-entity-id"><code>EVICT ENTITY ID</code>:</a></h3>
+<h3 id="evict-entity-id"><a class="header" href="#evict-entity-id"><code>EVICT ENTITY ID</code>:</a></h3>
 <p>Removes all occurrences of an entity map with the given ID. </p>
 <p>Example request </p>
 <pre><code class="language-sql">EVICT 00d025c9-eda8-4190-a33a-29998bd77bd3 from my_entity_name
@@ -720,7 +715,7 @@ Delete entity with ID at transaction-time</li>
 <blockquote>
 <p>For now it only deletes the access to the entity history.</p>
 </blockquote>
-<h3><a class="header" href="#evict-entity" id="evict-entity"><code>EVICT ENTITY</code>:</a></h3>
+<h3 id="evict-entity"><a class="header" href="#evict-entity"><code>EVICT ENTITY</code>:</a></h3>
 <p>Evicts all entity ids registries from entity tree and removes entity tree key, which means entity tree does not contain the key for the evicted entity: Similar to SQL <code>DROP TABLE &lt;entity&gt;</code>. </p>
 <p>Example request: </p>
 <pre><code class="language-sql">EVICT my_entity
@@ -736,7 +731,7 @@ Delete entity with ID at transaction-time</li>
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h1><a class="header" href="#queries" id="queries">Queries</a></h1>
+<h1 id="queries"><a class="header" href="#queries">Queries</a></h1>
 <p>Query is the name of all operations that read the database, like <code>SELECT, CHECK</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/query</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/query -d 'SELECT * FROM my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
 <blockquote>
 <p><strong>Reminder</strong>
@@ -744,11 +739,11 @@ A comma is required at the end of every data structure representation.
 Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>. 
 No need for <code>;</code> at the end of each expression.</p>
 </blockquote>
-<h2><a class="header" href="#check-1" id="check-1"><code>CHECK</code></a></h2>
+<h2 id="check-1"><a class="header" href="#check-1"><code>CHECK</code></a></h2>
 <p><a href="./sec-4-wql.html#check">CHECK WQL Reference</a></p>
 <p>Checks for encrypted data, in entity map, validity. It requires an entity tree name after <code>FROM</code> and an entity id as Uuid after <code>ID</code>. This transaction only works with keys that are encrypted and it serves to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data. </p>
 <p>Considering entity tree key <code>my_entity_name</code> with entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> with entity map <code>{pswd: Hash(&quot;my-password&quot;), name: &quot;Julia&quot;}</code></p>
-<h3><a class="header" href="#example-1" id="example-1">Example 1:</a></h3>
+<h3 id="example-1"><a class="header" href="#example-1">Example 1:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;my-password\&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
@@ -760,7 +755,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </span>{&quot;pswd&quot;: true,}
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#exmample-2" id="exmample-2">Exmample 2:</a></h3>
+<h3 id="exmample-2"><a class="header" href="#exmample-2">Exmample 2:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;my-password\&quot;, ssn: &quot;1234&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
@@ -775,7 +770,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#example-3" id="example-3">Example 3:</a></h3>
+<h3 id="example-3"><a class="header" href="#example-3">Example 3:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;your-password\&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
@@ -787,13 +782,13 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </span>{&quot;pswd&quot;: false,}
 <span class="boring">}
 </span></code></pre></pre>
-<h2><a class="header" href="#select-1" id="select-1"><code>SELECT</code></a></h2>
+<h2 id="select-1"><a class="header" href="#select-1"><code>SELECT</code></a></h2>
 <p><a href="./sec-4-wql.html#select">SELECT WQL Reference</a></p>
 <p>This is the way to query entities from WooriDB. Similar to SQL and SparQL <code>SELECT</code>. There are several different keywords that can be combined with <code>SELECT</code>, a few examples are:</p>
 <blockquote>
 <p><code>*</code> and <code>#{keys...}</code> can be used in all select modes.</p>
 </blockquote>
-<h3><a class="header" href="#selecting-all-entity-map-keys-from-entity-tree-key" id="selecting-all-entity-map-keys-from-entity-tree-key">SELECTing all entity map keys FROM entity tree key:</a></h3>
+<h3 id="selecting-all-entity-map-keys-from-entity-tree-key"><a class="header" href="#selecting-all-entity-map-keys-from-entity-tree-key">SELECTing all entity map keys FROM entity tree key:</a></h3>
 <p>Same as SQL using the token <code>*</code> will defined that all keys in the entity map will be returned. The query <code>SELECT * FROM entity_name</code> selects  all entity ids and entity maps found inside entity tree key <code>entity_name</code>. It is equivalent to SQL's <code>Select * From table</code>. </p>
 <p>Example request: <code>SELECT * from my_entity_name</code>. </p>
 <p>Example response:</p>
@@ -813,7 +808,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-a-set-of-entity-map-keys-from-entity-tree-key" id="selecting-a-set-of-entity-map-keys-from-entity-tree-key">SELECTing a set of entity map keys FROM entity tree key:</a></h3>
+<h3 id="selecting-a-set-of-entity-map-keys-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entity-map-keys-from-entity-tree-key">SELECTing a set of entity map keys FROM entity tree key:</a></h3>
 <p>Differently from SQL, WQL requires the keys to be inside a set like <code>#{a, b, c,}</code>, which will return only the keys <code>a, b, c</code>. It is equivalent to <code>SELECT a, b, c FROM table</code>. </p>
 <p>Example request: <code>SELECT #{a, b, c,} FROM my_entity_name</code>. </p>
 <p>Example response:</p>
@@ -830,7 +825,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-one-entity-map-from-entity-tree-key" id="selecting-one-entity-map-from-entity-tree-key">SELECTing one entity map FROM entity tree key:</a></h3>
+<h3 id="selecting-one-entity-map-from-entity-tree-key"><a class="header" href="#selecting-one-entity-map-from-entity-tree-key">SELECTing one entity map FROM entity tree key:</a></h3>
 <p>Select one entity map (by its ID) from entity tree <code>my_entity</code>. By including the key <code>ID</code> after the <code>FROM entity_name</code> it is possible to select a single entity. The content for <code>ID</code>is the entity id's Uuid. It is equivalent to SQL's <code>Select * From table WHERE id = &lt;uuid&gt;</code>. </p>
 <p>Example request <code>SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code>. </p>
 <p>Example response:</p>
@@ -838,7 +833,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <p>It will return only the entity map contained inside inside entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.
 <code>{a: 123, b: 43.3, c: \&quot;hello\&quot;, d: \&quot;world\&quot;,}</code>.</p>
 </blockquote>
-<h3><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key" id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
+<h3 id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
 <p>Select a few entities maps (by their IDs) from entity tree <code>my_entity</code>. Key <code>IN</code> receives a set of Uuids</p>
 <p>Example request: </p>
 <pre><code class="language-sql">SELECT #{a, b, c,} 
@@ -857,7 +852,7 @@ IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5e
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key" id="selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key">SELECTing the last entity map for entity id at DATETIME<UTC> FROM entity tree key:</a></h3>
+<h3 id="selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key"><a class="header" href="#selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key">SELECTing the last entity map for entity id at DATETIME<UTC> FROM entity tree key:</a></h3>
 <p>Select an entity on a defined past day using the <code>WHEN AT</code> keys.  Key <code>WHEN AT</code> is the date to search. Time will be discarded. The <code>ID</code> field can be used before <code>WHEN</code> to define a specific entity id, <code>IDS IN</code> is not supported. Date format should be <code>&quot;2014-11-28T21:00:09+09:00&quot;</code> or <code>&quot;2014-11-28T21:00:09Z&quot;</code>. </p>
 <p>Example requests: </p>
 <ul>
@@ -866,12 +861,12 @@ IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5e
 </ul>
 <p>Example response:
 <code>{a: 34, b: 4.3, c: \&quot;hello\&quot;, d: \&quot;Julia\&quot;,}</code></p>
-<h3><a class="header" href="#todos-2" id="todos-2">TODOs:</a></h3>
+<h3 id="todos-2"><a class="header" href="#todos-2">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Support <code>IDS IN</code></li>
 </ul>
-<h3><a class="header" href="#selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc" id="selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc">SELECTing all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:</a></h3>
+<h3 id="selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc"><a class="header" href="#selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc">SELECTing all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:</a></h3>
 <p>Select all occurrences of an entity id from entity tree <code>entity_name</code> in a time range. The time range must be on the same day as <code>WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z</code>. </p>
 <ul>
 <li>Key <code>WHEN</code> defines it as a temporal query.</li>
@@ -902,13 +897,13 @@ WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied" id="selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied">SELECTing entities ids and maps FROM entity tree key WHERE conditions are satisfied</a></h3>
+<h3 id="selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied"><a class="header" href="#selecting-entities-ids-and-maps-from-entity-tree-key-where-conditions-are-satisfied">SELECTing entities ids and maps FROM entity tree key WHERE conditions are satisfied</a></h3>
 <p>This is probably the most different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. Selects entities ids and maps with positive WHERE clauses. Key <code>WHERE</code> receives all clauses inside a <code>{...}</code> block.</p>
 <p>To use <code>select</code> with the <code>where</code> clause you can use the following expression:</p>
 <ul>
 <li><code>SELECT * FROM my_entity WHERE {&lt;clauses&gt;}</code> </li>
 </ul>
-<h4><a class="header" href="#example-1-1" id="example-1-1">Example 1:</a></h4>
+<h4 id="example-1-1"><a class="header" href="#example-1-1">Example 1:</a></h4>
 <p>Example Request:</p>
 <pre><code class="language-sql">SELECT * FROM test_entity 
 WHERE {
@@ -938,7 +933,7 @@ WHERE {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h4><a class="header" href="#example-2" id="example-2">Example 2:</a></h4>
+<h4 id="example-2"><a class="header" href="#example-2">Example 2:</a></h4>
 <p>Example request:</p>
 <pre><code class="language-sql">SELECT * FROM test_entity 
 WHERE {
@@ -960,17 +955,12 @@ WHERE {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h4><a class="header" href="#todos-3" id="todos-3">TODOs:</a></h4>
+<h4 id="todos-3"><a class="header" href="#todos-3">TODOs:</a></h4>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Support temporality for where clause</li>
 </ul>
-<h4><a class="header" href="#issues-1" id="issues-1">Issues:</a></h4>
-<ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/77">Something wrong with <code>or</code></a></li>
-</ul>
-<h3><a class="header" href="#select-todos---functions-that-couldwill-be-implemented-from-relation-algebra" id="select-todos---functions-that-couldwill-be-implemented-from-relation-algebra">SELECT TODOs - Functions that could/will be implemented from Relation Algebra:</a></h3>
+<h3 id="select-todos---functions-that-couldwill-be-implemented-from-relation-algebra"><a class="header" href="#select-todos---functions-that-couldwill-be-implemented-from-relation-algebra">SELECT TODOs - Functions that could/will be implemented from Relation Algebra:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Projection</li>
@@ -997,10 +987,10 @@ Aggregate</li>
 <li><input disabled="" type="checkbox"/>
 Division</li>
 </ul>
-<h1><a class="header" href="#error-messages" id="error-messages">Error Messages</a></h1>
+<h1 id="error-messages"><a class="header" href="#error-messages">Error Messages</a></h1>
 <p>Woori DB has a variety of Error messages, from WQL when parsing the transaction or the query to some internal database errors. Here are listed expected messages:</p>
-<h2><a class="header" href="#wooridb-errors" id="wooridb-errors">WooriDB Errors:</a></h2>
-<h3><a class="header" href="#example-errors-as-response" id="example-errors-as-response">Example errors as response:</a></h3>
+<h2 id="wooridb-errors"><a class="header" href="#wooridb-errors">WooriDB Errors:</a></h2>
+<h3 id="example-errors-as-response"><a class="header" href="#example-errors-as-response">Example errors as response:</a></h3>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1010,7 +1000,7 @@ Division</li>
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3><a class="header" href="#error-types" id="error-types">Error types:</a></h3>
+<h3 id="error-types"><a class="header" href="#error-types">Error types:</a></h3>
 <ul>
 <li><code>Io(io::Error)</code> - Failed to read or write file.</li>
 <li><code>QueryFormat(String)</code> - WQL error.</li>
@@ -1039,7 +1029,7 @@ Division</li>
 <li><code>FailedToCreateUser</code> - Failed to create new user.</li>
 <li><code>Unknown</code> - Unknown error.</li>
 </ul>
-<h2><a class="header" href="#wql-parsing" id="wql-parsing">WQL Parsing</a></h2>
+<h2 id="wql-parsing"><a class="header" href="#wql-parsing">WQL Parsing</a></h2>
 <ul>
 <li>
 <p><code>Query symbol error</code>: </p>
@@ -1131,7 +1121,7 @@ Division</li>
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#issues-2" id="issues-2">Issues:</a></h2>
+<h2 id="issues"><a class="header" href="#issues">Issues:</a></h2>
 <ul>
 <li><input disabled="" type="checkbox"/>
 <a href="https://github.com/naomijub/wooridb/issues/79">Split <code>AuthBadRequest</code> into <code>AuthenticationBadRequest</code> and <code>AuthorizationBadRequest</code></a></li>

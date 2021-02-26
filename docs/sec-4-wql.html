@@ -167,7 +167,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#woori-query-language" id="woori-query-language">Woori Query Language</a></h1>
+                        <h1 id="woori-query-language"><a class="header" href="#woori-query-language">Woori Query Language</a></h1>
 <p><a href="https://github.com/naomijub/wooridb/tree/main/wql">Woori Query language</a> or <code>WQL</code> is WooriDB's Query Language and it is inspired by SparQL, Datalog and SQL. Its main features are:</p>
 <p><strong>Transactions</strong></p>
 <ul>
@@ -201,8 +201,8 @@
 <blockquote>
 <p>ALL DATA STRUCTURES HASHMAPS, HASHSETS AND LIST MUST CONTAIN A <code>,</code> AFTER EACH ELEMENT. Example <code>#{name, ssn,}</code> is valid but <code>#{name, ssn}</code> is not valid.</p>
 </blockquote>
-<h2><a class="header" href="#examples" id="examples">Examples</a></h2>
-<h3><a class="header" href="#create" id="create">CREATE</a></h3>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="create"><a class="header" href="#create">CREATE</a></h3>
 <p>Creates an entity tree key.</p>
 <ul>
 <li><code>CREATE ENTITY my_entity</code> this will create an entity tree key named <code>my_entity</code>, in SQL terms it means <code>CREATE TABLE my_entity</code>.</li>
@@ -210,22 +210,22 @@
 <li><code>CREATE ENTITY my_entity ENCRYPTS #{pswd,}</code> the entity tree key named <code>my_entity</code> will encrypt the entities keys that are <code>pswd</code>. The hashing cost of the encrypt is defined by the environment variable <code>HASHING_COST</code>, recommended is between 10 and 14.</li>
 <li>Encryted keys cannot be uniques so <code>CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}</code> is invalid but <code>CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}</code> is valid.</li>
 </ul>
-<h3><a class="header" href="#insert" id="insert">INSERT</a></h3>
+<h3 id="insert"><a class="header" href="#insert">INSERT</a></h3>
 <p>Inserts an entity id and an entity map into entity tree key.</p>
 <ul>
 <li><code>INSERT {a: 123, b: &quot;hello julia&quot;,} INTO entity_key</code> this will insert the entity map <code>{a: 123, b: &quot;hello julia&quot;,}</code> (key <code>a</code> containing as <code>Type::Integer(123)</code> and key <code>b</code> containing a <code>Type::String(&quot;hello julia&quot;)</code>) and a random Uuid for entity ID into entity tree key <code>entity_key</code>.</li>
 </ul>
-<h3><a class="header" href="#update-set" id="update-set">UPDATE SET</a></h3>
+<h3 id="update-set"><a class="header" href="#update-set">UPDATE SET</a></h3>
 <p>Updates the content by replacing the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</p>
 <ul>
 <li><code>UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will replace the current entity map stored in entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</li>
 </ul>
-<h3><a class="header" href="#update-content" id="update-content">UPDATE CONTENT</a></h3>
+<h3 id="update-content"><a class="header" href="#update-content">UPDATE CONTENT</a></h3>
 <p>Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>. Non numerical or non string value will just be replaced. If key doesn't  exist it will be created.</p>
 <ul>
 <li><code>UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will add <code>-4</code> to entity map key <code>a</code> and add <code>32</code> to entity map key <code>b</code> in the current entity map stored in entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</li>
 </ul>
-<h3><a class="header" href="#match-update" id="match-update">MATCH UPDATE</a></h3>
+<h3 id="match-update"><a class="header" href="#match-update">MATCH UPDATE</a></h3>
 <p>Similar to SET, but it requires a pre-condition to be satisfied.</p>
 <ul>
 <li><code>MATCH ALL(a == 1, b &gt;= 3, c != \&quot;hello\&quot;, d &lt; 7,) UPDATE this_entity SET {a: 123, g: NiL,} INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536</code> if all conditions defined inside <code>ALL</code> are satisfied the set update will happen.
@@ -246,23 +246,23 @@
 </ul>
 </li>
 </ul>
-<h3><a class="header" href="#delete" id="delete">DELETE</a></h3>
+<h3 id="delete"><a class="header" href="#delete">DELETE</a></h3>
 <p>Deletes the last entity map event for an entity ID in entity tree key, that is, it deletes the last state of an entity map.</p>
 <ul>
 <li><code>DELETE 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name</code> this will delete the last state of entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> in entity tree key <code>my_entity_name</code> from entity history.</li>
 </ul>
-<h3><a class="header" href="#evict" id="evict">EVICT</a></h3>
+<h3 id="evict"><a class="header" href="#evict">EVICT</a></h3>
 <p>Removes all occurrences of an entity from the entity tree. It can be just the entity id or the whole entity tree key.</p>
 <ul>
 <li><code>EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name</code> removes all occurrences of the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> from the entity tree key <code>my_entity_name</code>, they cannot be queried anymore.</li>
 <li><code>EVICT my_entity</code> removes the key <code>my_entity</code> from the entity tree. It cannot be queried anymore. It is similar to SQL's <code>DROP TABLE my_entity</code>.</li>
 </ul>
-<h3><a class="header" href="#check" id="check">CHECK</a></h3>
+<h3 id="check"><a class="header" href="#check">CHECK</a></h3>
 <p>Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves  as a way to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data. </p>
 <ul>
 <li><code>CHECK {pswd: &quot;my-password&quot;, ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will check if keys <code>psdw</code> and <code>ssn</code> from entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> in entity tree key <code>my_entity_name</code> have the values <code>&quot;my-password&quot;</code> for pswd and <code>3948453</code> for ssn.</li>
 </ul>
-<h3><a class="header" href="#select" id="select">SELECT</a></h3>
+<h3 id="select"><a class="header" href="#select">SELECT</a></h3>
 <p>This is the way to query entities from WooriDB. Similar to SQL and SparQL <code>SELECT</code>.</p>
 <p>Possible <code>SELECT</code>  combinantions:</p>
 <ul>
@@ -281,7 +281,7 @@
 </ul>
 </li>
 </ul>
-<h4><a class="header" href="#where-clause" id="where-clause">WHERE Clause</a></h4>
+<h4 id="where-clause"><a class="header" href="#where-clause">WHERE Clause</a></h4>
 <p>Possible functions for the where clause:</p>
 <ul>
 <li><code>in</code>: <code>(in ?k1 123 34543 7645 435)</code>, <code>?k1</code> must be present in the set containing <code>123 34543 7645 435</code>. NOTE: <strong>for now, please don't use <code>,</code></strong>.</li>
@@ -290,7 +290,7 @@
 <li><code>==</code>, <code>&gt;=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>!=</code> -&gt; <code>(&gt;= ?k1 0)</code> which means <em>get all values that <code>?k1</code> is greater than or equal to <code>0</code></em>.</li>
 <li><code>or</code>: All arguments inside the <code>or</code> function call will be evaluated to <code>true</code> if any of them is <code>true</code>. </li>
 </ul>
-<h4><a class="header" href="#relation-algebra" id="relation-algebra">Relation Algebra</a></h4>
+<h4 id="relation-algebra"><a class="header" href="#relation-algebra">Relation Algebra</a></h4>
 <p>Some relation algebra may be implemented:</p>
 <ul>
 <li><input disabled="" type="checkbox"/>
@@ -316,7 +316,7 @@ Aggregate</li>
 <li><input disabled="" type="checkbox"/>
 Division</li>
 </ul>
-<h3><a class="header" href="#entity-map-value-types" id="entity-map-value-types">Entity map value TYPES</a></h3>
+<h3 id="entity-map-value-types"><a class="header" href="#entity-map-value-types">Entity map value TYPES</a></h3>
 <blockquote>
 <p><strong>Types Notes</strong></p>
 <ol>
