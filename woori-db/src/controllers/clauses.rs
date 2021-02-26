@@ -119,8 +119,12 @@ fn or_clauses(
             Clause::ValueAttribution(_, _, _) => true,
             Clause::Error => false,
             Clause::Or(_, or_inner_clauses) => or_clauses(state, &args_to_key, or_inner_clauses),
-            Clause::ContainsKeyValue(_, key, value) => state.get(key).map_or(false, |v| value == v),
+            Clause::ContainsKeyValue(_, key, value) => {
+                let key = args_to_key.get(key).unwrap_or(&default);
+                state.get(key).map_or(false, |v| value == v)
+            }
             Clause::SimpleComparisonFunction(f, key, value) => {
+                let key = args_to_key.get(key).unwrap_or(&default);
                 state.get(key).map_or(false, |v| match f {
                     wql::Function::Eq => v == value,
                     wql::Function::NotEq => v != value,
@@ -131,11 +135,14 @@ fn or_clauses(
                     wql::Function::Like => {
                         if let (Types::String(content), Types::String(regex)) = (v, value) {
                             if regex.starts_with('%') && regex.ends_with('%') {
-                                content.contains(&regex[1..regex.len() - 1])
+                                let regex = regex.replace("%", "");
+                                content.contains(&regex)
                             } else if regex.starts_with('%') {
-                                content.ends_with(&regex[..regex.len() - 1])
+                                let regex = regex.replace("%", "");
+                                content.ends_with(&regex)
                             } else if regex.ends_with('%') {
-                                content.starts_with(&regex[1..])
+                                let regex = regex.replace("%", "");
+                                content.starts_with(&regex)
                             } else {
                                 content.contains(&regex[..])
                             }

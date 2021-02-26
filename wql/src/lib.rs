@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
-
 mod language_parser;
 mod logic;
 mod select;
