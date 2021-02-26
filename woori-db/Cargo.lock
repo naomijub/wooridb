@@ -2381,7 +2381,7 @@ dependencies = [
 
 [[package]]
 name = "woori-db"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix",
  "actix-http",
@@ -2412,7 +2412,7 @@ dependencies = [
 
 [[package]]
 name = "wql"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bcrypt",
  "serde",
