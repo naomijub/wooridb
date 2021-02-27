@@ -18,13 +18,13 @@
 - Able to handle very large numbers when using the `P` suffix.
   - Ex: `98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P`.
 - Configuration is done via environment variables.
-  - [ ] Non sensitive configurations are done with `Config.toml`.
   - [ ] CORS
 - Authentication and Authorization via session token
-  - [ ] Creating and removing ADMINs/new users.
+  - [ ] Creating and removing ADMINs.
+  - [ ] Removing Users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] File compression done with `zstd`.
-- [ ] Entity id history
+- [ ] [Entity id history](https://github.com/naomijub/wooridb/issues/85)
 - [ ] Possible Relation Algebra
     - [ ] Projection
     - [ ] Union

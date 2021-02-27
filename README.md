@@ -39,8 +39,33 @@ This project is hugely inspired by:
 
 
 ## Installation
-- if you don't have Rust and Cargo installed, run `make setup` at root.
-- `make run` at root for `release mode`, or `make debug` for `debug mode` (Debug mode doesn't have auth system enabled).
+
+To run WooriDB it is necessary to have Rust installed in the machine. There are two ways to do this:
+
+1. Go to rustup.rs and copy the command there, for unix it is `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`.
+2. Clone WooriDB and execute `make setup`.
+
+
+### Executing WooriDB
+
+- `Release mode performance`: `make release` in project root for performance optimization.
+- `Release mode size`: `make run` in project root for size optimization.
+- `Debug mode`: `make debug` in project root.
+
+### Docker
+you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-1`**. To execute the docker container run:
+
+* `docker run -p 1438:1438 naomijubs/wooridb:beta-1 debug` for debug mode.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-1 run`  for size optimization.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-1 release` for performance optimization.
+* All `-e/--env` can be replaced by a `--env-file path/to/your/.env`. Your `.env`file should contain the following fields:
+```
+HASHING_COST=16
+PORT=1438
+AUTH_HASHING_COST=8
+ADMIN=your-admin-id
+ADMIN_PASSWORD=your-admin-pswd
+``` 
 
 ## Usage
 * Responses are in [`RON`](https://github.com/ron-rs/ron) format. Support for `JSON` and `EDN` will be done later by using features.
