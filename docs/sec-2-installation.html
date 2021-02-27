@@ -176,9 +176,24 @@
 </ol>
 <h3 id="executing-wooridb"><a class="header" href="#executing-wooridb">Executing WooriDB</a></h3>
 <ul>
-<li><code>Release mode</code>: <code>make run</code> in project root.</li>
+<li><code>Release mode performance</code>: <code>make release</code> in project root for performance optimization.</li>
+<li><code>Release mode size</code>: <code>make run</code> in project root for size optimization.</li>
 <li><code>Debug mode</code>: <code>make debug</code> in project root.</li>
 </ul>
+<h3 id="docker"><a class="header" href="#docker">Docker</a></h3>
+<p>you can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. The current most stable tag is <strong><code>beta-1</code></strong>. To execute the docker container run:</p>
+<ul>
+<li><code>docker run -p 1438:1438 naomijubs/wooridb:beta-1 debug</code> for debug mode.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-1 run</code>  for size optimization.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-1 release</code> for performance optimization.</li>
+<li>All <code>-e/--env</code> can be replaced by a <code>--env-file path/to/your/.env</code>. Your <code>.env</code>file should contain the following fields:</li>
+</ul>
+<pre><code>HASHING_COST=16
+PORT=1438
+AUTH_HASHING_COST=8
+ADMIN=your-admin-id
+ADMIN_PASSWORD=your-admin-pswd
+</code></pre>
 <h2 id="important-information"><a class="header" href="#important-information">Important Information</a></h2>
 <ul>
 <li>Responses are in <a href="https://github.com/ron-rs/ron"><code>RON</code></a> format.</li>

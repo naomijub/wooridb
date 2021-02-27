@@ -7,5 +7,6 @@ authors = ["Julia Naomi <jnboeira@outlook.com>"]
 git-repository-url = "https://github.com/naomijub/wooridb/tree/main/book"
 
 [output.linkcheck]
+optional = true
 follow-web-links = true
 warning-policy = "error"
