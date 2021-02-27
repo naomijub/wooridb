@@ -8,7 +8,7 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 2. Clone WooriDB and execute `make setup`.
 
 
-## Executing WooriDB
+### Executing WooriDB
 
 - `Release mode performance`: `make release` in project root for performance optimization.
 - `Release mode size`: `make run` in project root for size optimization.
