@@ -207,7 +207,7 @@ mod test_insert {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Insert("my_entity".to_string(), hashmap())
+            Wql::Insert("my_entity".to_string(), hashmap(), None)
         );
     }
 
@@ -222,7 +222,7 @@ mod test_insert {
         let mut hm = HashMap::new();
         hm.insert("a".to_string(), Types::Precise("98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673".to_string()));
 
-        assert_eq!(wql.unwrap(), Wql::Insert("my_entity".to_string(), hm));
+        assert_eq!(wql.unwrap(), Wql::Insert("my_entity".to_string(), hm, None));
     }
 
     #[test]
@@ -642,7 +642,7 @@ mod test_data_sructures {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Insert("my_entity".to_string(), hashmap())
+            Wql::Insert("my_entity".to_string(), hashmap(), None)
         );
     }
 
@@ -657,7 +657,7 @@ mod test_data_sructures {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Insert("my_entity".to_string(), hashmap2())
+            Wql::Insert("my_entity".to_string(), hashmap2(), None)
         );
     }
 
@@ -687,7 +687,7 @@ mod test_data_sructures {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Insert("my_entity".to_string(), hashmap3())
+            Wql::Insert("my_entity".to_string(), hashmap3(), None)
         );
     }
 

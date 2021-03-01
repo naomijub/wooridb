@@ -90,11 +90,16 @@ impl UpdateArgs {
 pub struct InsertArgs {
     pub entity: String,
     pub content: HashMap<String, Types>,
+    pub uuid: Option<Uuid>,
 }
 
 impl InsertArgs {
-    pub fn new(entity: String, content: HashMap<String, Types>) -> Self {
-        Self { entity, content }
+    pub fn new(entity: String, content: HashMap<String, Types>, uuid: Option<Uuid>) -> Self {
+        Self {
+            entity,
+            content,
+            uuid,
+        }
     }
 }
 

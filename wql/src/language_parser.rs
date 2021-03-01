@@ -147,7 +147,7 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
         return Err(String::from("Entity name is required after INTO"));
     }
 
-    Ok(Wql::Insert(entity_name, entity_map))
+    Ok(Wql::Insert(entity_name, entity_map, None))
 }
 
 fn check(chars: &mut std::str::Chars) -> Result<Wql, String> {
