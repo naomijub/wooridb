@@ -677,6 +677,24 @@ mod test_data_sructures {
     }
 
     #[test]
+    fn insert_with_err() {
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 123,
+            b: [12.3, 34, \"hello\",]
+        } INTO my_entity
+        ID 555555-5555-444444",
+        );
+
+        assert_eq!(
+            wql.err(),
+            Some(String::from(
+                "Keyword WITH is required for INSERT with Uuid"
+            ))
+        );
+    }
+
+    #[test]
     fn insert_vec_with_map() {
         let wql = Wql::from_str(
             "INSERT {
@@ -688,6 +706,23 @@ mod test_data_sructures {
         assert_eq!(
             wql.unwrap(),
             Wql::Insert("my_entity".to_string(), hashmap3(), None)
+        );
+    }
+
+    #[test]
+    fn insert_vec_with_map_and_id() {
+        let uuid = Uuid::parse_str("13ca62fc-241b-4af6-87c3-0ae4015f9967").ok();
+        let wql = Wql::from_str(
+            "INSERT {
+            a: 123,
+            b: { a: 12.3, b: 34, }
+        } INTO my_entity
+          WITH 13ca62fc-241b-4af6-87c3-0ae4015f9967",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Insert("my_entity".to_string(), hashmap3(), uuid)
         );
     }
 
