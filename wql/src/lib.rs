@@ -17,7 +17,7 @@ pub use where_clause::{Clause, Function, Value};
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Wql {
     CreateEntity(String, Vec<String>, Vec<String>),
-    Insert(String, Entity),
+    Insert(String, Entity, Option<Uuid>),
     UpdateContent(String, Entity, Uuid),
     UpdateSet(String, Entity, Uuid),
     Delete(String, String),
