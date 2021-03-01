@@ -58,9 +58,9 @@ pub async fn wql_handler(
         Ok(Wql::Delete(entity, uuid)) => {
             delete_controller(entity, uuid, local_data.into_inner(), bytes_counter, actor).await
         }
-        Ok(Wql::Insert(entity, content)) => {
+        Ok(Wql::Insert(entity, content, uuid)) => {
             insert_controller(
-                InsertArgs::new(entity, content),
+                InsertArgs::new(entity, content, uuid),
                 local_data.into_inner(),
                 bytes_counter,
                 uniqueness,
@@ -311,7 +311,11 @@ pub async fn insert_controller(
         .await??;
 
     let content_value = actor
-        .send(InsertEntityContent::new(&args.entity, &content_log))
+        .send(InsertEntityContent::new(
+            &args.entity,
+            &content_log,
+            args.uuid,
+        ))
         .await??;
 
     if content_value.3 {

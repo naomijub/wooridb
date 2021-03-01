@@ -147,7 +147,34 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
         return Err(String::from("Entity name is required after INTO"));
     }
 
-    Ok(Wql::Insert(entity_name, entity_map))
+    let with_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>();
+
+    if with_symbol.is_empty() {
+        Ok(Wql::Insert(entity_name, entity_map, None))
+    } else if with_symbol.to_uppercase() != "WITH" {
+        Err(String::from(
+            "Keyword WITH is required for INSERT with Uuid",
+        ))
+    } else {
+        let entity_id = chars
+            .take_while(|c| c.is_alphanumeric() || c == &'-')
+            .collect::<String>()
+            .trim()
+            .to_string();
+
+        if entity_id.is_empty() {
+            return Err(String::from("Entity UUID is required for INSERT WITH id"));
+        }
+
+        Ok(Wql::Insert(
+            entity_name,
+            entity_map,
+            Uuid::parse_str(&entity_id).ok(),
+        ))
+    }
 }
 
 fn check(chars: &mut std::str::Chars) -> Result<Wql, String> {

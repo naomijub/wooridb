@@ -37,6 +37,8 @@ Inserts an entity id and an entity map into entity tree key.
 
 * `INSERT {a: 123, b: "hello julia",} INTO entity_key` this will insert the entity map `{a: 123, b: "hello julia",}` (key `a` containing as `Type::Integer(123)` and key `b` containing a `Type::String("hello julia")`) and a random Uuid for entity ID into entity tree key `entity_key`.
 
+To INSERT entity with a predefined `Uuid` it is necessary to use the keyword `WITH` after the entity tree key followed by as Uuid-V4. `INSERT {a: 123, b: "hello julia",} INTO entity_key WITH 4f6fccb0-20fb-4d8e-af7c-65db30f4954a`.
+
 ### UPDATE SET
 Updates the content by replacing the previous entity map in entity tree key `my_entity_name` with the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
 

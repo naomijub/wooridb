@@ -49,13 +49,15 @@ impl Handler<CreateEntity> for Executor {
 pub struct InsertEntityContent {
     pub name: String,
     pub content: String,
+    pub uuid: Option<Uuid>,
 }
 
 impl InsertEntityContent {
-    pub fn new(name: &str, content: &str) -> Self {
+    pub fn new(name: &str, content: &str, uuid: Option<Uuid>) -> Self {
         Self {
             name: name.to_owned(),
             content: content.to_owned(),
+            uuid,
         }
     }
 }
@@ -273,6 +275,7 @@ mod test {
         let insert = InsertEntityContent {
             name: String::from("insert-my-entity"),
             content: String::from("this is the content"),
+            uuid: None,
         };
         let actor = Executor::new().start();
 

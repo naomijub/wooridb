@@ -62,6 +62,13 @@ The request above will insert an entity with the following structure in `my_enti
 }}
 ```
 
+* To pre-define the Uuid of the entity to insert use `WITH` keyword followed by an Uuid-v4. This uuid will be used to identify the entity map in the entity tree. As follows:
+```sql
+INSERT {a: 123,  c: \"hello\", d: \"world\",} 
+INTO my_entity_name
+WITH <ENTITY-UUID>
+```
+
 ## `UPDATE`
 Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:
 

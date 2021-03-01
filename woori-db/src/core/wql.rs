@@ -37,7 +37,12 @@ pub fn evict_entity_id_content(entity: &EvictEntityId) -> String {
 }
 
 pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
-    let uuid = Uuid::new_v4();
+    let uuid = if let Some(id) = content.uuid {
+        id
+    } else {
+        Uuid::new_v4()
+    };
+
     let date: DateTime<Utc> = Utc::now();
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
@@ -185,11 +190,28 @@ mod test {
         let entity = InsertEntityContent {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
+            uuid: None,
         };
         let (_, _, s) = insert_entity_content(&entity);
 
         assert!(s.contains("INSERT"));
         assert!(s.contains("my_entity"));
+        assert!(s.contains("suppose this is a log"));
+    }
+
+    #[test]
+    fn insert_entitywith_uuid_test() {
+        let uuid = Uuid::new_v4();
+        let entity = InsertEntityContent {
+            name: "my_entity".to_string(),
+            content: "suppose this is a log".to_string(),
+            uuid: Some(uuid),
+        };
+        let (_, _, s) = insert_entity_content(&entity);
+
+        assert!(s.contains("INSERT"));
+        assert!(s.contains("my_entity"));
+        assert!(s.contains(&uuid.to_string()));
         assert!(s.contains("suppose this is a log"));
     }
 

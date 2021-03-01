@@ -2,6 +2,7 @@ use crate::io::read;
 use crate::{http::routes, schemas::tx::InsertEntityResponse};
 use actix_http::body::ResponseBody;
 use actix_web::{body::Body, test, App};
+use uuid::Uuid;
 
 #[actix_rt::test]
 async fn test_create_post_ok() {
@@ -160,6 +161,33 @@ async fn test_insert_post_ok() {
 
     read::assert_content("INSERT|");
     read::assert_content("|test_ok|{\"a\": Integer(123),};");
+    clear();
+}
+
+#[actix_rt::test]
+async fn test_insert_with_id_post_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_ok_with_id")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let uuid = Uuid::new_v4().to_string();
+    let payload = format!("INSERT {{a: 123,}} INTO test_ok_with_id WITH {}", uuid);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+
+    read::assert_content("INSERT|");
+    read::assert_content(&uuid);
+    read::assert_content("|test_ok_with_id|{\"a\": Integer(123),};");
     clear();
 }
 
