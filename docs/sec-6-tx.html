@@ -227,6 +227,13 @@ INTO my_entity_name
 }}
 <span class="boring">}
 </span></code></pre></pre>
+<ul>
+<li>To pre-define the Uuid of the entity to insert use <code>WITH</code> keyword followed by an Uuid-v4. This uuid will be used to identify the entity map in the entity tree. As follows:</li>
+</ul>
+<pre><code class="language-sql">INSERT {a: 123,  c: \&quot;hello\&quot;, d: \&quot;world\&quot;,} 
+INTO my_entity_name
+WITH &lt;ENTITY-UUID&gt;
+</code></pre>
 <h2 id="update"><a class="header" href="#update"><code>UPDATE</code></a></h2>
 <p>Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:</p>
 <h3 id="update-set"><a class="header" href="#update-set"><code>UPDATE SET</code></a></h3>

@@ -368,6 +368,7 @@ Division</li>
 <ul>
 <li><code>INSERT {a: 123, b: &quot;hello julia&quot;,} INTO entity_key</code> this will insert the entity map <code>{a: 123, b: &quot;hello julia&quot;,}</code> (key <code>a</code> containing as <code>Type::Integer(123)</code> and key <code>b</code> containing a <code>Type::String(&quot;hello julia&quot;)</code>) and a random Uuid for entity ID into entity tree key <code>entity_key</code>.</li>
 </ul>
+<p>To INSERT entity with a predefined <code>Uuid</code> it is necessary to use the keyword <code>WITH</code> after the entity tree key followed by as Uuid-V4. <code>INSERT {a: 123, b: &quot;hello julia&quot;,} INTO entity_key WITH 4f6fccb0-20fb-4d8e-af7c-65db30f4954a</code>.</p>
 <h3 id="update-set"><a class="header" href="#update-set">UPDATE SET</a></h3>
 <p>Updates the content by replacing the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</p>
 <ul>
@@ -622,6 +623,13 @@ INTO my_entity_name
 }}
 <span class="boring">}
 </span></code></pre></pre>
+<ul>
+<li>To pre-define the Uuid of the entity to insert use <code>WITH</code> keyword followed by an Uuid-v4. This uuid will be used to identify the entity map in the entity tree. As follows:</li>
+</ul>
+<pre><code class="language-sql">INSERT {a: 123,  c: \&quot;hello\&quot;, d: \&quot;world\&quot;,} 
+INTO my_entity_name
+WITH &lt;ENTITY-UUID&gt;
+</code></pre>
 <h2 id="update"><a class="header" href="#update"><code>UPDATE</code></a></h2>
 <p>Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:</p>
 <h3 id="update-set-1"><a class="header" href="#update-set-1"><code>UPDATE SET</code></a></h3>
