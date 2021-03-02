@@ -1,5 +1,9 @@
 #[cfg(not(debug_assertions))]
-use crate::auth::{controllers as auth, io::read_admin_info, middlewares::wql_validator};
+use crate::auth::{
+    controllers as auth,
+    io::read_admin_info,
+    middlewares::{history_validator, wql_validator},
+};
 #[cfg(not(debug_assertions))]
 use actix_web_httpauth::middleware::HttpAuthentication;
 
@@ -57,6 +61,8 @@ pub fn routes(config: &mut web::ServiceConfig) {
     // Scheduler.start();
     #[cfg(not(debug_assertions))]
     let wql_auth = HttpAuthentication::bearer(wql_validator);
+    #[cfg(not(debug_assertions))]
+    let history_auth = HttpAuthentication::bearer(history_validator);
 
     #[cfg(not(debug_assertions))]
     config
@@ -80,9 +86,10 @@ pub fn routes(config: &mut web::ServiceConfig) {
                 .route("/tx", web::post().to(tx::wql_handler))
                 .route("/query", web::post().to(query::wql_handler)),
         )
-        .route(
-            "/entity-history",
-            web::post().to(entity_history::history_handler),
+        .service(
+            web::scope("/entity-history")
+                .wrap(history_auth)
+                .route("", web::post().to(entity_history::history_handler)),
         )
         .route("", web::get().to(HttpResponse::NotFound));
 

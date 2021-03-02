@@ -20,7 +20,8 @@ pub enum Role {
     User,
     Read,
     Write,
-    // Jsom. Edn, History,
+    History,
+    // Json. Edn,
 }
 
 #[derive(Serialize, Deserialize)]

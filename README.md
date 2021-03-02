@@ -23,7 +23,7 @@ Some other features are:
   - [ ] Creating and removing ADMINs/new users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] Possible Relation Algebra
-- [ ] Entity history
+- [x] Entity history
 
 `Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
 

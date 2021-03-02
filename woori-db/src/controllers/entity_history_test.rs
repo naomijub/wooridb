@@ -61,7 +61,7 @@ async fn test_history_ok() {
 
     let _ = test::call_service(&mut app, req).await;
 
-    let payload = format!("(entity_key: \"test_history\", entity_id: \"{}\")", uuid);
+    let payload = format!("(entity_key: \"test_history\", entity_id: \"{}\",)", uuid);
     let req = test::TestRequest::post()
         .set_payload(payload)
         .uri("/entity-history")
