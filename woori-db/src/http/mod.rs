@@ -1,10 +1,15 @@
 #[cfg(not(debug_assertions))]
-use crate::auth::{controllers as auth, io::read_admin_info, middlewares::wql_validator};
+use crate::auth::{
+    controllers as auth,
+    io::read_admin_info,
+    middlewares::{history_validator, wql_validator},
+};
 #[cfg(not(debug_assertions))]
 use actix_web_httpauth::middleware::HttpAuthentication;
 
 use crate::{
     actors::wql::Executor,
+    controllers::entity_history,
     io::read::{encryption, local_data, offset, unique_data},
     repository::local::{LocalContext, SessionContext, UniquenessContext},
 };
@@ -56,10 +61,14 @@ pub fn routes(config: &mut web::ServiceConfig) {
     // Scheduler.start();
     #[cfg(not(debug_assertions))]
     let wql_auth = HttpAuthentication::bearer(wql_validator);
+    #[cfg(not(debug_assertions))]
+    let history_auth = HttpAuthentication::bearer(history_validator);
 
     #[cfg(not(debug_assertions))]
     config
         .data(session_context)
+        .data(wql_context)
+        .data(actor)
         .service(
             web::scope("/auth")
                 .data(admin_info)
@@ -69,32 +78,39 @@ pub fn routes(config: &mut web::ServiceConfig) {
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))
-                .data(wql_context)
                 .data(cost)
                 .data(unique_context)
                 .data(encrypt_context)
                 .data(write_offset)
-                .data(actor)
                 .wrap(wql_auth)
                 .route("/tx", web::post().to(tx::wql_handler))
                 .route("/query", web::post().to(query::wql_handler)),
+        )
+        .service(
+            web::scope("/entity-history")
+                .wrap(history_auth)
+                .route("", web::post().to(entity_history::history_handler)),
         )
         .route("", web::get().to(HttpResponse::NotFound));
 
     #[cfg(debug_assertions)]
     config
         .data(session_context)
+        .data(wql_context)
+        .data(actor)
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))
-                .data(wql_context)
                 .data(cost)
                 .data(unique_context)
                 .data(encrypt_context)
                 .data(write_offset)
-                .data(actor)
                 .route("/tx", web::post().to(tx::wql_handler))
                 .route("/query", web::post().to(query::wql_handler)),
+        )
+        .route(
+            "/entity-history",
+            web::post().to(entity_history::history_handler),
         )
         .route("", web::get().to(HttpResponse::NotFound));
 }

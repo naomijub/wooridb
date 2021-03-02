@@ -24,7 +24,7 @@
   - [ ] Removing Users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] File compression done with `zstd`.
-- [ ] [Entity id history](https://github.com/naomijub/wooridb/issues/85)
+- [x] Entity id history
 - [ ] Possible Relation Algebra
     - [ ] Projection
     - [ ] Union

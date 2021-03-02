@@ -34,6 +34,7 @@ Response to this request will be `(user_id: \"<some-uuid>\",)`, containing the u
 - `USER` - works on all `/wql/query`, `/wql/tx` and `/auth/putUserSession`.
 - `WRITE` - only works on `/wql/tx` and `/auth/putUserSession`.
 - `READ` - only works on `/wql/query` and `/auth/putUserSession`.
+- `HISTORY` - only works on `/entity-history`.
 - New roles to be added as needed.
 
 ### Getting a session token
