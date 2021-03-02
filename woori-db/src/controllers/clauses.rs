@@ -10,13 +10,25 @@ use crate::{
     model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
 };
 
-pub async fn select_where(
+pub async fn select_where_controller(
     entity: String,
     args_to_select: ToSelect,
     clauses: Vec<Clause>,
     local_data: DataLocalContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    let states = select_where(entity, args_to_select, clauses, local_data, actor);
+
+    Ok(ron::ser::to_string_pretty(&states.await?, pretty_config_output())?)
+}
+
+pub async fn select_where(
+    entity: String,
+    args_to_select: ToSelect,
+    clauses: Vec<Clause>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
+) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
     let args_to_key = clauses
         .clone()
         .into_iter()
@@ -32,7 +44,7 @@ pub async fn select_where(
     let states = generate_state(&registries, args_to_select, &actor).await?;
     let states = filter_where_clauses(states, args_to_key, &clauses).await;
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    Ok(states)
 }
 
 async fn filter_where_clauses(

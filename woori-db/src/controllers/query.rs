@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr,
-};
+use std::{collections::{BTreeMap, HashMap, HashSet}, str::FromStr};
 
 use actix_web::{HttpResponse, Responder};
 use ron::ser::to_string_pretty;
@@ -18,7 +15,7 @@ use crate::{
     model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
 };
 
-use super::clauses::select_where;
+use super::clauses::{select_where_controller};
 
 pub async fn wql_handler(
     body: String,
@@ -60,7 +57,7 @@ pub async fn wql_handler(
             select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
         }
         Ok(Wql::SelectWhere(entity_name, args_to_select, clauses)) => {
-            select_where(entity_name, args_to_select, clauses, local_data, actor).await
+            select_where_controller(entity_name, args_to_select, clauses, local_data, actor).await
         }
         Ok(Wql::CheckValue(entity, uuid, content)) => {
             check_value_controller(entity, uuid, content, local_data, encryption, actor).await
@@ -451,7 +448,7 @@ async fn select_all(
         registries
     };
 
-    let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
+    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
     for (uuid, regs) in registries {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
