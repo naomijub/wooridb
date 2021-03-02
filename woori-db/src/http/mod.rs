@@ -5,6 +5,7 @@ use actix_web_httpauth::middleware::HttpAuthentication;
 
 use crate::{
     actors::wql::Executor,
+    controllers::entity_history,
     io::read::{encryption, local_data, offset, unique_data},
     repository::local::{LocalContext, SessionContext, UniquenessContext},
 };
@@ -60,6 +61,8 @@ pub fn routes(config: &mut web::ServiceConfig) {
     #[cfg(not(debug_assertions))]
     config
         .data(session_context)
+        .data(wql_context)
+        .data(actor)
         .service(
             web::scope("/auth")
                 .data(admin_info)
@@ -69,32 +72,38 @@ pub fn routes(config: &mut web::ServiceConfig) {
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))
-                .data(wql_context)
                 .data(cost)
                 .data(unique_context)
                 .data(encrypt_context)
                 .data(write_offset)
-                .data(actor)
                 .wrap(wql_auth)
                 .route("/tx", web::post().to(tx::wql_handler))
                 .route("/query", web::post().to(query::wql_handler)),
+        )
+        .route(
+            "/entity-history",
+            web::post().to(entity_history::history_handler),
         )
         .route("", web::get().to(HttpResponse::NotFound));
 
     #[cfg(debug_assertions)]
     config
         .data(session_context)
+        .data(wql_context)
+        .data(actor)
         .service(
             web::scope("/wql")
                 .guard(guard::Header("Content-Type", "application/wql"))
-                .data(wql_context)
                 .data(cost)
                 .data(unique_context)
                 .data(encrypt_context)
                 .data(write_offset)
-                .data(actor)
                 .route("/tx", web::post().to(tx::wql_handler))
                 .route("/query", web::post().to(query::wql_handler)),
+        )
+        .route(
+            "/entity-history",
+            web::post().to(entity_history::history_handler),
         )
         .route("", web::get().to(HttpResponse::NotFound));
 }

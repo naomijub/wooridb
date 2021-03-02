@@ -76,6 +76,8 @@ test:
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::clauses_test::clause_like
 	rm -rf data/*.log
+	cargo test -- --ignored controllers::entity_history_test::test_history_ok
+	rm -rf data/*.log
 	cargo test --release -- --ignored auth::controllers::routes_test_with_auth::query_and_tx_with_token
 	rm -rf data/*.log
 

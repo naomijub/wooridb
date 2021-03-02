@@ -1,4 +1,5 @@
 pub mod encrypts;
+pub mod history;
 pub mod recovery;
 pub mod scheduler;
 pub mod state;
