@@ -4,6 +4,7 @@ use std::{
 };
 
 use actix_web::{HttpResponse, Responder};
+use rayon::prelude::*;
 use ron::ser::to_string_pretty;
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
@@ -87,7 +88,7 @@ pub async fn check_value_controller(
         if guard.contains_key(&entity) {
             let encrypts = guard.get(&entity).unwrap();
             let non_encrypt_keys = content
-                .iter()
+                .par_iter()
                 .filter(|(k, _)| !encrypts.contains(&(*k).to_string()))
                 .map(|(k, _)| k.to_owned())
                 .collect::<Vec<String>>();
@@ -118,7 +119,7 @@ pub async fn check_value_controller(
         .map(ToOwned::to_owned)
         .collect::<HashSet<String>>();
     let filtered_state: HashMap<String, Types> = state
-        .into_iter()
+        .into_par_iter()
         .filter(|(k, _)| keys.contains(k))
         .collect();
     let results = actor
@@ -212,7 +213,7 @@ async fn select_keys_id_when_controller(
         .send(ReadEntityIdAt::new(&entity, uuid, date_log))
         .await??;
     let result = result
-        .into_iter()
+        .into_par_iter()
         .filter(|(k, _)| keys.contains(k))
         .collect::<HashMap<String, Types>>();
 
@@ -236,7 +237,7 @@ async fn select_keys_when_controller(
     let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
     let result = result
-        .into_iter()
+        .into_par_iter()
         .map(|(id, hm)| {
             (
                 id,
@@ -278,7 +279,7 @@ async fn select_all_with_id(
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
     let filterd_state = state
-        .into_iter()
+        .into_par_iter()
         .filter(|(_, v)| !v.is_hash())
         .collect::<HashMap<String, Types>>();
     Ok(ron::ser::to_string_pretty(
@@ -301,7 +302,7 @@ async fn select_all_with_ids(
         };
         let registries = if let Some(id_to_registry) = local_data.get(&entity) {
             uuids
-                .into_iter()
+                .into_par_iter()
                 .filter_map(|id| {
                     Some((
                         id,
@@ -326,7 +327,7 @@ async fn select_all_with_ids(
             let content = actor.send(regs).await??;
             let state = actor.send(State(content)).await??;
             let filtered = state
-                .into_iter()
+                .into_par_iter()
                 .filter(|(_, v)| !v.is_hash())
                 .collect::<HashMap<String, Types>>();
             states.insert(uuid, Some(filtered));
@@ -345,7 +346,7 @@ async fn select_keys_with_id(
     local_data: DataLocalContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let keys = keys.into_iter().collect::<HashSet<String>>();
+    let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -368,7 +369,7 @@ async fn select_keys_with_id(
     let content = actor.send(registry).await??;
     let state = actor.send(State(content)).await??;
     let filtered: HashMap<String, Types> = state
-        .into_iter()
+        .into_par_iter()
         .filter(|(k, _)| keys.contains(k))
         .filter(|(_, v)| !v.is_hash())
         .collect();
@@ -393,7 +394,7 @@ async fn select_keys_with_ids(
         };
         let registries = if let Some(id_to_registry) = local_data.get(&entity) {
             uuids
-                .into_iter()
+                .into_par_iter()
                 .filter_map(|id| {
                     Some((
                         id,
@@ -418,7 +419,7 @@ async fn select_keys_with_ids(
             let content = actor.send(regs).await??;
             let state = actor.send(State(content)).await??;
             let filtered: HashMap<String, Types> = state
-                .into_iter()
+                .into_par_iter()
                 .filter(|(k, _)| keys.contains(k))
                 .filter(|(_, v)| !v.is_hash())
                 .collect();
@@ -456,7 +457,7 @@ async fn select_all(
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered = state
-            .into_iter()
+            .into_par_iter()
             .filter(|(_, v)| !v.is_hash())
             .collect::<HashMap<String, Types>>();
 
@@ -472,7 +473,7 @@ async fn select_args(
     local_data: DataLocalContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
-    let keys = keys.into_iter().collect::<HashSet<String>>();
+    let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -493,7 +494,7 @@ async fn select_args(
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered: HashMap<String, Types> = state
-            .into_iter()
+            .into_par_iter()
             .filter(|(k, _)| keys.contains(k))
             .filter(|(_, v)| !v.is_hash())
             .collect();

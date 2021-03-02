@@ -30,6 +30,7 @@ use crate::{
 };
 
 use actix_web::{HttpResponse, Responder};
+use rayon::prelude::*;
 use ron::ser::to_string_pretty;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -479,7 +480,7 @@ pub async fn update_content_controller(
         if guard.contains_key(&args.entity) {
             let keys = args
                 .content
-                .iter()
+                .par_iter()
                 .filter(|(k, _)| guard.get(&args.entity).unwrap().contains(k.to_owned()))
                 .map(|(k, _)| k.to_owned())
                 .collect::<Vec<String>>();
