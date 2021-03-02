@@ -1,38 +1,34 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::process::Command;
 
-
 fn criterion_benchmark(c: &mut Criterion) {
     let ent_str = "bench_entity_name";
     curl_create(ent_str);
     curl_insert(ent_str);
-    c.bench_function("select_all_1_entity", |b| {
-        b.iter(|| {
-            curl_select(ent_str)
-        })
-    });
+    c.bench_function("select_all_1_entity", |b| b.iter(|| curl_select(ent_str)));
 
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
     curl_insert(ent_str);
-    c.bench_function("select_all_10_entity", |b| {
-        b.iter(|| {
-            curl_select(ent_str)
-        })
-    });
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    c.bench_function("select_all_10_entity", |b| b.iter(|| curl_select(ent_str)));
 
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
-    curl_insert(ent_str);curl_insert(ent_str);
-    c.bench_function("select_all_20_entity", |b| {
-        b.iter(|| {
-            curl_select(ent_str)
-        })
-    });
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    curl_insert(ent_str);
+    c.bench_function("select_all_20_entity", |b| b.iter(|| curl_select(ent_str)));
 }
 
 criterion_group!(benches, criterion_benchmark);
