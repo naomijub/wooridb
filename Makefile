@@ -12,3 +12,7 @@ release:
 debug:
 	cargo package --manifest-path wql/Cargo.toml
 	cargo run --manifest-path woori-db/Cargo.toml
+
+push:
+	docker build -t naomijubs/wooridb:$(tag) .
+	docker push naomijubs/wooridb:$(tag)

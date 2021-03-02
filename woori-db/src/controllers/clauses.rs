@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use futures::{future, stream, StreamExt};
+use rayon::prelude::*;
 use uuid::Uuid;
 use wql::{Clause, ToSelect, Types, Value};
 
@@ -10,16 +11,31 @@ use crate::{
     model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
 };
 
-pub async fn select_where(
+pub async fn select_where_controller(
     entity: String,
     args_to_select: ToSelect,
     clauses: Vec<Clause>,
     local_data: DataLocalContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    let states = select_where(entity, args_to_select, clauses, local_data, actor);
+
+    Ok(ron::ser::to_string_pretty(
+        &states.await?,
+        pretty_config_output(),
+    )?)
+}
+
+pub async fn select_where(
+    entity: String,
+    args_to_select: ToSelect,
+    clauses: Vec<Clause>,
+    local_data: DataLocalContext,
+    actor: DataExecutor,
+) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
     let args_to_key = clauses
         .clone()
-        .into_iter()
+        .into_par_iter()
         .filter_map(|clause| {
             if let Clause::ValueAttribution(_, key, Value(arg)) = clause {
                 Some((arg, key))
@@ -32,7 +48,7 @@ pub async fn select_where(
     let states = generate_state(&registries, args_to_select, &actor).await?;
     let states = filter_where_clauses(states, args_to_key, &clauses).await;
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    Ok(states)
 }
 
 async fn filter_where_clauses(
@@ -45,7 +61,7 @@ async fn filter_where_clauses(
         .filter(|(_, state)| {
             future::ready(
                 clauses
-                    .iter()
+                    .par_iter()
                     .map(|clause| match clause {
                         Clause::ValueAttribution(_, _, _) => true,
                         Clause::Or(_, inner_clauses) => {
@@ -114,7 +130,7 @@ fn or_clauses(
 ) -> bool {
     let default = String::new();
     inner_clauses
-        .iter()
+        .par_iter()
         .map(|clause| match clause {
             Clause::ValueAttribution(_, _, _) => true,
             Clause::Error => false,
@@ -179,7 +195,7 @@ async fn generate_state(
         let state = actor
             .send(State(content))
             .await??
-            .into_iter()
+            .into_par_iter()
             .filter(|(_, v)| !v.is_hash());
         let filtered = if let ToSelect::Keys(ref keys) = args_to_select {
             state

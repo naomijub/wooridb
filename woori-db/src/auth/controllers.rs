@@ -215,6 +215,7 @@ mod routes_test_with_auth {
     use crate::{auth::schemas::UserId, http::routes};
     use actix_http::body::ResponseBody;
     use actix_web::{body::Body, test, App};
+    use uuid::Uuid;
 
     #[ignore]
     #[actix_rt::test]
@@ -268,6 +269,65 @@ mod routes_test_with_auth {
 
         assert!(resp.status().is_success());
         assert!(body.contains("{\n  \"a\": Integer(123),\n }"))
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn history_with_token() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
+            .uri("/auth/createUser")
+            .to_request();
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+        let uuid: UserId = ron::de::from_str(&body).unwrap();
+
+        let payload = format!(
+            "(id: \"{}\", user_password: \"my_password\",)",
+            uuid.user_id
+        );
+        let req = test::TestRequest::put()
+            .set_payload(payload)
+            .uri("/auth/putUserSession")
+            .to_request();
+        let mut resp = test::call_service(&mut app, req).await;
+        let token = resp.take_body().as_str().to_string();
+        let token = format!("Bearer {}", token);
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .header("Authorization", token.clone())
+            .set_payload("CREATE ENTITY token_history_ok")
+            .uri("/wql/tx")
+            .to_request();
+        let _ = test::call_service(&mut app, req).await;
+
+        let uuid = Uuid::new_v4();
+
+        let payload = format!("INSERT {{a: 123,}} INTO token_history_ok with {}", uuid);
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .header("Authorization", token.clone())
+            .set_payload(payload)
+            .uri("/wql/tx")
+            .to_request();
+        let _ = test::call_service(&mut app, req).await;
+
+        let payload = format!(
+            "(entity_key: \"token_history_ok\", entity_id: \"{}\",)",
+            uuid
+        );
+        let req = test::TestRequest::post()
+            .header("Authorization", token.clone())
+            .set_payload(payload)
+            .uri("/entity-history")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+
+        assert!(body.contains("\"a\": Integer(123)"));
     }
 
     trait BodyTest {

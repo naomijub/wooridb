@@ -4,6 +4,7 @@ use std::{
     io::{Error, Read, Seek, SeekFrom},
 };
 
+use rayon::prelude::*;
 use uuid::Uuid;
 
 use crate::model::error;
@@ -180,7 +181,7 @@ pub fn encryption() -> Result<BTreeMap<String, HashSet<String>>, error::Error> {
     };
 
     let data = data?
-        .into_iter()
+        .into_par_iter()
         .map(|enc| {
             (
                 enc.entity,

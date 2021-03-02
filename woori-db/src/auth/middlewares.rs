@@ -45,6 +45,32 @@ pub async fn wql_validator(
     }
 }
 
+pub async fn history_validator(
+    req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, Error> {
+    println!("{:?}", req.path());
+    if req.path().starts_with("/entity-history") {
+        let allow = req
+            .app_data::<web::Data<Arc<Mutex<SessionContext>>>>()
+            .and_then(|db| {
+                validate_token(
+                    &db,
+                    Some(credentials.token()),
+                    vec![Role::History, Role::User],
+                )
+            });
+
+        if let Some(true) = allow {
+            Ok(req)
+        } else {
+            Err(crate::model::error::Error::AuthBadRequest.into())
+        }
+    } else {
+        Ok(req)
+    }
+}
+
 fn validate_token(
     db: &Arc<Mutex<BTreeMap<String, SessionInfo>>>,
     token: Option<&str>,
