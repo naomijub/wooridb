@@ -1,5 +1,6 @@
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
+use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 use wql::Types;
@@ -69,7 +70,7 @@ impl Handler<ReadEntityRange> for Executor {
                     };
                     match resp {
                         Ok(map) => {
-                            let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                            let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                             hm.insert(date, map);
                         }
                         Err(e) => return Err(e),
@@ -96,7 +97,7 @@ impl Handler<ReadEntityRange> for Executor {
                     };
                     match resp {
                         Ok(map) => {
-                            let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                            let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                             hm.insert(date, map);
                         }
                         Err(e) => return Err(e),
@@ -150,7 +151,7 @@ impl Handler<ReadEntitiesAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm.insert(fractions[2].to_owned(), map);
                     }
                     Err(e) => return Err(e),
@@ -169,7 +170,7 @@ impl Handler<ReadEntitiesAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm.insert(fractions[2].to_owned(), map);
                     }
                     Err(e) => return Err(e),
@@ -228,7 +229,7 @@ impl Handler<ReadEntityIdAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm = map;
                     }
                     Err(e) => return Err(e),
@@ -248,7 +249,7 @@ impl Handler<ReadEntityIdAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm = map;
                     }
                     Err(e) => return Err(e),

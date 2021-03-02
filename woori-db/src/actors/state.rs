@@ -1,4 +1,5 @@
 use actix::prelude::*;
+use rayon::prelude::*;
 use std::collections::HashMap;
 use wql::{MatchCondition, Types};
 
@@ -109,7 +110,7 @@ impl Handler<MatchUpdate> for Executor {
 }
 fn match_all(all: &[MatchCondition], previous_state: &HashMap<String, Types>) -> Result<(), Error> {
     let conds = all
-        .iter()
+        .par_iter()
         .map(|cond| match cond.clone() {
             MatchCondition::Eq(key, val) => {
                 if previous_state.get(&key).is_some() {
@@ -165,7 +166,7 @@ fn match_all(all: &[MatchCondition], previous_state: &HashMap<String, Types>) ->
 
 fn match_any(any: &[MatchCondition], previous_state: &HashMap<String, Types>) -> Result<(), Error> {
     let conds = any
-        .iter()
+        .par_iter()
         .map(|cond| match cond.clone() {
             MatchCondition::Eq(key, val) => {
                 if previous_state.get(&key).is_some() {

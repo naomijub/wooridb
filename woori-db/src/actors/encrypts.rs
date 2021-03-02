@@ -4,6 +4,7 @@ use std::{
 };
 
 use actix::prelude::*;
+use rayon::prelude::*;
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};
 use wql::Types;
@@ -51,7 +52,7 @@ impl Handler<CreateWithEncryption> for Executor {
         };
 
         if !encrypt_data.contains_key(&msg.entity) {
-            let hm = msg.encrypts.into_iter().collect::<HashSet<String>>();
+            let hm = msg.encrypts.into_par_iter().collect::<HashSet<String>>();
             encrypt_data.insert(msg.entity.to_owned(), hm);
         }
         Ok(())
@@ -144,7 +145,7 @@ impl Handler<VerifyEncryption> for Executor {
         let results = msg
             .content
             .clone()
-            .into_iter()
+            .into_par_iter()
             .map(|(k, v)| {
                 let original = msg.filtered.clone();
                 let original_hash = original.get(&k).unwrap_or(&type_nil);
