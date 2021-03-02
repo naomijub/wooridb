@@ -19,7 +19,10 @@ pub async fn select_where_controller(
 ) -> Result<String, Error> {
     let states = select_where(entity, args_to_select, clauses, local_data, actor);
 
-    Ok(ron::ser::to_string_pretty(&states.await?, pretty_config_output())?)
+    Ok(ron::ser::to_string_pretty(
+        &states.await?,
+        pretty_config_output(),
+    )?)
 }
 
 pub async fn select_where(

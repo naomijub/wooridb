@@ -1,4 +1,7 @@
-use std::{collections::{BTreeMap, HashMap, HashSet}, str::FromStr};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    str::FromStr,
+};
 
 use actix_web::{HttpResponse, Responder};
 use ron::ser::to_string_pretty;
@@ -15,7 +18,7 @@ use crate::{
     model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
 };
 
-use super::clauses::{select_where_controller};
+use super::clauses::select_where_controller;
 
 pub async fn wql_handler(
     body: String,
