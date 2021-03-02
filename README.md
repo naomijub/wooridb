@@ -82,16 +82,15 @@ PORT=1438
 
 ## TODOS
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
-- [ ] Docker
-- [ ] Benchmarks. PRs [61](https://github.com/naomijub/wooridb/pull/61)
+- [ ] Benchmarks. PRs [61](https://github.com/naomijub/wooridb/pull/61) [93](https://github.com/naomijub/wooridb/pull/93)
 
 ## Current Benchmarks
 >  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
 
 - `create_entity`           time:   [15.269 ms 15.332 ms 15.396 ms]
 - `insert_entity`           time:   [27.438 ms 28.177 ms 28.958 ms]
-- `update_set_entity`       time:   [39.814 ms 40.054 ms 40.314 ms]
-- `update_content_entity`   time:   [42.359 ms 43.129 ms 43.942 ms]
+- `update_set_entity`       time:   [24.110 ms 24.857 ms 25.695 ms]
+- `update_content_entity`   time:   [25.076 ms 25.819 ms 26.584 ms]
 - `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
 - `evict_entity_id`         time:   [41.387 ms 42.029 ms 42.731 ms] - Filtered 400s
 - `evict_entity`            time:   [31.582 ms 31.805 ms 32.039 ms] - Filtered 400s
