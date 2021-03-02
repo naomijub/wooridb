@@ -50,6 +50,10 @@ rand = "*"
 # name = "tx"
 # harness = false
 
+# [[bench]]
+# name = "query"
+# harness = false
+
 [profile.release]
 panic = 'unwind'
 opt-level = 3
