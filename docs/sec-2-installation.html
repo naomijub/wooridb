@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html" class="active"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-errors.html"><strong aria-hidden="true">8.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html" class="active"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-errors.html"><strong aria-hidden="true">9.</strong> Errors Messages</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -181,11 +181,11 @@
 <li><code>Debug mode</code>: <code>make debug</code> in project root.</li>
 </ul>
 <h3 id="docker"><a class="header" href="#docker">Docker</a></h3>
-<p>you can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. The current most stable tag is <strong><code>beta-1</code></strong>. To execute the docker container run:</p>
+<p>you can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. The current most stable tag is <strong><code>beta-2</code></strong>. To execute the docker container run:</p>
 <ul>
-<li><code>docker run -p 1438:1438 naomijubs/wooridb:beta-1 debug</code> for debug mode.</li>
-<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-1 run</code>  for size optimization.</li>
-<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-1 release</code> for performance optimization.</li>
+<li><code>docker run -p 1438:1438 naomijubs/wooridb:beta-2 debug</code> for debug mode.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-2 run</code>  for size optimization.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-2 release</code> for performance optimization.</li>
 <li>All <code>-e/--env</code> can be replaced by a <code>--env-file path/to/your/.env</code>. Your <code>.env</code>file should contain the following fields:</li>
 </ul>
 <pre><code>HASHING_COST=16
