@@ -207,6 +207,32 @@
 <li><code>UPDATE entity_tree_key SET {{a: 34, c: true,}} INTO dc3069e7-2a22-4fbc-ae05-f78a807239c0</code>.</li>
 <li><code>UPDATE entity_tree_key SET {{a: 321, c: 'h',}} INTO dc3069e7-2a22-4fbc-ae05-f78a807239c0</code>.</li>
 </ol>
+<h2 id="entity-history-with-time-ranges"><a class="header" href="#entity-history-with-time-ranges">Entity history with time ranges</a></h2>
+<p>There are two extra parameters that can be used with <code>entity-history</code>, they are <code>start_datetime</code> and <code>end_datetime</code>. Both parameters are optional and if they are present they will define the time limits of the query. <code>start_datetime</code> is the beginning of the time range query while <code>end_datetime</code> is the ending of the time range query. If we used <code>start_datetime</code> and <code>end_datetime</code> for the previous example as <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/entity-history -d '(entity_key: &quot;entity_tree_key&quot;, entity_id: &quot;&lt;some-Uuid&gt;&quot;, start_datetime: Some(&quot;2021-03-02T05:00:19.816357937Z&quot;), end_datetime: Some(&quot;2021-03-02T05:00:19.817189988Z&quot;),)'</code> we would have the following result:</p>
+<p>Example request: </p>
+<pre><code class="language-ron">(
+    entity_key: &quot;entity_tree_key&quot;, 
+    entity_id: &quot;dc3069e7-2a22-4fbc-ae05-f78a807239c0&quot;,  
+    start_datetime: Some(&quot;2021-03-02T05:00:19.816357937Z&quot;), 
+    end_datetime: Some(&quot;2021-03-02T05:00:19.817189988Z&quot;),
+)
+</code></pre>
+<p>Example response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+&quot;2021-03-02T05:00:19.816357939Z&quot;: {
+    &quot;b&quot;: Float(12.3),
+    &quot;a&quot;: Integer(123),
+},
+&quot;2021-03-02T05:00:19.817189987Z&quot;: {
+    &quot;b&quot;: Float(12.3),
+    &quot;c&quot;: Boolean(true),
+    &quot;a&quot;: Integer(34),
+},,}
+<span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
