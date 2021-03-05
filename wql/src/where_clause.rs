@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{logic::parse_value, ToSelect, Types, Wql};
+use crate::{logic::parse_value, select::select_functions, ToSelect, Types, Wql};
 use serde::{Deserialize, Serialize};
 
 pub fn where_selector(
@@ -41,7 +41,18 @@ pub fn where_selector(
         return Err(String::from("WHERE clause cannot be empty"));
     }
 
-    Ok(Wql::SelectWhere(entity_name, arg, clauses))
+    let next_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_uppercase();
+
+    Ok(Wql::SelectWhere(
+        entity_name,
+        arg,
+        clauses,
+        select_functions(next_symbol, chars)?,
+    ))
 }
 
 fn set_clause(entity_name: &str, chs: &mut std::str::Chars) -> Clause {
@@ -222,6 +233,7 @@ pub struct Value(pub String);
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_error_open() {
@@ -261,7 +273,8 @@ mod test {
                         "id".to_string(),
                         Types::Integer(349875325)
                     ),
-                ]
+                ],
+                HashMap::new()
             )
         )
     }
@@ -321,7 +334,8 @@ mod test {
                         "?name".to_string(),
                         Types::String("%uli%".to_string())
                     ),
-                ]
+                ],
+                HashMap::new()
             )
         )
     }
@@ -355,7 +369,8 @@ mod test {
                         "?age".to_string(),
                         vec![Types::Integer(30), Types::Integer(35)]
                     )
-                ]
+                ],
+                HashMap::new()
             )
         )
     }
@@ -374,7 +389,8 @@ mod test {
             Wql::SelectWhere(
                 "my_entity".to_string(),
                 ToSelect::All,
-                vec![Clause::Error, Clause::Error,]
+                vec![Clause::Error, Clause::Error,],
+                HashMap::new()
             )
         )
     }
@@ -423,7 +439,8 @@ mod test {
                             ),
                         ]
                     ),
-                ]
+                ],
+                HashMap::new()
             )
         )
     }

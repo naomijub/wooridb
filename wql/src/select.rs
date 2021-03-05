@@ -1,6 +1,40 @@
-use std::str::FromStr;
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, str::FromStr};
 
 use uuid::Uuid;
+
+const FUNCTIONS: [&'static str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT"];
+const OPERATORS: [&'static str; 10] = [
+    "ID", "IDS", "WHERE", "WHEN", "DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT",
+];
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum Order {
+    Asc,
+    Desc,
+}
+
+impl std::str::FromStr for Order {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == ":asc" {
+            Ok(Order::Asc)
+        } else if s == ":desc" {
+            Ok(Order::Desc)
+        } else {
+            Err(String::from("Order parameter should be :asc/:desc"))
+        }
+    }
+}
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum Functions {
+    Dedup(String),
+    GroupBy(String),
+    OrderBy(String, Order),
+    Limit(usize),
+    Offset(usize),
+    Count,
+}
 
 use crate::where_clause::where_selector;
 
@@ -65,7 +99,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             return when_selector(entity_name, arg, uuid.ok(), chars);
         }
 
-        Ok(Wql::Select(entity_name, arg, uuid.ok()))
+        Ok(Wql::Select(entity_name, arg, uuid.ok(), HashMap::new()))
     } else if next_symbol == "IDS" {
         let in_symbol = chars
             .skip_while(|c| c.is_whitespace())
@@ -83,7 +117,12 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             if next_symbol.to_uppercase() == "WHEN" {
                 return Err(String::from("WHEN not allowed after IDS IN"));
             }
-            Ok(Wql::SelectIds(entity_name, arg, uuids))
+            Ok(Wql::SelectIds(
+                entity_name,
+                arg,
+                uuids,
+                select_functions(next_symbol, chars)?,
+            ))
         } else {
             Err(String::from(
                 "Keyword IN is required after IDS to define a set of uuids",
@@ -93,15 +132,95 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         when_selector(entity_name, arg, None, chars)
     } else if next_symbol.to_uppercase() == "WHERE" {
         where_selector(entity_name, arg, chars)
-    } else if !next_symbol.is_empty()
-        && (next_symbol.to_uppercase() != "ID" || next_symbol.to_uppercase() != "IDS")
-    {
-        Err(String::from(
-            "Keyword ID/IDS is required to set an uuid in SELECT",
+    } else if FUNCTIONS.contains(&&next_symbol.to_uppercase()[..]) {
+        Ok(Wql::Select(
+            entity_name,
+            arg,
+            None,
+            select_functions(next_symbol, chars)?,
         ))
+    } else if !next_symbol.is_empty() && !OPERATORS.contains(&&next_symbol.to_uppercase()[..]) {
+        Err(String::from(
+            "Keyword ID/IDS is required to set an uuid in SELECT or functions WHEN/WHERE/OFFSET/LIMIT/DEDUP/GROUP BY/ORDER BY. Key was ",
+        ) + &next_symbol)
     } else {
-        Ok(Wql::Select(entity_name, arg, None))
+        Ok(Wql::Select(entity_name, arg, None, HashMap::new()))
     }
+}
+
+pub fn select_functions(
+    next: String,
+    chars: &mut std::str::Chars,
+) -> Result<HashMap<String, Functions>, String> {
+    let mut functions = HashMap::new();
+    let mut next_symbol = next;
+
+    loop {
+        if FUNCTIONS.contains(&&next_symbol[..]) {
+            if next_symbol == "GROUP" || next_symbol == "ORDER" {
+                let by = chars
+                    .skip_while(|c| c.is_whitespace())
+                    .take_while(|c| !c.is_whitespace())
+                    .collect::<String>()
+                    .to_uppercase();
+
+                if by != "BY" {
+                    return Err(String::from("ORDER and GROUP must be followed by BY"));
+                }
+            }
+            let next_value = chars
+                .skip_while(|c| c.is_whitespace())
+                .take_while(|c| !c.is_whitespace())
+                .collect::<String>();
+
+            match &next_symbol[..] {
+                "DEDUP" => functions.insert("DEDUP".to_string(), Functions::Dedup(next_value)),
+                "GROUP" => functions.insert("GROUP".to_string(), Functions::GroupBy(next_value)),
+                "ORDER" => {
+                    let order = chars
+                        .skip_while(|c| c.is_whitespace())
+                        .take_while(|c| !c.is_whitespace())
+                        .collect::<String>()
+                        .to_lowercase();
+
+                    let order = Order::from_str(&order)?;
+                    functions.insert("ORDER".to_string(), Functions::OrderBy(next_value, order))
+                }
+                "OFFSET" => {
+                    let value = next_value
+                        .parse::<usize>()
+                        .or_else(|e| Err(format!("Error parsing value: {:?}", e)))?;
+                    functions.insert("OFFSET".to_string(), Functions::Offset(value))
+                }
+                "LIMIT" => {
+                    let value = next_value
+                        .parse::<usize>()
+                        .or_else(|e| Err(format!("Error parsing value: {:?}", e)))?;
+                    functions.insert("LIMIT".to_string(), Functions::Limit(value))
+                }
+                "COUNT" => functions.insert("COUNT".to_string(), Functions::Count),
+                _ => {
+                    return Err(String::from(
+                        "Available functions are DEDUP, GROUP BY, ORDER BY, OFFSET, LIMIT, COUNT",
+                    ))
+                }
+            };
+
+            next_symbol = chars
+                .skip_while(|c| c.is_whitespace())
+                .take_while(|c| !c.is_whitespace())
+                .collect::<String>()
+                .to_uppercase();
+        } else if chars.count() == 0 {
+            break;
+        } else {
+            return Err(String::from(
+                "Available functions are DEDUP, GROUP BY, ORDER BY, OFFSET, LIMIT, COUNT",
+            ));
+        }
+    }
+
+    Ok(functions)
 }
 
 fn when_selector(
@@ -177,7 +296,7 @@ mod test {
     use uuid::Uuid;
 
     use crate::{ToSelect, Wql};
-    use std::str::FromStr;
+    use std::{collections::HashMap, str::FromStr};
 
     #[test]
     fn select_all() {
@@ -185,7 +304,7 @@ mod test {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select("my_entity".to_string(), ToSelect::All, None)
+            Wql::Select("my_entity".to_string(), ToSelect::All, None, HashMap::new())
         );
     }
 
@@ -218,7 +337,8 @@ mod test {
             Wql::Select(
                 "my_entity".to_string(),
                 ToSelect::Keys(vec!["hello".to_string()]),
-                None
+                None,
+                HashMap::new()
             )
         );
     }
@@ -236,7 +356,8 @@ mod test {
                     "world".to_string(),
                     "by_me".to_string()
                 ]),
-                None
+                None,
+                HashMap::new()
             )
         );
     }
@@ -248,7 +369,12 @@ mod test {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select("my_entity".to_string(), ToSelect::All, uuid.ok())
+            Wql::Select(
+                "my_entity".to_string(),
+                ToSelect::All,
+                uuid.ok(),
+                HashMap::new()
+            )
         );
     }
 
@@ -263,11 +389,18 @@ mod test {
     fn select_all_id_key_missing() {
         let wql = Wql::from_str("SelEct * FROM my_entity 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 ");
 
+        assert!(
+            wql.err().unwrap().contains("Keyword ID/IDS is required to set an uuid in SELECT or functions WHEN/WHERE/OFFSET/LIMIT/DEDUP/GROUP BY/ORDER BY"),
+        );
+    }
+
+    #[test]
+    fn select_all_wrong_key() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ops");
+
         assert_eq!(
             wql.err(),
-            Some(String::from(
-                "Keyword ID/IDS is required to set an uuid in SELECT"
-            ))
+            Some(String::from("Keyword ID/IDS is required to set an uuid in SELECT or functions WHEN/WHERE/OFFSET/LIMIT/DEDUP/GROUP BY/ORDER BY. Key was OPS")),
         );
     }
 
@@ -279,7 +412,12 @@ mod test {
 
         assert_eq!(
             wql.unwrap(),
-            Wql::SelectIds("my_entity".to_string(), ToSelect::All, vec![uuid1, uuid2])
+            Wql::SelectIds(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![uuid1, uuid2],
+                HashMap::new()
+            )
         );
     }
 
@@ -294,7 +432,8 @@ mod test {
             Wql::SelectIds(
                 "my_entity".to_string(),
                 ToSelect::Keys(vec!["a".to_string(), "b".to_string(), "c".to_string()]),
-                vec![uuid1, uuid2]
+                vec![uuid1, uuid2],
+                HashMap::new()
             )
         );
     }
@@ -380,6 +519,104 @@ mod test {
             Some(String::from(
                 "Keyword END is required after START date for SELECT WHEN"
             ))
+        );
+    }
+}
+
+#[cfg(test)]
+mod functions_test {
+    use super::*;
+    use crate::{ToSelect, Wql};
+    use edn_rs::hmap;
+    use std::str::FromStr;
+
+    #[test]
+    fn select_all_limit_offset() {
+        let wql = Wql::from_str("SelEct * FROM my_entity LIMIT 3 OFFSET 5");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Select(
+                "my_entity".to_string(),
+                ToSelect::All,
+                None,
+                hmap! {
+                    "LIMIT".to_string() => Functions::Limit(3),
+                    "OFFSET".to_string() => Functions::Offset(5)
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn select_all_order_by() {
+        let wql = Wql::from_str("SelEct * FROM my_entity ORDER BY key_1 :asc");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Select(
+                "my_entity".to_string(),
+                ToSelect::All,
+                None,
+                hmap! {
+                    "ORDER".to_string() => Functions::OrderBy("key_1".to_string(), Order::Asc)
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn select_all_group_by() {
+        let wql = Wql::from_str("SelEct * FROM my_entity GROUP BY key_1");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Select(
+                "my_entity".to_string(),
+                ToSelect::All,
+                None,
+                hmap! {
+                    "GROUP".to_string() => Functions::GroupBy("key_1".to_string())
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn select_all_dedup() {
+        let wql = Wql::from_str("SelEct * FROM my_entity DEDUP key_1 COUNT");
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Select(
+                "my_entity".to_string(),
+                ToSelect::All,
+                None,
+                hmap! {
+                    "DEDUP".to_string() => Functions::Dedup("key_1".to_string()),
+                    "COUNT".to_string() => Functions::Count
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn select_all_ids_order() {
+        let wql = Wql::from_str("SelEct * FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,} ORDER BY my_key :desc DEDUP ley");
+        let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectIds(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![uuid1, uuid2],
+                hmap! {
+                    "ORDER".to_string() => Functions::OrderBy("my_key".to_string(), Order::Desc),
+                    "DEDUP".to_string() => Functions::Dedup("ley".to_string())
+                }
+            )
         );
     }
 }

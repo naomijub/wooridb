@@ -1,4 +1,5 @@
 use language_parser::read_symbol;
+use select::Functions;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, str::FromStr};
@@ -23,11 +24,11 @@ pub enum Wql {
     Delete(String, String),
     MatchUpdate(String, Entity, Uuid, MatchCondition),
     Evict(String, Option<Uuid>),
-    Select(String, ToSelect, Option<Uuid>),
+    Select(String, ToSelect, Option<Uuid>, HashMap<String, Functions>),
     SelectWhen(String, ToSelect, Option<Uuid>, String),
     SelectWhenRange(String, Uuid, String, String),
-    SelectIds(String, ToSelect, Vec<Uuid>),
-    SelectWhere(String, ToSelect, Vec<Clause>),
+    SelectIds(String, ToSelect, Vec<Uuid>, HashMap<String, Functions>),
+    SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Functions>),
     CheckValue(String, Uuid, HashMap<String, String>),
 }
 
@@ -58,7 +59,6 @@ pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
 impl std::str::FromStr for Wql {
     type Err = String;
 
-    /// Parses a `&str` that contains an Edn into `Result<Edn, EdnError>`
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut tokens = tokenize(s.trim_start());
         let wql = parse(tokens.next(), &mut tokens)?;

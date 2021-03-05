@@ -29,20 +29,20 @@ pub async fn wql_handler(
 ) -> impl Responder {
     let query = Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::Select(entity, ToSelect::All, Some(uuid))) => {
+        Ok(Wql::Select(entity, ToSelect::All, Some(uuid), _)) => {
             select_all_with_id(entity, uuid, local_data, actor).await
         }
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid))) => {
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid), _)) => {
             select_keys_with_id(entity, uuid, keys, local_data, actor).await
         }
-        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, local_data, actor).await,
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), None)) => {
+        Ok(Wql::Select(entity, ToSelect::All, None, functions)) => select_all(entity, local_data, actor).await,
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), None, functions)) => {
             select_args(entity, keys, local_data, actor).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::All, uuids)) => {
+        Ok(Wql::SelectIds(entity, ToSelect::All, uuids, functions)) => {
             select_all_with_ids(entity, uuids, local_data, actor).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
+        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions)) => {
             select_keys_with_ids(entity, keys, uuids, local_data, actor).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
@@ -60,7 +60,7 @@ pub async fn wql_handler(
         Ok(Wql::SelectWhenRange(entity_name, uuid, start_date, end_date)) => {
             select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
         }
-        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses)) => {
+        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses, functions)) => {
             select_where_controller(entity_name, args_to_select, clauses, local_data, actor).await
         }
         Ok(Wql::CheckValue(entity, uuid, content)) => {
