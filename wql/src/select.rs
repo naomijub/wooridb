@@ -3,7 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use uuid::Uuid;
 
-const FUNCTIONS: [&'static str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT"];
+const ALGEBRA: [&'static str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT"];
 const OPERATORS: [&'static str; 10] = [
     "ID", "IDS", "WHERE", "WHEN", "DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT",
 ];
@@ -27,7 +27,7 @@ impl std::str::FromStr for Order {
     }
 }
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub enum Functions {
+pub enum Algebra {
     Dedup(String),
     GroupBy(String),
     OrderBy(String, Order),
@@ -121,7 +121,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
                 entity_name,
                 arg,
                 uuids,
-                select_functions(next_symbol, chars)?,
+                select_algebra_functions(next_symbol, chars)?,
             ))
         } else {
             Err(String::from(
@@ -132,12 +132,12 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
         when_selector(entity_name, arg, None, chars)
     } else if next_symbol.to_uppercase() == "WHERE" {
         where_selector(entity_name, arg, chars)
-    } else if FUNCTIONS.contains(&&next_symbol.to_uppercase()[..]) {
+    } else if ALGEBRA.contains(&&next_symbol.to_uppercase()[..]) {
         Ok(Wql::Select(
             entity_name,
             arg,
             None,
-            select_functions(next_symbol, chars)?,
+            select_algebra_functions(next_symbol, chars)?,
         ))
     } else if !next_symbol.is_empty() && !OPERATORS.contains(&&next_symbol.to_uppercase()[..]) {
         Err(String::from(
@@ -148,15 +148,15 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
     }
 }
 
-pub fn select_functions(
+pub fn select_algebra_functions(
     next: String,
     chars: &mut std::str::Chars,
-) -> Result<HashMap<String, Functions>, String> {
+) -> Result<HashMap<String, Algebra>, String> {
     let mut functions = HashMap::new();
     let mut next_symbol = next;
 
     loop {
-        if FUNCTIONS.contains(&&next_symbol[..]) {
+        if ALGEBRA.contains(&&next_symbol[..]) {
             if next_symbol == "GROUP" || next_symbol == "ORDER" {
                 let by = chars
                     .skip_while(|c| c.is_whitespace())
@@ -174,8 +174,8 @@ pub fn select_functions(
                 .collect::<String>();
 
             match &next_symbol[..] {
-                "DEDUP" => functions.insert("DEDUP".to_string(), Functions::Dedup(next_value)),
-                "GROUP" => functions.insert("GROUP".to_string(), Functions::GroupBy(next_value)),
+                "DEDUP" => functions.insert("DEDUP".to_string(), Algebra::Dedup(next_value)),
+                "GROUP" => functions.insert("GROUP".to_string(), Algebra::GroupBy(next_value)),
                 "ORDER" => {
                     let order = chars
                         .skip_while(|c| c.is_whitespace())
@@ -184,21 +184,21 @@ pub fn select_functions(
                         .to_lowercase();
 
                     let order = Order::from_str(&order)?;
-                    functions.insert("ORDER".to_string(), Functions::OrderBy(next_value, order))
+                    functions.insert("ORDER".to_string(), Algebra::OrderBy(next_value, order))
                 }
                 "OFFSET" => {
                     let value = next_value
                         .parse::<usize>()
                         .or_else(|e| Err(format!("Error parsing value: {:?}", e)))?;
-                    functions.insert("OFFSET".to_string(), Functions::Offset(value))
+                    functions.insert("OFFSET".to_string(), Algebra::Offset(value))
                 }
                 "LIMIT" => {
                     let value = next_value
                         .parse::<usize>()
                         .or_else(|e| Err(format!("Error parsing value: {:?}", e)))?;
-                    functions.insert("LIMIT".to_string(), Functions::Limit(value))
+                    functions.insert("LIMIT".to_string(), Algebra::Limit(value))
                 }
-                "COUNT" => functions.insert("COUNT".to_string(), Functions::Count),
+                "COUNT" => functions.insert("COUNT".to_string(), Algebra::Count),
                 _ => {
                     return Err(String::from(
                         "Available functions are DEDUP, GROUP BY, ORDER BY, OFFSET, LIMIT, COUNT",
@@ -541,8 +541,8 @@ mod functions_test {
                 ToSelect::All,
                 None,
                 hmap! {
-                    "LIMIT".to_string() => Functions::Limit(3),
-                    "OFFSET".to_string() => Functions::Offset(5)
+                    "LIMIT".to_string() => Algebra::Limit(3),
+                    "OFFSET".to_string() => Algebra::Offset(5)
                 }
             )
         );
@@ -559,7 +559,7 @@ mod functions_test {
                 ToSelect::All,
                 None,
                 hmap! {
-                    "ORDER".to_string() => Functions::OrderBy("key_1".to_string(), Order::Asc)
+                    "ORDER".to_string() => Algebra::OrderBy("key_1".to_string(), Order::Asc)
                 }
             )
         );
@@ -576,7 +576,7 @@ mod functions_test {
                 ToSelect::All,
                 None,
                 hmap! {
-                    "GROUP".to_string() => Functions::GroupBy("key_1".to_string())
+                    "GROUP".to_string() => Algebra::GroupBy("key_1".to_string())
                 }
             )
         );
@@ -593,8 +593,8 @@ mod functions_test {
                 ToSelect::All,
                 None,
                 hmap! {
-                    "DEDUP".to_string() => Functions::Dedup("key_1".to_string()),
-                    "COUNT".to_string() => Functions::Count
+                    "DEDUP".to_string() => Algebra::Dedup("key_1".to_string()),
+                    "COUNT".to_string() => Algebra::Count
                 }
             )
         );
@@ -613,8 +613,8 @@ mod functions_test {
                 ToSelect::All,
                 vec![uuid1, uuid2],
                 hmap! {
-                    "ORDER".to_string() => Functions::OrderBy("my_key".to_string(), Order::Desc),
-                    "DEDUP".to_string() => Functions::Dedup("ley".to_string())
+                    "ORDER".to_string() => Algebra::OrderBy("my_key".to_string(), Order::Desc),
+                    "DEDUP".to_string() => Algebra::Dedup("ley".to_string())
                 }
             )
         );

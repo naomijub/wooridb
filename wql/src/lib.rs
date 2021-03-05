@@ -1,5 +1,4 @@
 use language_parser::read_symbol;
-use select::Functions;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, str::FromStr};
@@ -24,13 +23,15 @@ pub enum Wql {
     Delete(String, String),
     MatchUpdate(String, Entity, Uuid, MatchCondition),
     Evict(String, Option<Uuid>),
-    Select(String, ToSelect, Option<Uuid>, HashMap<String, Functions>),
+    Select(String, ToSelect, Option<Uuid>, HashMap<String, Algebra>),
     SelectWhen(String, ToSelect, Option<Uuid>, String),
     SelectWhenRange(String, Uuid, String, String),
-    SelectIds(String, ToSelect, Vec<Uuid>, HashMap<String, Functions>),
-    SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Functions>),
+    SelectIds(String, ToSelect, Vec<Uuid>, HashMap<String, Algebra>),
+    SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Algebra>),
     CheckValue(String, Uuid, HashMap<String, String>),
 }
+
+pub use select::{Order, Algebra};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum ToSelect {
