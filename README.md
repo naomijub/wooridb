@@ -94,3 +94,6 @@ PORT=1438
 - `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
 - `evict_entity_id`         time:   [41.387 ms 42.029 ms 42.731 ms] - Filtered 400s
 - `evict_entity`            time:   [31.582 ms 31.805 ms 32.039 ms] - Filtered 400s
+- `select_all` 20 entities  time:   [28.217 ms 30.311 ms 32.479 ms]
+- `select_all` 10 entities  time:   [25.265 ms 26.094 ms 26.932 ms]
+- `select_all` 1 entity     time:   [22.129 ms 22.776 ms 23.434 ms]

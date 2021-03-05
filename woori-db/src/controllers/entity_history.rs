@@ -31,6 +31,7 @@ pub async fn history_controller(
     actor: DataExecutor,
 ) -> Result<String, Error> {
     let info: EntityHistoryInfo = ron::de::from_str(&body)?;
+    println!("{:?}\n\n\n", info);
 
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -58,7 +59,26 @@ pub async fn history_controller(
 
     loop {
         let (entity_map, date, previous_registry) = actor.send(History(content.clone())).await??;
-        btree.insert(date, entity_map);
+        if let (Some(start), Some(end)) = (info.start_datetime, info.end_datetime) {
+            if date >= start && date <= end {
+                btree.insert(date, entity_map);
+            } else if date > end {
+                break;
+            }
+        } else if let (Some(start), None) = (info.start_datetime, info.end_datetime) {
+            if date >= start {
+                btree.insert(date, entity_map);
+            }
+        } else if let (None, Some(end)) = (info.start_datetime, info.end_datetime) {
+            if date <= end {
+                btree.insert(date, entity_map);
+            } else if date > end {
+                break;
+            }
+        } else {
+            btree.insert(date, entity_map);
+        }
+
         if previous_registry.is_none() {
             break;
         }

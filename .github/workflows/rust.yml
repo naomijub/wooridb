@@ -113,6 +113,14 @@ jobs:
         cargo test --features test_read io::read::test::offset_test
         cargo test --features test_read io::read::unique_data_test
 
+  build_entity_history_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: DB-entity-history-tests
+      run: cargo test -- --ignored controllers::entity_history_test::test_start_end_time_ok
+
   build_wql:
     runs-on: ubuntu-latest
 

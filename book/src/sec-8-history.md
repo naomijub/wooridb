@@ -36,3 +36,31 @@ Example response:
 3. `Delete dc3069e7-2a22-4fbc-ae05-f78a807239c0 FROM entity_tree_key`. Entity map state is the same as the previous state, therefore "2021-03-02T05:00:19.813514240Z" and "2021-03-02T05:00:19.816357939Z" have equal content.
 4. `UPDATE entity_tree_key SET {{a: 34, c: true,}} INTO dc3069e7-2a22-4fbc-ae05-f78a807239c0`.
 5. `UPDATE entity_tree_key SET {{a: 321, c: 'h',}} INTO dc3069e7-2a22-4fbc-ae05-f78a807239c0`.
+
+## Entity history with time ranges
+
+There are two extra parameters that can be used with `entity-history`, they are `start_datetime` and `end_datetime`. Both parameters are optional and if they are present they will define the time limits of the query. `start_datetime` is the beginning of the time range query while `end_datetime` is the ending of the time range query. If we used `start_datetime` and `end_datetime` for the previous example as `curl -X POST -H "Content-Type: application/wql" <ip>:1438/entity-history -d '(entity_key: "entity_tree_key", entity_id: "<some-Uuid>", start_datetime: Some("2021-03-02T05:00:19.816357937Z"), end_datetime: Some("2021-03-02T05:00:19.817189988Z"),)'` we would have the following result:
+
+Example request: 
+```ron
+(
+    entity_key: "entity_tree_key", 
+    entity_id: "dc3069e7-2a22-4fbc-ae05-f78a807239c0",  
+    start_datetime: Some("2021-03-02T05:00:19.816357937Z"), 
+    end_datetime: Some("2021-03-02T05:00:19.817189988Z"),
+)
+``` 
+
+Example response:
+```rust
+{
+"2021-03-02T05:00:19.816357939Z": {
+    "b": Float(12.3),
+    "a": Integer(123),
+},
+"2021-03-02T05:00:19.817189987Z": {
+    "b": Float(12.3),
+    "c": Boolean(true),
+    "a": Integer(34),
+},,}
+```
