@@ -83,5 +83,9 @@ test:
 	cargo test --release -- --ignored auth::controllers::routes_test_with_auth::history_with_token
 	rm -rf data/*.log
 
+full-test: test
+	cargo test -- --ignored controllers::entity_history_test::test_start_end_time_ok
+	rm -rf data/*.log
+
 release:
 	cargo run --release
