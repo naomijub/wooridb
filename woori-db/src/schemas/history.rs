@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -5,4 +6,6 @@ use uuid::Uuid;
 pub struct EntityHistoryInfo {
     pub entity_key: String,
     pub entity_id: Uuid,
+    pub start_datetime: Option<DateTime<Utc>>,
+    pub end_datetime: Option<DateTime<Utc>>,
 }
