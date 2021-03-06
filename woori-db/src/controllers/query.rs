@@ -475,8 +475,17 @@ async fn select_all(
 
         states.insert(uuid, filtered);
     }
-
-    // DEDUP
+    let states = if let Some(Algebra::Dedup(k)) = functions.get("DEDUP") {
+        let mut set: HashSet<String> = HashSet::new();
+        let mut new_states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+        for (id, state) in states {
+            if !set.contains(&format!("{:?}", state.get(k).unwrap_or(&Types::Nil))) {
+                set.insert(format!("{:?}", state.get(k).unwrap_or(&Types::Nil)));
+                new_states.insert(id, state);
+            }
+        }
+        new_states
+    } else { states };
     // COUNT
 
     if let Some(Algebra::OrderBy(k, ord)) = functions.get("ORDER") {
