@@ -31,7 +31,9 @@ async fn test_select_all_limit_offset_ok() {
         Ok(s) => {
             let s: BTreeMap<Uuid, HashMap<String, Types>> = s;
             assert_eq!(s.len(), 3);
-            assert_eq!(s.iter().next().unwrap().1.get("c"), Some(&Types::Char('d')));
+            assert!(s
+                .iter()
+                .all(|(_, state)| state.get("a").unwrap() != &Types::Integer(123)));
             Ok(s)
         }
         Err(e) => {
