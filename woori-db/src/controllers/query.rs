@@ -1,4 +1,8 @@
-use std::{cmp::Ordering, collections::{BTreeMap, HashMap, HashSet}, str::FromStr};
+use std::{
+    cmp::Ordering,
+    collections::{BTreeMap, HashMap, HashSet},
+    str::FromStr,
+};
 
 use actix_web::{HttpResponse, Responder};
 use rayon::prelude::*;
@@ -485,22 +489,37 @@ async fn select_all(
             }
         }
         new_states
-    } else { states };
+    } else {
+        states
+    };
     // COUNT
 
     if let Some(Algebra::OrderBy(k, ord)) = functions.get("ORDER") {
-        let mut states = states.into_par_iter().map(|(id, state)| (id, state)).collect::<Vec<(Uuid, HashMap<String, Types>)>>();
+        let mut states = states
+            .into_par_iter()
+            .map(|(id, state)| (id, state))
+            .collect::<Vec<(Uuid, HashMap<String, Types>)>>();
         if ord == &wql::Order::Asc {
-            states.sort_by(|a, b| a.1.get(k).partial_cmp(&b.1.get(k)).unwrap_or(Ordering::Less));
-        } else  {
-            states.sort_by(|a, b| b.1.get(k).partial_cmp(&a.1.get(k)).unwrap_or(Ordering::Less));
+            states.sort_by(|a, b| {
+                a.1.get(k)
+                    .partial_cmp(&b.1.get(k))
+                    .unwrap_or(Ordering::Less)
+            });
+        } else {
+            states.sort_by(|a, b| {
+                b.1.get(k)
+                    .partial_cmp(&a.1.get(k))
+                    .unwrap_or(Ordering::Less)
+            });
         }
         Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
     } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
         let mut groups: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>> = HashMap::new();
         for (id, state) in states {
             let key = state.get(k).unwrap_or(&Types::Nil);
-            let g = groups.entry(format!("{:?}", key)).or_insert(BTreeMap::new());
+            let g = groups
+                .entry(format!("{:?}", key))
+                .or_insert(BTreeMap::new());
             (*g).insert(id, state);
         }
         Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)

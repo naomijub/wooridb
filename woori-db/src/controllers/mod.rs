@@ -1,3 +1,5 @@
+#[cfg(test)]
+pub mod algebra_test;
 pub mod clauses;
 #[cfg(test)]
 pub mod clauses_test;
