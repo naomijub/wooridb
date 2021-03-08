@@ -40,13 +40,13 @@ pub async fn wql_handler(
             select_all(entity, local_data, actor, functions).await
         }
         Ok(Wql::Select(entity, ToSelect::Keys(keys), None, functions)) => {
-            select_args(entity, keys, local_data, actor).await
+            select_args(entity, keys, local_data, actor, functions).await
         }
         Ok(Wql::SelectIds(entity, ToSelect::All, uuids, functions)) => {
-            select_all_with_ids(entity, uuids, local_data, actor).await
+            select_all_with_ids(entity, uuids, local_data, actor, functions).await
         }
         Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions)) => {
-            select_keys_with_ids(entity, keys, uuids, local_data, actor).await
+            select_keys_with_ids(entity, keys, uuids, local_data, actor, functions).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
             select_all_when_controller(entity, date, actor).await
@@ -64,7 +64,15 @@ pub async fn wql_handler(
             select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
         }
         Ok(Wql::SelectWhere(entity_name, args_to_select, clauses, functions)) => {
-            select_where_controller(entity_name, args_to_select, clauses, local_data, actor).await
+            select_where_controller(
+                entity_name,
+                args_to_select,
+                clauses,
+                local_data,
+                actor,
+                functions,
+            )
+            .await
         }
         Ok(Wql::CheckValue(entity, uuid, content)) => {
             check_value_controller(entity, uuid, content, local_data, encryption, actor).await
@@ -296,7 +304,9 @@ async fn select_all_with_ids(
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -337,6 +347,30 @@ async fn select_all_with_ids(
         } else {
             states.insert(uuid, None);
         }
+    }
+
+    let states = states
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
+    if let Some(Algebra::Dedup(_)) = functions.get("DEDUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("DEDUP"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("GROUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("GROUP BY"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("ORDER") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("ORDER BY"),
+            String::from("SELECT WITH IDS"),
+        ));
     }
 
     Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -388,7 +422,9 @@ async fn select_keys_with_ids(
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -416,7 +452,7 @@ async fn select_keys_with_ids(
         registries
     };
 
-    let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
+    let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
     for (uuid, registry) in registries {
         if let Some(regs) = registry {
             let content = actor.send(regs).await??;
@@ -431,7 +467,29 @@ async fn select_keys_with_ids(
             states.insert(uuid, None);
         }
     }
-
+    let states = states
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
+    if let Some(Algebra::Dedup(_)) = functions.get("DEDUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("DEDUP"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("GROUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("GROUP BY"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("ORDER") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("ORDER BY"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
     Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
 }
 
@@ -480,7 +538,9 @@ async fn select_args(
     keys: Vec<String>,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -497,8 +557,8 @@ async fn select_args(
         registries
     };
 
-    let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in registries {
+    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+    for (uuid, regs) in registries.into_iter().skip(offset).take(limit) {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered: HashMap<String, Types> = state
@@ -509,10 +569,13 @@ async fn select_args(
         states.insert(uuid, filtered);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    let states = dedup_states(states, &functions);
+    get_result_after_manipulation(states, functions)
 }
 
-fn get_limit_offset_count(functions: &HashMap<String, wql::Algebra>) -> (usize, usize, bool) {
+pub(crate) fn get_limit_offset_count(
+    functions: &HashMap<String, wql::Algebra>,
+) -> (usize, usize, bool) {
     let limit = if let Some(Algebra::Limit(l)) = functions.get("LIMIT") {
         *l
     } else {
@@ -532,7 +595,7 @@ fn get_limit_offset_count(functions: &HashMap<String, wql::Algebra>) -> (usize, 
     (limit, offset, count)
 }
 
-fn dedup_states(
+pub(crate) fn dedup_states(
     states: BTreeMap<Uuid, HashMap<String, Types>>,
     functions: &HashMap<String, wql::Algebra>,
 ) -> BTreeMap<Uuid, HashMap<String, Types>> {
@@ -551,7 +614,7 @@ fn dedup_states(
     }
 }
 
-fn get_result_after_manipulation(
+pub(crate) fn get_result_after_manipulation(
     states: BTreeMap<Uuid, HashMap<String, Types>>,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
