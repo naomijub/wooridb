@@ -18,6 +18,7 @@ use crate::{
     },
     core::pretty_config_output,
     model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
+    schemas::query::CountResponse,
 };
 
 use super::clauses::select_where_controller;
@@ -499,7 +500,7 @@ async fn select_all(
     actor: DataExecutor,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
-    let (limit, offset, _) = get_limit_offset_count(&functions);
+    let (limit, offset, count) = get_limit_offset_count(&functions);
 
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -528,9 +529,8 @@ async fn select_all(
         states.insert(uuid, filtered);
     }
     let states = dedup_states(states, &functions);
-    // COUNT
 
-    get_result_after_manipulation(states, functions)
+    get_result_after_manipulation(states, functions, count)
 }
 
 async fn select_args(
@@ -540,7 +540,7 @@ async fn select_args(
     actor: DataExecutor,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
-    let (limit, offset, _) = get_limit_offset_count(&functions);
+    let (limit, offset, count) = get_limit_offset_count(&functions);
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -570,7 +570,7 @@ async fn select_args(
     }
 
     let states = dedup_states(states, &functions);
-    get_result_after_manipulation(states, functions)
+    get_result_after_manipulation(states, functions, count)
 }
 
 pub(crate) fn get_limit_offset_count(
@@ -617,6 +617,7 @@ pub(crate) fn dedup_states(
 pub(crate) fn get_result_after_manipulation(
     states: BTreeMap<Uuid, HashMap<String, Types>>,
     functions: HashMap<String, wql::Algebra>,
+    should_count: bool,
 ) -> Result<String, Error> {
     if let (Some(Algebra::OrderBy(k, ord)), None) = (functions.get("ORDER"), functions.get("GROUP"))
     {
@@ -637,7 +638,15 @@ pub(crate) fn get_result_after_manipulation(
                     .unwrap_or(Ordering::Less)
             });
         }
-        Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+        if should_count {
+            let size = states.len();
+            CountResponse::to_response(
+                size,
+                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+            )
+        } else {
+            Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+        }
     } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
         let mut groups: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>> = HashMap::new();
         for (id, state) in states {
@@ -696,9 +705,25 @@ pub(crate) fn get_result_after_manipulation(
                 )?)
             }
         } else {
-            Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+            if should_count {
+                let size = groups.keys().len();
+                CountResponse::to_response(
+                    size,
+                    ron::ser::to_string_pretty(&groups, pretty_config_output())?,
+                )
+            } else {
+                Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+            }
         }
     } else {
-        Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+        if should_count {
+            let size = states.keys().len();
+            CountResponse::to_response(
+                size,
+                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+            )
+        } else {
+            Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+        }
     }
 }

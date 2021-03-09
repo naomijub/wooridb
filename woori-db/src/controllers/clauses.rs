@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use futures::{future, stream, StreamExt};
 use rayon::prelude::*;
 use uuid::Uuid;
-use wql::{Clause, ToSelect, Types, Value};
+use wql::{Algebra, Clause, ToSelect, Types, Value};
 
 use crate::{
     actors::state::State,
@@ -29,8 +29,13 @@ pub async fn select_where_controller(
         actor,
         &functions,
     );
+    let count = if let Some(Algebra::Count) = functions.get("COUNT") {
+        true
+    } else {
+        false
+    };
 
-    get_result_after_manipulation(states.await?, functions)
+    get_result_after_manipulation(states.await?, functions, count)
 }
 
 pub async fn select_where(
