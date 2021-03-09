@@ -7,7 +7,7 @@ use actix_web::{HttpResponse, Responder};
 use rayon::prelude::*;
 use ron::ser::to_string_pretty;
 use uuid::Uuid;
-use wql::{Algebra, ToSelect, Types, Wql};
+use wql::{ToSelect, Types, Wql};
 
 use crate::{
     actors::{
@@ -17,7 +17,10 @@ use crate::{
     },
     core::{
         pretty_config_output,
-        query::{dedup_states, get_limit_offset_count, get_result_after_manipulation},
+        query::{
+            dedup_option_states, dedup_states, get_limit_offset_count,
+            get_result_after_manipulation, get_result_after_manipulation_for_options,
+        },
     },
     model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
 };
@@ -308,7 +311,7 @@ async fn select_all_with_ids(
     actor: DataExecutor,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
-    let (limit, offset, _) = get_limit_offset_count(&functions);
+    let (limit, offset, count) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -356,26 +359,9 @@ async fn select_all_with_ids(
         .skip(offset)
         .take(limit)
         .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
-    if let Some(Algebra::Dedup(_)) = functions.get("DEDUP") {
-        return Err(Error::FeatureNotImplemented(
-            String::from("DEDUP"),
-            String::from("SELECT WITH IDS"),
-        ));
-    }
-    if let Some(Algebra::Dedup(_)) = functions.get("GROUP") {
-        return Err(Error::FeatureNotImplemented(
-            String::from("GROUP BY"),
-            String::from("SELECT WITH IDS"),
-        ));
-    }
-    if let Some(Algebra::Dedup(_)) = functions.get("ORDER") {
-        return Err(Error::FeatureNotImplemented(
-            String::from("ORDER BY"),
-            String::from("SELECT WITH IDS"),
-        ));
-    }
+    let states = dedup_option_states(states, &functions);
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    get_result_after_manipulation_for_options(states, functions, count)
 }
 
 async fn select_keys_with_id(
@@ -426,7 +412,7 @@ async fn select_keys_with_ids(
     actor: DataExecutor,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
-    let (limit, offset, _) = get_limit_offset_count(&functions);
+    let (limit, offset, count) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -474,25 +460,10 @@ async fn select_keys_with_ids(
         .skip(offset)
         .take(limit)
         .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
-    if let Some(Algebra::Dedup(_)) = functions.get("DEDUP") {
-        return Err(Error::FeatureNotImplemented(
-            String::from("DEDUP"),
-            String::from("SELECT WITH IDS"),
-        ));
-    }
-    if let Some(Algebra::Dedup(_)) = functions.get("GROUP") {
-        return Err(Error::FeatureNotImplemented(
-            String::from("GROUP BY"),
-            String::from("SELECT WITH IDS"),
-        ));
-    }
-    if let Some(Algebra::Dedup(_)) = functions.get("ORDER") {
-        return Err(Error::FeatureNotImplemented(
-            String::from("ORDER BY"),
-            String::from("SELECT WITH IDS"),
-        ));
-    }
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+
+    let states = dedup_option_states(states, &functions);
+
+    get_result_after_manipulation_for_options(states, functions, count)
 }
 
 async fn select_all(
