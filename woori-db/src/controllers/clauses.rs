@@ -53,13 +53,14 @@ pub async fn select_where(
             }
         })
         .collect::<HashMap<String, String>>();
-    let registries = get_registries(&entity, &local_data)?
+    let registries = get_registries(&entity, &local_data)?;
+    let states = generate_state(&registries, args_to_select, &actor).await?;
+    let states = filter_where_clauses(states, args_to_key, &clauses)
+        .await
         .into_iter()
         .skip(offset)
         .take(limit)
         .collect();
-    let states = generate_state(&registries, args_to_select, &actor).await?;
-    let states = filter_where_clauses(states, args_to_key, &clauses).await;
 
     let states = dedup_states(states, &functions);
     Ok(states)

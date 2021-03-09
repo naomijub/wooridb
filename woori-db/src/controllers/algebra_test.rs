@@ -123,10 +123,12 @@ async fn test_select_where_group_by_ok() {
         let _ = test::call_service(&mut app, req).await;
     }
 
-    let payload = format!("Select * FROM where_group_by_test WHERE {{
+    let payload = format!(
+        "Select * FROM where_group_by_test WHERE {{
         ?* where_group_by_test:c ?c,
         (in ?c 'c' 'd'),
-    }} GROUP BY c",);
+    }} GROUP BY c",
+    );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)
