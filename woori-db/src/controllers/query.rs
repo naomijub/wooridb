@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     collections::{BTreeMap, HashMap, HashSet},
     str::FromStr,
 };
@@ -7,7 +8,7 @@ use actix_web::{HttpResponse, Responder};
 use rayon::prelude::*;
 use ron::ser::to_string_pretty;
 use uuid::Uuid;
-use wql::{ToSelect, Types, Wql};
+use wql::{Algebra, ToSelect, Types, Wql};
 
 use crate::{
     actors::{
@@ -29,21 +30,23 @@ pub async fn wql_handler(
 ) -> impl Responder {
     let query = Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::Select(entity, ToSelect::All, Some(uuid))) => {
+        Ok(Wql::Select(entity, ToSelect::All, Some(uuid), _)) => {
             select_all_with_id(entity, uuid, local_data, actor).await
         }
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid))) => {
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid), _)) => {
             select_keys_with_id(entity, uuid, keys, local_data, actor).await
         }
-        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, local_data, actor).await,
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), None)) => {
-            select_args(entity, keys, local_data, actor).await
+        Ok(Wql::Select(entity, ToSelect::All, None, functions)) => {
+            select_all(entity, local_data, actor, functions).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::All, uuids)) => {
-            select_all_with_ids(entity, uuids, local_data, actor).await
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), None, functions)) => {
+            select_args(entity, keys, local_data, actor, functions).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
-            select_keys_with_ids(entity, keys, uuids, local_data, actor).await
+        Ok(Wql::SelectIds(entity, ToSelect::All, uuids, functions)) => {
+            select_all_with_ids(entity, uuids, local_data, actor, functions).await
+        }
+        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions)) => {
+            select_keys_with_ids(entity, keys, uuids, local_data, actor, functions).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
             select_all_when_controller(entity, date, actor).await
@@ -60,8 +63,16 @@ pub async fn wql_handler(
         Ok(Wql::SelectWhenRange(entity_name, uuid, start_date, end_date)) => {
             select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
         }
-        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses)) => {
-            select_where_controller(entity_name, args_to_select, clauses, local_data, actor).await
+        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses, functions)) => {
+            select_where_controller(
+                entity_name,
+                args_to_select,
+                clauses,
+                local_data,
+                actor,
+                functions,
+            )
+            .await
         }
         Ok(Wql::CheckValue(entity, uuid, content)) => {
             check_value_controller(entity, uuid, content, local_data, encryption, actor).await
@@ -293,7 +304,9 @@ async fn select_all_with_ids(
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -334,6 +347,30 @@ async fn select_all_with_ids(
         } else {
             states.insert(uuid, None);
         }
+    }
+
+    let states = states
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
+    if let Some(Algebra::Dedup(_)) = functions.get("DEDUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("DEDUP"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("GROUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("GROUP BY"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("ORDER") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("ORDER BY"),
+            String::from("SELECT WITH IDS"),
+        ));
     }
 
     Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -385,7 +422,9 @@ async fn select_keys_with_ids(
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -413,7 +452,7 @@ async fn select_keys_with_ids(
         registries
     };
 
-    let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
+    let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
     for (uuid, registry) in registries {
         if let Some(regs) = registry {
             let content = actor.send(regs).await??;
@@ -428,7 +467,29 @@ async fn select_keys_with_ids(
             states.insert(uuid, None);
         }
     }
-
+    let states = states
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
+    if let Some(Algebra::Dedup(_)) = functions.get("DEDUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("DEDUP"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("GROUP") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("GROUP BY"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
+    if let Some(Algebra::Dedup(_)) = functions.get("ORDER") {
+        return Err(Error::FeatureNotImplemented(
+            String::from("ORDER BY"),
+            String::from("SELECT WITH IDS"),
+        ));
+    }
     Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
 }
 
@@ -436,7 +497,10 @@ async fn select_all(
     entity: String,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
+
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -453,7 +517,7 @@ async fn select_all(
     };
 
     let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
-    for (uuid, regs) in registries {
+    for (uuid, regs) in registries.into_iter().skip(offset).take(limit) {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered = state
@@ -463,8 +527,10 @@ async fn select_all(
 
         states.insert(uuid, filtered);
     }
+    let states = dedup_states(states, &functions);
+    // COUNT
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    get_result_after_manipulation(states, functions)
 }
 
 async fn select_args(
@@ -472,7 +538,9 @@ async fn select_args(
     keys: Vec<String>,
     local_data: DataLocalContext,
     actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, _) = get_limit_offset_count(&functions);
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -489,8 +557,8 @@ async fn select_args(
         registries
     };
 
-    let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in registries {
+    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+    for (uuid, regs) in registries.into_iter().skip(offset).take(limit) {
         let content = actor.send(regs).await??;
         let state = actor.send(State(content)).await??;
         let filtered: HashMap<String, Types> = state
@@ -501,5 +569,85 @@ async fn select_args(
         states.insert(uuid, filtered);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    let states = dedup_states(states, &functions);
+    get_result_after_manipulation(states, functions)
+}
+
+pub(crate) fn get_limit_offset_count(
+    functions: &HashMap<String, wql::Algebra>,
+) -> (usize, usize, bool) {
+    let limit = if let Some(Algebra::Limit(l)) = functions.get("LIMIT") {
+        *l
+    } else {
+        usize::MAX
+    };
+    let offset = if let Some(Algebra::Offset(o)) = functions.get("OFFSET") {
+        *o
+    } else {
+        0
+    };
+    let count = if let Some(Algebra::Count) = functions.get("COUNT") {
+        true
+    } else {
+        false
+    };
+
+    (limit, offset, count)
+}
+
+pub(crate) fn dedup_states(
+    states: BTreeMap<Uuid, HashMap<String, Types>>,
+    functions: &HashMap<String, wql::Algebra>,
+) -> BTreeMap<Uuid, HashMap<String, Types>> {
+    if let Some(Algebra::Dedup(k)) = functions.get("DEDUP") {
+        let mut set: HashSet<String> = HashSet::new();
+        let mut new_states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+        for (id, state) in states {
+            if !set.contains(&format!("{:?}", state.get(k).unwrap_or(&Types::Nil))) {
+                set.insert(format!("{:?}", state.get(k).unwrap_or(&Types::Nil)));
+                new_states.insert(id, state);
+            }
+        }
+        new_states
+    } else {
+        states
+    }
+}
+
+pub(crate) fn get_result_after_manipulation(
+    states: BTreeMap<Uuid, HashMap<String, Types>>,
+    functions: HashMap<String, wql::Algebra>,
+) -> Result<String, Error> {
+    if let Some(Algebra::OrderBy(k, ord)) = functions.get("ORDER") {
+        let mut states = states
+            .into_par_iter()
+            .map(|(id, state)| (id, state))
+            .collect::<Vec<(Uuid, HashMap<String, Types>)>>();
+        if ord == &wql::Order::Asc {
+            states.sort_by(|a, b| {
+                a.1.get(k)
+                    .partial_cmp(&b.1.get(k))
+                    .unwrap_or(Ordering::Less)
+            });
+        } else {
+            states.sort_by(|a, b| {
+                b.1.get(k)
+                    .partial_cmp(&a.1.get(k))
+                    .unwrap_or(Ordering::Less)
+            });
+        }
+        Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
+        let mut groups: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>> = HashMap::new();
+        for (id, state) in states {
+            let key = state.get(k).unwrap_or(&Types::Nil);
+            let g = groups
+                .entry(format!("{:?}", key))
+                .or_insert(BTreeMap::new());
+            (*g).insert(id, state);
+        }
+        Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+    } else {
+        Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    }
 }

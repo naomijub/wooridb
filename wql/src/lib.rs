@@ -23,13 +23,15 @@ pub enum Wql {
     Delete(String, String),
     MatchUpdate(String, Entity, Uuid, MatchCondition),
     Evict(String, Option<Uuid>),
-    Select(String, ToSelect, Option<Uuid>),
+    Select(String, ToSelect, Option<Uuid>, HashMap<String, Algebra>),
     SelectWhen(String, ToSelect, Option<Uuid>, String),
     SelectWhenRange(String, Uuid, String, String),
-    SelectIds(String, ToSelect, Vec<Uuid>),
-    SelectWhere(String, ToSelect, Vec<Clause>),
+    SelectIds(String, ToSelect, Vec<Uuid>, HashMap<String, Algebra>),
+    SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Algebra>),
     CheckValue(String, Uuid, HashMap<String, String>),
 }
+
+pub use select::{Algebra, Order};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum ToSelect {
@@ -58,7 +60,6 @@ pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
 impl std::str::FromStr for Wql {
     type Err = String;
 
-    /// Parses a `&str` that contains an Edn into `Result<Edn, EdnError>`
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut tokens = tokenize(s.trim_start());
         let wql = parse(tokens.next(), &mut tokens)?;

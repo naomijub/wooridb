@@ -28,15 +28,14 @@
 - [ ] Possible Relation Algebra
     - [ ] Projection
     - [ ] Union
-    - [ ] Intersection
-    - [ ] Difference (SQL's EXCEPT?)
+    - [ ] Intersection 
+    - [ ] Difference (SQL's EXCEPT?) `-`
     - [ ] Join
-    - [ ] Product (SQL's CROSS JOIN?)
     - [ ] Rename
     - [ ] Assign
-    - [ ] Dedup
-    - [ ] Sort
-    - [ ] Aggregate
+    - [x] Dedup
+    - [x] Sort
+    - [x] Aggregate
     - [ ] Division
 
 ## Naming conventios:

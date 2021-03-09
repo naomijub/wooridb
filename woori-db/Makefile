@@ -82,6 +82,15 @@ test:
 	rm -rf data/*.log
 	cargo test --release -- --ignored auth::controllers::routes_test_with_auth::history_with_token
 	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_limit_offset_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_dedup_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_order_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_where_group_by_ok
 
 full-test: test
 	cargo test -- --ignored controllers::entity_history_test::test_start_end_time_ok
