@@ -116,6 +116,48 @@ async fn test_select_all_group_by_ok() {
 
 #[ignore]
 #[actix_rt::test]
+async fn test_select_where_group_by_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("where_group_by_test") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload = format!("Select * FROM where_group_by_test WHERE {{
+        ?* where_group_by_test:c ?c,
+        (in ?c 'c' 'd'),
+    }} GROUP BY c",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    let _: Result<HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>, String> =
+        match ron::de::from_str(&body) {
+            Ok(s) => {
+                let s: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>> = s;
+                let keys = s.keys().map(|k| k.to_owned()).collect::<Vec<String>>();
+                assert!(!keys.contains(&String::from("Char(\'r\')")));
+                assert!(keys.contains(&String::from("Char(\'d\')")));
+                assert!(keys.contains(&String::from("Char(\'c\')")));
+                assert!(!keys.contains(&String::from("Nil")));
+                Ok(s)
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                assert!(false);
+                Err(String::new())
+            }
+        };
+}
+
+#[ignore]
+#[actix_rt::test]
 async fn test_select_all_order_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
 
