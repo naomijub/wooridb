@@ -43,6 +43,52 @@ async fn test_select_all_limit_offset_ok() {
 
 #[ignore]
 #[actix_rt::test]
+async fn test_select_all_limit_count_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("limit_offset_count") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload = format!("Select * FROM limit_offset_count LIMIT 3 OFFSET 2 COUNT",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    assert!(body.contains("count: 3"));
+}
+
+#[ignore]
+#[actix_rt::test]
+async fn test_select_all_count_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("select_count") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload = format!("Select * FROM select_count COUNT",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    assert!(body.contains("count: 6"));
+}
+
+#[ignore]
+#[actix_rt::test]
 async fn test_select_all_dedup_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
 
@@ -73,6 +119,29 @@ async fn test_select_all_dedup_ok() {
             Err(String::new())
         }
     };
+}
+
+#[ignore]
+#[actix_rt::test]
+async fn test_select_all_dedup_count_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("dedup_test_count") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload = format!("Select * FROM dedup_test_count DEDUP a COUNT",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    assert!(body.contains("count: 5"));
 }
 
 #[ignore]
@@ -112,6 +181,29 @@ async fn test_select_all_group_by_ok() {
                 Err(String::new())
             }
         };
+}
+
+#[ignore]
+#[actix_rt::test]
+async fn test_select_all_group_by_count_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("group_by_count") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload = format!("Select * FROM group_by_count GROUP BY c COUNT",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    assert!(body.contains("count: 4"));
 }
 
 #[ignore]

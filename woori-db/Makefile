@@ -93,6 +93,14 @@ test:
 	cargo test -- --ignored controllers::algebra_test::test_select_where_group_by_ok
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_with_order_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_limit_count_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_dedup_count_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_count_ok
+	rm -rf data/*.log
+	cargo test -- --ignored controllers::algebra_test::test_select_all_count_ok
 
 full-test: test
 	cargo test -- --ignored controllers::entity_history_test::test_start_end_time_ok
