@@ -31,7 +31,7 @@ pub enum Wql {
     CheckValue(String, Uuid, HashMap<String, String>),
 }
 
-pub use select::{Order, Algebra};
+pub use select::{Algebra, Order};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum ToSelect {

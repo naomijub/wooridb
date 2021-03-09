@@ -917,7 +917,7 @@ mod test_where {
                     ),
                 ],
                 hmap! {
-                    "GROUP".to_string() => Functions::GroupBy(String::from("amazing_key"))
+                    "GROUP".to_string() => Algebra::GroupBy(String::from("amazing_key"))
                 }
             )
         )
