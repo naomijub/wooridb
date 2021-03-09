@@ -1,5 +1,6 @@
 use ron::ser::PrettyConfig;
 
+pub(crate) mod query;
 pub(crate) mod registry;
 pub(crate) mod wql;
 

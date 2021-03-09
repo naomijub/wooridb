@@ -37,7 +37,6 @@ pub enum Error {
     AuthenticationBadRequest,
     AuthenticationBadRequestBody(String),
     FailedToCreateUser,
-    FeatureNotImplemented(String, String),
     Unknown,
 }
 
@@ -172,11 +171,6 @@ impl std::fmt::Display for Error {
             Error::Unknown => Response::new(
                 String::from("Unknown"),
                 "Request credentials failed".to_string(),
-            )
-            .write(f),
-            Error::FeatureNotImplemented(feature, query) => Response::new(
-                String::from("FeatureNotImplemented"),
-                format!("Feature {} not implemented for {}", feature, query),
             )
             .write(f),
         }

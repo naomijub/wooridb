@@ -11,7 +11,7 @@ use crate::{
     model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
 };
 
-use super::query::{dedup_states, get_limit_offset_count, get_result_after_manipulation};
+use crate::core::query::{dedup_states, get_limit_offset_count, get_result_after_manipulation};
 
 pub async fn select_where_controller(
     entity: String,
