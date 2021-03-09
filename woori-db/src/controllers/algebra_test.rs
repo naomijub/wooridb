@@ -160,6 +160,45 @@ async fn test_select_where_group_by_ok() {
 
 #[ignore]
 #[actix_rt::test]
+async fn test_select_all_group_by_with_order_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("group_by_with_order") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload = format!("Select * FROM group_by_with_order GROUP BY c ORDER BY a :desc",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+    let _: Result<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>, String> =
+        match ron::de::from_str(&body) {
+            Ok(s) => {
+                let s: HashMap<String, Vec<(Uuid, HashMap<String, Types>)>> = s;
+                let c = s.get("Char(\'c\')").unwrap();
+                let c1 = c[0].1.to_owned();
+                let c2 = c[1].1.to_owned();
+                assert_eq!(c1.get("a"), Some(&Types::Integer(235)));
+                assert_eq!(c2.get("a"), Some(&Types::Integer(25)));
+                Ok(s)
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                assert!(false);
+                Err(String::new())
+            }
+        };
+}
+
+#[ignore]
+#[actix_rt::test]
 async fn test_select_all_order_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
 

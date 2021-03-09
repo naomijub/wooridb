@@ -618,7 +618,8 @@ pub(crate) fn get_result_after_manipulation(
     states: BTreeMap<Uuid, HashMap<String, Types>>,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
-    if let Some(Algebra::OrderBy(k, ord)) = functions.get("ORDER") {
+    if let (Some(Algebra::OrderBy(k, ord)), None) = (functions.get("ORDER"), functions.get("GROUP"))
+    {
         let mut states = states
             .into_par_iter()
             .map(|(id, state)| (id, state))
@@ -646,7 +647,57 @@ pub(crate) fn get_result_after_manipulation(
                 .or_insert(BTreeMap::new());
             (*g).insert(id, state);
         }
-        Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+        if let Some(Algebra::OrderBy(k, ord)) = functions.get("ORDER") {
+            let mut group_states = groups
+                .into_par_iter()
+                .map(|(key, states)| {
+                    (
+                        key,
+                        states
+                            .into_iter()
+                            .map(|(id, state)| (id, state))
+                            .collect::<Vec<(Uuid, HashMap<String, Types>)>>(),
+                    )
+                })
+                .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+
+            if ord == &wql::Order::Asc {
+                let group_states = group_states
+                    .iter_mut()
+                    .map(|(key, states)| {
+                        states.sort_by(|a, b| {
+                            a.1.get(k)
+                                .partial_cmp(&b.1.get(k))
+                                .unwrap_or(Ordering::Less)
+                        });
+                        (key.to_owned(), states.to_owned())
+                    })
+                    .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+
+                Ok(ron::ser::to_string_pretty(
+                    &group_states,
+                    pretty_config_output(),
+                )?)
+            } else {
+                let group_states = group_states
+                    .iter_mut()
+                    .map(|(key, states)| {
+                        states.sort_by(|a, b| {
+                            b.1.get(k)
+                                .partial_cmp(&a.1.get(k))
+                                .unwrap_or(Ordering::Less)
+                        });
+                        (key.to_owned(), states.to_owned())
+                    })
+                    .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                Ok(ron::ser::to_string_pretty(
+                    &group_states,
+                    pretty_config_output(),
+                )?)
+            }
+        } else {
+            Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+        }
     } else {
         Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
     }
