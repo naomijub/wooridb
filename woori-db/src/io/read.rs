@@ -6,6 +6,7 @@ use std::{
 
 use rayon::prelude::*;
 use uuid::Uuid;
+use wql::Types;
 
 use crate::model::error;
 use crate::{actors::encrypts::WriteWithEncryption, model::DataRegister};
@@ -128,7 +129,9 @@ pub fn offset() -> Result<usize, error::Error> {
         .map_err(|_| error::Error::FailedToParseState)?)
 }
 
-pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, error::Error> {
+pub fn local_data(
+) -> Result<BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>, error::Error>
+{
     #[cfg(not(feature = "test_read"))]
     let path = "data/local_data.log";
     #[cfg(feature = "test_read")]
@@ -137,11 +140,13 @@ pub fn local_data() -> Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, er
     let mut s = String::new();
     file.read_to_string(&mut s)?;
 
-    let data: Result<BTreeMap<String, BTreeMap<Uuid, DataRegister>>, error::Error> =
-        match ron::de::from_str(&s) {
-            Ok(x) => Ok(x),
-            Err(_) => Err(error::Error::FailedToParseState),
-        };
+    let data: Result<
+        BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>,
+        error::Error,
+    > = match ron::de::from_str(&s) {
+        Ok(x) => Ok(x),
+        Err(_) => Err(error::Error::FailedToParseState),
+    };
 
     data
 }
@@ -253,7 +258,7 @@ mod test {
         assert!(local_data.is_ok());
         assert_eq!(
                 format!("{:?}", local_data), 
-                "Ok({\"encrypt_ent\": {}, \"encrypt_ent2\": {}, \"hello\": {50e68bc1-0c3b-4ffc-93be-46e57f59b415: DataRegister { file_name: \"2021_02_10.log\", offset: 447, bytes_length: 153 }}, \"oh_yeah\": {27367bd0-1966-4005-a8b5-5e323e1c3524: DataRegister { file_name: \"2021_02_10.log\", offset: 180, bytes_length: 247 }}})"
+                "Ok({\"encrypt_ent\": {}, \"encrypt_ent2\": {}, \"hello\": {50e68bc1-0c3b-4ffc-93be-46e57f59b415: (DataRegister { file_name: \"2021_02_10.log\", offset: 447, bytes_length: 153 }, {})}, \"oh_yeah\": {27367bd0-1966-4005-a8b5-5e323e1c3524: (DataRegister { file_name: \"2021_02_10.log\", offset: 180, bytes_length: 247 }, {})}})"
             );
     }
 

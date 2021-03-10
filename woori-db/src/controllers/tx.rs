@@ -306,7 +306,7 @@ pub async fn insert_controller(
     actor
         .send(CheckForUniqueKeys {
             entity: args.entity.to_owned(),
-            content: encrypted_content,
+            content: encrypted_content.clone(),
             uniqueness,
         })
         .await??;
@@ -337,7 +337,7 @@ pub async fn insert_controller(
             return Err(Error::LockData);
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
-            map.insert(content_value.1, local_data_register);
+            map.insert(content_value.1, (local_data_register, encrypted_content));
         }
         local_data.clone()
     };
@@ -411,9 +411,9 @@ pub async fn update_set_controller(
         previous_entry.clone()
     };
 
-    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
-
+    let encrypted_content_clone = encrypted_content.clone();
     encrypted_content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
         *local_state = v;
@@ -452,7 +452,7 @@ pub async fn update_set_controller(
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
             if let Some(reg) = map.get_mut(&args.id) {
-                *reg = local_data_register;
+                *reg = (local_data_register, encrypted_content_clone);
             }
         }
         local_data.clone()
@@ -526,7 +526,7 @@ pub async fn update_content_controller(
         previous_entry.clone()
     };
 
-    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
     args.content
@@ -564,7 +564,7 @@ pub async fn update_content_controller(
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
             if let Some(reg) = map.get_mut(&args.id) {
-                *reg = local_data_register;
+                *reg = (local_data_register, previous_state);
             }
         }
         local_data.clone()
@@ -606,13 +606,13 @@ pub async fn delete_controller(
         }
 
         let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
-        previous_entry.clone()
+        previous_entry.clone().0
     };
 
     let previous_state_str = actor.send(previous_entry.to_owned()).await??;
     let two_registries_ago = actor.send(PreviousRegistry(previous_state_str)).await??;
 
-    let state_to_be = if let Some(reg) = two_registries_ago {
+    let state_to_be = if let Some((reg, _)) = two_registries_ago {
         let state_str = actor.send(reg.to_owned()).await??;
         (actor.send(State(state_str)).await??, reg.to_owned())
     } else {
@@ -622,7 +622,7 @@ pub async fn delete_controller(
             return Err(Error::LockData);
         };
         let insert_reg = local_data.get(&entity).unwrap().get(&uuid).unwrap();
-        (HashMap::new(), insert_reg.to_owned())
+        (HashMap::new(), insert_reg.0.to_owned())
     };
 
     let content_log =
@@ -658,7 +658,7 @@ pub async fn delete_controller(
         };
         if let Some(map) = local_data.get_mut(&entity) {
             if let Some(reg) = map.get_mut(&uuid) {
-                *reg = local_data_register;
+                *reg = (local_data_register, state_to_be.0);
             }
         }
         local_data.clone()
@@ -700,7 +700,7 @@ pub async fn match_update_set_controller(
         let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
         previous_entry.clone()
     };
-    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
     actor
@@ -769,7 +769,7 @@ pub async fn match_update_set_controller(
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
             if let Some(reg) = map.get_mut(&args.id) {
-                *reg = local_data_register;
+                *reg = (local_data_register, encrypted_content);
             }
         }
         local_data.clone()

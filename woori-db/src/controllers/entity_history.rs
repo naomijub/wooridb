@@ -31,7 +31,6 @@ pub async fn history_controller(
     actor: DataExecutor,
 ) -> Result<String, Error> {
     let info: EntityHistoryInfo = ron::de::from_str(&body)?;
-    println!("{:?}\n\n\n", info);
 
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -54,7 +53,7 @@ pub async fn history_controller(
         .to_owned();
         registry
     };
-    let mut content = actor.send(registry).await??;
+    let mut content = actor.send(registry.0).await??;
     let mut btree: BTreeMap<DateTime<Utc>, HashMap<String, Types>> = BTreeMap::new();
 
     loop {
