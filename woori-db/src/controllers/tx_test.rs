@@ -557,7 +557,6 @@ async fn test_delete_post_ok() {
         .to_request();
 
     let resp = test::call_service(&mut app, req).await;
-
     assert!(resp.status().is_success());
 
     read::assert_content("DELETE");
