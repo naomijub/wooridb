@@ -304,11 +304,11 @@ pub async fn insert_controller(
 
     let uniqueness = uniqueness.into_inner();
     actor
-        .send(CheckForUniqueKeys {
-            entity: args.entity.to_owned(),
-            content: encrypted_content.clone(),
+        .send(CheckForUniqueKeys::new(
+            args.entity.to_owned(),
+            &encrypted_content,
             uniqueness,
-        })
+        ))
         .await??;
 
     let content_value = actor

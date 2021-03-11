@@ -75,7 +75,6 @@ impl Handler<PreviousRegistry> for Executor {
                 .ok_or(Error::FailedToParseRegistry)?
                 .to_owned();
             let state = &state[..(state.len() - 1)];
-            println!("{:?}", state);
 
             let resp: Result<(DataRegister, HashMap<String, Types>), Error> = match from_str(state)
             {

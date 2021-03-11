@@ -81,6 +81,20 @@ pub struct CheckForUniqueKeys {
     pub uniqueness: Arc<Arc<Mutex<UniquenessContext>>>,
 }
 
+impl CheckForUniqueKeys {
+    pub fn new(
+        entity: String,
+        content: &HashMap<String, Types>,
+        uniqueness: Arc<Arc<Mutex<UniquenessContext>>>,
+    ) -> Self {
+        Self {
+            entity,
+            uniqueness,
+            content: content.to_owned(),
+        }
+    }
+}
+
 impl Message for CheckForUniqueKeys {
     type Result = Result<(), Error>;
 }
