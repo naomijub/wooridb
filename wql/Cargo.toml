@@ -18,4 +18,4 @@ serde = { version = "1.0.121", features = ["derive"] }
 bcrypt = "0.8"
 
 [dev-dependencies]
-edn-rs = "*"
+edn-rs = "0.16.12"
