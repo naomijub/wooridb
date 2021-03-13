@@ -88,7 +88,15 @@ We would have as a result something like:
 }
 ```
 
-- [ ] [Dedup None/Types::Nil values](https://github.com/naomijub/wooridb/issues/107)
+Also it is possible to eliminate `Nil` and `Types::Nil` values for a `DEDUP` key. This is done by calling the function `NIL()` (It needs to be **UPPERCASE**) with the key used for the `DEDUP`. So for the previous data the response for the query `SELECT * FROM key DEDUP NIL(c)` would be:
+
+```rust
+{
+    <Uuid2>: {a: 235, b: 12.3, c: 'c',},
+    <Uuid4>: {a: 475, b: 12.3, c: 'd',},
+    <Uuid5>: {a: 295, b: 12.3, c: 'r',},
+}
+```
 
 ## `LIMIT` and `OFFSET`
 

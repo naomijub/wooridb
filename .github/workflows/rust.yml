@@ -128,6 +128,8 @@ jobs:
         cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_count_ok
         rm -rf data/*.log
         cargo test -- --ignored controllers::algebra_test::test_select_all_count_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_dedup_nil_ok
 
   build_feature_tests:
     runs-on: ubuntu-latest
