@@ -1,4 +1,4 @@
-use crate::model::error::{Error, error_to_http};
+use crate::model::error::{error_to_http, Error};
 use crate::{
     actors::history::History,
     core::pretty_config_output,
