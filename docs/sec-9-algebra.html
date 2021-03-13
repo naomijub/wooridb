@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Errors Messages - WooriDB</title>
+        <title>Relation Algebra - WooriDB</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-errors.html" class="active"><strong aria-hidden="true">9.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html" class="active"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -167,145 +167,124 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="error-messages"><a class="header" href="#error-messages">Error Messages</a></h1>
-<p>Woori DB has a variety of Error messages, from WQL when parsing the transaction or the query to some internal database errors. Here are listed expected messages:</p>
-<h2 id="wooridb-errors"><a class="header" href="#wooridb-errors">WooriDB Errors:</a></h2>
-<h3 id="example-errors-as-response"><a class="header" href="#example-errors-as-response">Example errors as response:</a></h3>
+                        <h1 id="relation-algebra-functions"><a class="header" href="#relation-algebra-functions">Relation Algebra Functions</a></h1>
+<p>WooriDB has some support to relation algebra functions as well as auxiliary functions to relation algebra. They are:</p>
+<ul>
+<li><a href="#group-by"><code>GROUP BY</code></a></li>
+<li><a href="#order-by"><code>ORDER BY</code></a></li>
+<li><a href="#dedup"><code>DEDUP</code></a></li>
+<li><a href="#limit-and-offset"><code>LIMIT</code></a></li>
+<li><a href="#limit-and-offset"><code>OFFSET</code></a></li>
+<li><a href="#count"><code>COUNT</code></a></li>
+</ul>
+<p>This functions are only supported by the following select queries:</p>
+<ul>
+<li><code>SELECT */#{...} FROM  tree_key_name</code></li>
+<li><code>SELECT */#{...} FROM  tree_key_name WHERE {...}</code></li>
+<li><code>SELECT */#{...} FROM  tree_key_name IDS IN #{...}</code></li>
+</ul>
+<h2 id="group-by"><a class="header" href="#group-by"><code>GROUP BY</code></a></h2>
+<p>This groups the responses of the select query in the following type <code>HashMap&lt;String, BTreeMap&lt;Uuid, HashMap&lt;String, Types&gt;&gt;&gt;</code> (for <code>group by</code> associated with <code>order by</code> the type is <code>HashMap&lt;String, Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;&gt;</code>). So the query <code>SELECT * FROM key GROUP BY c</code>for the following 6 entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{a: 123, b: 12.3,}
+{a: 235, b: 12.3, c: 'c',}
+{a: 235, b: 12.3, c: 'd',}
+{a: 25, b: 12.3, c: 'c',}
+{a: 475, b: 12.3, c: 'd',}
+{a: 295, b: 12.3, c: 'r',}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Will produce the response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &quot;Char(\'r\')&quot;: {&lt;Uuid6&gt;: {a: 295, b: 12.3, c: 'r',},} ,
+    &quot;Char(\'c\')&quot;: {&lt;Uuid2&gt;: {a: 235, b: 12.3, c: 'c',}, &lt;Uuid4&gt;: {a: 25, b: 12.3, c: 'c',},},
+    &quot;Char(\'d\')&quot;: {&lt;Uuid3&gt;: {a: 235, b: 12.3, c: 'd',}, &lt;Uuid5&gt;: {a: 475, b: 12.3, c: 'd',},},
+    &quot;Nil&quot;: {&lt;Uuid1&gt;: {a: 123, b: 12.3,},},
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>Note that the Hash of the type is a <code>String</code> containing a <code>wql::Types</code>.</li>
+</ul>
+<h2 id="order-by"><a class="header" href="#order-by"><code>ORDER BY</code></a></h2>
+<p>This functions orders the response of the query by the value of a key. The key-value can be ordered by <code>:asc</code> or <code>:desc</code>. So the query <code>SELECT * FROM key ORDER BY a :asc</code> will return a <code>Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;</code> for the following 6 entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{a: 123, b: 12.3,}
+{a: 235, b: 12.3, c: 'c',}
+{a: 235, b: 12.3, c: 'd',}
+{a: 25, b: 12.3, c: 'c',}
+{a: 475, b: 12.3, c: 'd',}
+{a: 295, b: 12.3, c: 'r',}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Will produce the response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>[
+    (&lt;Uuid4&gt;, {a: 25, b: 12.3, c: 'c',}),
+    (&lt;Uuid1&gt;, {a: 123, b: 12.3,}),
+    (&lt;Uuid2&gt;, {a: 235, b: 12.3, c: 'c',}),
+    (&lt;Uuid3&gt;, {a: 235, b: 12.3, c: 'd',}),
+    (&lt;Uuid6&gt;, {a: 295, b: 12.3, c: 'r',}),
+    (&lt;Uuid5&gt;, {a: 475, b: 12.3, c: 'd',}),
+]
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<a href="https://github.com/naomijub/wooridb/issues/101">Order By with multiple arguments</a>. The problem here is how to have multiple <code>.and_then(...)</code> alter de <code>partial_cmp</code>.</li>
+</ul>
+<h2 id="dedup"><a class="header" href="#dedup"><code>DEDUP</code></a></h2>
+<p>This functios is capable of removing duplicates key-values in responses. By using <code>SELECT * FROM key DEDUP a</code> for the following 6 entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{a: 123, b: 12.3,}
+{a: 235, b: 12.3, c: 'c',}
+{a: 235, b: 12.3, c: 'd',}
+{a: 25, b: 12.3, c: 'c',}
+{a: 475, b: 12.3, c: 'd',}
+{a: 295, b: 12.3, c: 'r',}
+<span class="boring">}
+</span></code></pre></pre>
+<p>We would have as a result something like:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &lt;Uuid1&gt;: {a: 123, b: 12.3,},
+    &lt;Uuid2&gt;: {a: 235, b: 12.3, c: 'c',},
+    &lt;Uuid3&gt;: {a: 25, b: 12.3, c: 'c',},
+    &lt;Uuid4&gt;: {a: 475, b: 12.3, c: 'd',},
+    &lt;Uuid5&gt;: {a: 295, b: 12.3, c: 'r',},
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<a href="https://github.com/naomijub/wooridb/issues/107">Dedup None/Types::Nil values</a></li>
+</ul>
+<h2 id="limit-and-offset"><a class="header" href="#limit-and-offset"><code>LIMIT</code> and <code>OFFSET</code></a></h2>
+<p>The functions <code>LIMIT</code> and <code>OFFSET</code> expect a positive integer as argument, this means that if you define <code>LIMIT 10</code> and <code>OFFSET 5</code> you will skip the first 5 elements from the tree and take only the next 10 elements. <code>LIMIT</code> and <code>OFFSET</code> are also appended to the end of the select query such that <code>SELECT * FROM key LIMIT 100 OFFSET 300</code>.</p>
+<h2 id="count"><a class="header" href="#count"><code>COUNT</code></a></h2>
+<p>This function is appended to the end of a select query and it will return the count for entities found by that select. So a query like <code>SELECT * FROM key WHERE {...} COUNT</code> will return the responses for select where as well as the count of entities found in that select. The aswer will be in the following structure:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- error_type: &quot;CheckNonEncryptedKeys&quot;,
- error_message: &quot;CHECK can only verify encrypted keys: [\&quot;ssn\&quot;]&quot;,
+    response: { &quot;map containing the response for the query&quot; },
+    count: usize,
 )
 <span class="boring">}
 </span></code></pre></pre>
-<h3 id="error-types"><a class="header" href="#error-types">Error types:</a></h3>
-<ul>
-<li><code>Io(io::Error)</code> - Failed to read or write file.</li>
-<li><code>QueryFormat(String)</code> - WQL error.</li>
-<li><code>EntityAlreadyCreated(&lt;entity_name&gt;)</code> - Entity <code>entity_name</code> already created in the database.</li>
-<li><code>EntityNotCreated(&lt;entity_name&gt;)</code> - tx or query at entity tree dooes not contain key <code>entity_name</code>.</li>
-<li><code>EntityNotCreatedWithUniqueness(&lt;entity_name&gt;)</code> - this error only occurs if a failed write to the bank happened. Migration to fix data inconsistency may be needed.</li>
-<li><code>Serialization(ron::Error)</code> - Ron serialization error in wql context.</li>
-<li><code>UuidNotCreatedForEntity(&lt;entity_name&gt;, Uuid)</code> - If you try to <code>UPDATE/DELETE/EVICT/SELECT</code> an Uuid that <code>entity_name</code> does not contain.</li>
-<li><code>FailedToParseState</code> - Failed to read log file state/entity map.</li>
-<li><code>FailedToParseRegistry</code> - Failed to read log file registry information</li>
-<li><code>UnknownCondition</code> - <code>MATCH UPDATE</code> has an unknown condition (<code>==</code>, <code>&gt;=</code>, <code>&lt;</code>, etc).</li>
-<li><code>FailedMatchCondition</code> - <code>MATCH UPDATE</code> internal service error while processing conditions.</li>
-<li><code>DuplicatedUnique(&lt;entity_name&gt;, &lt;entity_map_key&gt;, Types)</code> - This means that <code>Types</code> is already present at <code>entity_map_key</code> for entity tree <code>entity_name</code>.</li>
-<li><code>SelectBadRequest</code> - Select operation done at <code>/wql/tx</code>. Select operations are done at <code>/wql/query</code>.</li>
-<li><code>NonSelectQuery</code> - Tx operation done at <code>/wql/query</code>. Tx operations are done at <code>/wql/tx</code>.</li>
-<li><code>ActixMailbox(MailboxError)</code> - Internal server error meaning that some actor mailbox crashed.</li>
-<li><code>LockData</code> - Failed to get a lock on Data</li>
-<li><code>Ron(ron::Error)</code> - Ron serialization error that occured in user creation.</li>
-<li><code>InvalidUuid(uuid::Error)</code> - Uuid could not be parsed.</li>
-<li><code>UpdateContentEncryptKeys(Vec&lt;keys&gt;)</code> - <code>UPDATE CONTENT</code> cannot update encrypted <code>keys</code>.</li>
-<li><code>CheckNonEncryptedKeys(Vec&lt;keys&gt;)</code> - Cannot <code>CHECK</code> non encrypted <code>keys</code>.</li>
-<li><code>DateTimeParse(chrono::ParseError)</code> - failed to parse input <code>DateTime&lt;UTC&gt;</code>.</li>
-<li><code>FailedToParseDate</code> - failed to parse log file saved date.</li>
-<li><code>AdminNotConfigured</code> - Admin is not configured at release mode, please check <a href="./sec-5-auth.html">auth section</a> for more info.</li>
-<li><code>AuthBadRequest</code> - Authentication &amp; Authorization error.</li>
-<li><code>FailedToCreateUser</code> - Failed to create new user.</li>
-<li><code>Unknown</code> - Unknown error.</li>
-</ul>
-<h2 id="wql-parsing"><a class="header" href="#wql-parsing">WQL Parsing</a></h2>
-<ul>
-<li>
-<p><code>Query symbol error</code>: </p>
-<ul>
-<li>&quot;Symbol <code>{symbol_name}</code> not implemented&quot;. Symbol name are the start of the query, like <code>SELECT, CHECK, CREATE, ISNERT</code>.</li>
-</ul>
-</li>
-<li>
-<p><code>Keyword error</code>:</p>
-<ul>
-<li><code>CREATE</code>: Keyword ENTITY is required for CREATE&quot;
-<ul>
-<li>&quot;Correct wording is ENCRYPT&quot; for <code>CREATE ENTITY ENCRYPT</code></li>
-<li>&quot;Correct wording is UNIQUES&quot; for <code>CREATE ENTITY UNIQUES</code>.</li>
-</ul>
-</li>
-<li><code>UPDATE</code>: &quot;UPDATE type is required after entity. Keywords are SET or CONTENT&quot;
-<ul>
-<li>&quot;Keyword INTO is required for UPDATE&quot;</li>
-<li>&quot;Keyword INTO is required for MATCH UPDATE&quot;</li>
-<li>&quot;UPDATE keyword is required for MATCH UPDATE&quot;</li>
-<li>&quot;MATCH UPDATE type is required after entity. Keyword is SET&quot;. Use <code>SET</code> as update type in <code>MATCH</code>.</li>
-</ul>
-</li>
-<li><code>SELECT/CHECK</code>: &quot;Keyword FROM is required for CHECK&quot;
-<ul>
-<li>&quot;Keyword FROM is required for SELECT&quot;</li>
-<li>&quot;WHEN not allowed after IDS IN&quot;</li>
-<li>&quot;Keyword AT is required after WHEN&quot;</li>
-<li>&quot;Keyword IN is required after IDS to define a set of uuids&quot;</li>
-<li>&quot;Keyword ID/IDS is required to set an uuid in SELECT&quot;.</li>
-</ul>
-</li>
-<li><code>EVICT/DELETE/INSERT</code>: &quot;Keyword FROM is required for DELETE&quot;
-<ul>
-<li>&quot;Keyword INTO is required for INSERT&quot;</li>
-<li>&quot;Keyword FROM is required to EVICT an UUID&quot;.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><code>Argument format error</code>:</p>
-<ul>
-<li>&quot;Arguments set should start with <code>#{</code> and end with <code>}</code>&quot;</li>
-<li>&quot;Entity map should start with <code>{</code> and end with <code>}</code>&quot; occurs mostly with <code>INSERT and UPDATE</code>.</li>
-<li>&quot;Field ID must be a UUID v4&quot;</li>
-<li><code>SELECT</code>: &quot;Encrypted arguments cannot be set to UNIQUE&quot;
-<ul>
-<li>&quot;SELECT expression should be followed by <code>*</code> for ALL keys or <code>#{key_names...}</code> for some keys&quot; and &quot;SELECT arguments set should start with <code>#{</code> and end with <code>}</code>&quot;</li>
-<li>&quot;Uuids in <code>IDS IN</code> are reuired to be inside a <code>#{</code> and <code>}</code>&quot;</li>
-<li>&quot;START date and END date should be the same date.&quot;</li>
-<li>&quot;WHERE clauses must be contained inside <code> {...}</code>&quot;</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><code>Required content</code>:</p>
-<ul>
-<li>&quot;MATCH requires ALL or ANY symbols&quot;. It is necessary to include <code>ANY</code> or <code>ALL</code> conditions after <code>MATCH</code> keyword.</li>
-<li>&quot;Entity UUID is required for DELETE&quot;</li>
-<li><code>Entity name</code>: 
-<ul>
-<li>&quot;Entity name is required after FROM&quot;</li>
-<li>&quot;Entity name is required for SELECT&quot;</li>
-<li>&quot;Entity name is required after INTO&quot;</li>
-<li>&quot;Entity name is required for UPDATE&quot;</li>
-<li>&quot;Entity name is required for EVICT&quot;</li>
-<li>&quot;Entity name is required for MATCH UPDATE&quot;</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><code>Parse error</code>:</p>
-<ul>
-<li>&quot;Couldn't create uuid from {some-text}. Error: {Uuid::Error}&quot;</li>
-<li>&quot;Couldn't parse UPDATE query&quot;. <code>SET</code> or <code>CONTENT</code> were not found after <code>UPDATE</code></li>
-<li>&quot;Couldn't parse MATCH UPDATE query&quot;</li>
-<li>&quot;Entity name cannot contain <code>-</code>&quot;. Entity name should contain only alphanumeric and <code>_</code> chars.</li>
-<li>&quot;Key must be an alphanumeric value&quot; or contain <code>_</code>.</li>
-<li>&quot;Hash cannot be hashed&quot; and &quot;Nil cannot be hashed&quot;. <code>Types::Hash</code> and <code>Types::Nil</code> cannot be hashed.</li>
-<li>&quot;Not able to parse match argument&quot;. Match condition has wrong argument type.</li>
-<li>&quot;Unidentified Match Condition&quot;. Could not identify match condition.</li>
-<li>&quot;Entity HashMap could not be created&quot;</li>
-<li>&quot;Value Type could not be created from {some value}&quot;. Could not create <code>Types</code> from <code>some value</code>.</li>
-<li>&quot;WHERE clause cannot be empty&quot;</li>
-</ul>
-</li>
-</ul>
-<h2 id="issues"><a class="header" href="#issues">Issues:</a></h2>
-<ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/79">Split <code>AuthBadRequest</code> into <code>AuthenticationBadRequest</code> and <code>AuthorizationBadRequest</code></a></li>
-</ul>
 
                     </main>
 
@@ -317,6 +296,10 @@
                             </a>
                         
 
+                        
+                            <a rel="next" href="sec-10-errors.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -331,6 +314,10 @@
                     </a>
                 
 
+                
+                    <a rel="next" href="sec-10-errors.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 

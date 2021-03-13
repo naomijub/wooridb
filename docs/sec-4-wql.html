@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html" class="active"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-errors.html"><strong aria-hidden="true">9.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html" class="active"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -171,22 +171,22 @@
 <p><a href="https://github.com/naomijub/wooridb/tree/main/wql">Woori Query language</a> or <code>WQL</code> is WooriDB's Query Language and it is inspired by SparQL, Datalog and SQL. Its main features are:</p>
 <p><strong>Transactions</strong></p>
 <ul>
-<li><code>CREATE</code> entity tree key by name.
+<li><a href="#create"><code>CREATE</code></a> entity tree key by name.
 <ul>
 <li><code>UNIQUE</code>: With unique values for entity map keys inside entity tree.</li>
 <li><code>ENCRYPTS</code>: With encrypted values for defined key-values inside entity map.</li>
 </ul>
 </li>
-<li><code>INSERT</code> entity map into entity tree.</li>
+<li><a href="#insert"><code>INSERT</code></a> entity map into entity tree.</li>
 <li><code>UPDATE</code>s with <code>SET</code> or <code>CONTENT</code> entity map.
 <ul>
-<li>SET UPDATE replaces the sent entity map as the entity's map content.</li>
-<li>CONTENT UPDATE updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. </li>
+<li><a href="#update-set">SET UPDATE</a> replaces the sent entity map as the entity's map content.</li>
+<li><a href="#update-content">CONTENT UPDATE</a> updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. </li>
 </ul>
 </li>
-<li><code>MATCH UPDATE</code> updates entity map content with new content if match condition is satisfied.</li>
-<li><code>DELETE</code>s the last entity map content for and entity id.</li>
-<li><code>EVICT</code>
+<li><a href="#match-update"><code>MATCH UPDATE</code></a> updates entity map content with new content if match condition is satisfied.</li>
+<li><a href="#delete"><code>DELETE</code></a>s the last entity map content for and entity id.</li>
+<li><a href="#evict"><code>EVICT</code></a>
 <ul>
 <li>Evicts specific entity id and entity map</li>
 <li>Evicts all entities in the entity tree key.</li>
@@ -195,8 +195,13 @@
 </ul>
 <p><strong>Queries</strong></p>
 <ul>
-<li><code>SELECT</code> the only way to retrieve entity's content.</li>
-<li><code>CHECK</code> the only way to verify keys that are encrypted.</li>
+<li><a href="#select"><code>SELECT</code></a> the only way to retrieve entity's content.
+<ul>
+<li><a href="#where-clause"><code>WHERE</code></a> clause is available.</li>
+<li><code>WHEN</code> clause is availbale</li>
+</ul>
+</li>
+<li><a href="#check"><code>CHECK</code></a> the only way to verify keys that are encrypted.</li>
 </ul>
 <blockquote>
 <p>ALL DATA STRUCTURES HASHMAPS, HASHSETS AND LIST MUST CONTAIN A <code>,</code> AFTER EACH ELEMENT. Example <code>#{name, ssn,}</code> is valid but <code>#{name, ssn}</code> is not valid.</p>
@@ -308,11 +313,11 @@ Join</li>
 Product (SQL's CROSS JOIN?)</li>
 <li><input disabled="" type="checkbox"/>
 Assign</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Dedup</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Sort</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Aggregate</li>
 <li><input disabled="" type="checkbox"/>
 Division</li>

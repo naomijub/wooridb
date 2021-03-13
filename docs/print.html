@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-errors.html"><strong aria-hidden="true">9.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -183,6 +183,7 @@
 <li>Book <a href="https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&amp;btkr=1">Database System Concept</a></li>
 <li>Book <a href="https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&amp;dchild=1&amp;keywords=Designing+Data%E2%80%93Intensive+Applications&amp;qid=1612831724&amp;s=books&amp;sr=1-1">Designing Data Intensive Application</a></li>
 <li>Professor <a href="http://www.cs.cmu.edu/%7Epavlo/">Andy Pavlo</a> Database Design Course. </li>
+<li><a href="https://www.ockam.io/learn/blog/trust_influxdb">Zero Trust in Time Series Data?</a></li>
 </ul>
 <h2 id="naming-conventios"><a class="header" href="#naming-conventios">Naming conventios:</a></h2>
 <ul>
@@ -292,22 +293,20 @@ Projection</li>
 <li><input disabled="" type="checkbox"/>
 Union</li>
 <li><input disabled="" type="checkbox"/>
-Intersection</li>
+Intersection </li>
 <li><input disabled="" type="checkbox"/>
-Difference (SQL's EXCEPT?)</li>
+Difference (SQL's EXCEPT?) <code>-</code></li>
 <li><input disabled="" type="checkbox"/>
 Join</li>
-<li><input disabled="" type="checkbox"/>
-Product (SQL's CROSS JOIN?)</li>
 <li><input disabled="" type="checkbox"/>
 Rename</li>
 <li><input disabled="" type="checkbox"/>
 Assign</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Dedup</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Sort</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Aggregate</li>
 <li><input disabled="" type="checkbox"/>
 Division</li>
@@ -324,22 +323,22 @@ Division</li>
 <p><a href="https://github.com/naomijub/wooridb/tree/main/wql">Woori Query language</a> or <code>WQL</code> is WooriDB's Query Language and it is inspired by SparQL, Datalog and SQL. Its main features are:</p>
 <p><strong>Transactions</strong></p>
 <ul>
-<li><code>CREATE</code> entity tree key by name.
+<li><a href="sec-4-wql.html#create"><code>CREATE</code></a> entity tree key by name.
 <ul>
 <li><code>UNIQUE</code>: With unique values for entity map keys inside entity tree.</li>
 <li><code>ENCRYPTS</code>: With encrypted values for defined key-values inside entity map.</li>
 </ul>
 </li>
-<li><code>INSERT</code> entity map into entity tree.</li>
+<li><a href="sec-4-wql.html#insert"><code>INSERT</code></a> entity map into entity tree.</li>
 <li><code>UPDATE</code>s with <code>SET</code> or <code>CONTENT</code> entity map.
 <ul>
-<li>SET UPDATE replaces the sent entity map as the entity's map content.</li>
-<li>CONTENT UPDATE updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. </li>
+<li><a href="sec-4-wql.html#update-set">SET UPDATE</a> replaces the sent entity map as the entity's map content.</li>
+<li><a href="sec-4-wql.html#update-content">CONTENT UPDATE</a> updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. </li>
 </ul>
 </li>
-<li><code>MATCH UPDATE</code> updates entity map content with new content if match condition is satisfied.</li>
-<li><code>DELETE</code>s the last entity map content for and entity id.</li>
-<li><code>EVICT</code>
+<li><a href="sec-4-wql.html#match-update"><code>MATCH UPDATE</code></a> updates entity map content with new content if match condition is satisfied.</li>
+<li><a href="sec-4-wql.html#delete"><code>DELETE</code></a>s the last entity map content for and entity id.</li>
+<li><a href="sec-4-wql.html#evict"><code>EVICT</code></a>
 <ul>
 <li>Evicts specific entity id and entity map</li>
 <li>Evicts all entities in the entity tree key.</li>
@@ -348,8 +347,13 @@ Division</li>
 </ul>
 <p><strong>Queries</strong></p>
 <ul>
-<li><code>SELECT</code> the only way to retrieve entity's content.</li>
-<li><code>CHECK</code> the only way to verify keys that are encrypted.</li>
+<li><a href="sec-4-wql.html#select"><code>SELECT</code></a> the only way to retrieve entity's content.
+<ul>
+<li><a href="sec-4-wql.html#where-clause"><code>WHERE</code></a> clause is available.</li>
+<li><code>WHEN</code> clause is availbale</li>
+</ul>
+</li>
+<li><a href="sec-4-wql.html#check"><code>CHECK</code></a> the only way to verify keys that are encrypted.</li>
 </ul>
 <blockquote>
 <p>ALL DATA STRUCTURES HASHMAPS, HASHSETS AND LIST MUST CONTAIN A <code>,</code> AFTER EACH ELEMENT. Example <code>#{name, ssn,}</code> is valid but <code>#{name, ssn}</code> is not valid.</p>
@@ -461,11 +465,11 @@ Join</li>
 Product (SQL's CROSS JOIN?)</li>
 <li><input disabled="" type="checkbox"/>
 Assign</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Dedup</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Sort</li>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Aggregate</li>
 <li><input disabled="" type="checkbox"/>
 Division</li>
@@ -984,33 +988,6 @@ WHERE {
 <li><input disabled="" type="checkbox"/>
 Support temporality for where clause</li>
 </ul>
-<h3 id="select-todos---functions-that-couldwill-be-implemented-from-relation-algebra"><a class="header" href="#select-todos---functions-that-couldwill-be-implemented-from-relation-algebra">SELECT TODOs - Functions that could/will be implemented from Relation Algebra:</a></h3>
-<ul>
-<li><input disabled="" type="checkbox"/>
-Projection</li>
-<li><input disabled="" type="checkbox"/>
-Union</li>
-<li><input disabled="" type="checkbox"/>
-Intersection</li>
-<li><input disabled="" type="checkbox"/>
-Difference (SQL's EXCEPT?)</li>
-<li><input disabled="" type="checkbox"/>
-Join</li>
-<li><input disabled="" type="checkbox"/>
-Product (SQL's CROSS JOIN?)</li>
-<li><input disabled="" type="checkbox"/>
-Rename</li>
-<li><input disabled="" type="checkbox"/>
-Assign</li>
-<li><input disabled="" type="checkbox"/>
-Dedup</li>
-<li><input disabled="" type="checkbox"/>
-Sort</li>
-<li><input disabled="" type="checkbox"/>
-Aggregate</li>
-<li><input disabled="" type="checkbox"/>
-Division</li>
-</ul>
 <h1 id="entity-history"><a class="header" href="#entity-history">Entity History</a></h1>
 <p>Entity history is one of the main features of WooriDB. It receives an <code>entity_key</code> name and an <code>entity_id</code> which will return the whole history of <code>(DateTime&lt;Utc&gt;, entity_map)</code> for the <code>entity_id</code> in the entity tree for key <code>entity_key</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/entity-history</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/entity-history -d '(entity_key: &quot;entity_tree_key&quot;, entity_id: &quot;&lt;some-Uuid&gt;&quot;,)'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint. </p>
 <p>Example request: </p>
@@ -1075,6 +1052,124 @@ Division</li>
     &quot;c&quot;: Boolean(true),
     &quot;a&quot;: Integer(34),
 },,}
+<span class="boring">}
+</span></code></pre></pre>
+<h1 id="relation-algebra-functions"><a class="header" href="#relation-algebra-functions">Relation Algebra Functions</a></h1>
+<p>WooriDB has some support to relation algebra functions as well as auxiliary functions to relation algebra. They are:</p>
+<ul>
+<li><a href="sec-9-algebra.html#group-by"><code>GROUP BY</code></a></li>
+<li><a href="sec-9-algebra.html#order-by"><code>ORDER BY</code></a></li>
+<li><a href="sec-9-algebra.html#dedup"><code>DEDUP</code></a></li>
+<li><a href="sec-9-algebra.html#limit-and-offset"><code>LIMIT</code></a></li>
+<li><a href="sec-9-algebra.html#limit-and-offset"><code>OFFSET</code></a></li>
+<li><a href="sec-9-algebra.html#count"><code>COUNT</code></a></li>
+</ul>
+<p>This functions are only supported by the following select queries:</p>
+<ul>
+<li><code>SELECT */#{...} FROM  tree_key_name</code></li>
+<li><code>SELECT */#{...} FROM  tree_key_name WHERE {...}</code></li>
+<li><code>SELECT */#{...} FROM  tree_key_name IDS IN #{...}</code></li>
+</ul>
+<h2 id="group-by"><a class="header" href="#group-by"><code>GROUP BY</code></a></h2>
+<p>This groups the responses of the select query in the following type <code>HashMap&lt;String, BTreeMap&lt;Uuid, HashMap&lt;String, Types&gt;&gt;&gt;</code> (for <code>group by</code> associated with <code>order by</code> the type is <code>HashMap&lt;String, Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;&gt;</code>). So the query <code>SELECT * FROM key GROUP BY c</code>for the following 6 entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{a: 123, b: 12.3,}
+{a: 235, b: 12.3, c: 'c',}
+{a: 235, b: 12.3, c: 'd',}
+{a: 25, b: 12.3, c: 'c',}
+{a: 475, b: 12.3, c: 'd',}
+{a: 295, b: 12.3, c: 'r',}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Will produce the response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &quot;Char(\'r\')&quot;: {&lt;Uuid6&gt;: {a: 295, b: 12.3, c: 'r',},} ,
+    &quot;Char(\'c\')&quot;: {&lt;Uuid2&gt;: {a: 235, b: 12.3, c: 'c',}, &lt;Uuid4&gt;: {a: 25, b: 12.3, c: 'c',},},
+    &quot;Char(\'d\')&quot;: {&lt;Uuid3&gt;: {a: 235, b: 12.3, c: 'd',}, &lt;Uuid5&gt;: {a: 475, b: 12.3, c: 'd',},},
+    &quot;Nil&quot;: {&lt;Uuid1&gt;: {a: 123, b: 12.3,},},
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li>Note that the Hash of the type is a <code>String</code> containing a <code>wql::Types</code>.</li>
+</ul>
+<h2 id="order-by"><a class="header" href="#order-by"><code>ORDER BY</code></a></h2>
+<p>This functions orders the response of the query by the value of a key. The key-value can be ordered by <code>:asc</code> or <code>:desc</code>. So the query <code>SELECT * FROM key ORDER BY a :asc</code> will return a <code>Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;</code> for the following 6 entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{a: 123, b: 12.3,}
+{a: 235, b: 12.3, c: 'c',}
+{a: 235, b: 12.3, c: 'd',}
+{a: 25, b: 12.3, c: 'c',}
+{a: 475, b: 12.3, c: 'd',}
+{a: 295, b: 12.3, c: 'r',}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Will produce the response:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>[
+    (&lt;Uuid4&gt;, {a: 25, b: 12.3, c: 'c',}),
+    (&lt;Uuid1&gt;, {a: 123, b: 12.3,}),
+    (&lt;Uuid2&gt;, {a: 235, b: 12.3, c: 'c',}),
+    (&lt;Uuid3&gt;, {a: 235, b: 12.3, c: 'd',}),
+    (&lt;Uuid6&gt;, {a: 295, b: 12.3, c: 'r',}),
+    (&lt;Uuid5&gt;, {a: 475, b: 12.3, c: 'd',}),
+]
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<a href="https://github.com/naomijub/wooridb/issues/101">Order By with multiple arguments</a>. The problem here is how to have multiple <code>.and_then(...)</code> alter de <code>partial_cmp</code>.</li>
+</ul>
+<h2 id="dedup"><a class="header" href="#dedup"><code>DEDUP</code></a></h2>
+<p>This functios is capable of removing duplicates key-values in responses. By using <code>SELECT * FROM key DEDUP a</code> for the following 6 entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{a: 123, b: 12.3,}
+{a: 235, b: 12.3, c: 'c',}
+{a: 235, b: 12.3, c: 'd',}
+{a: 25, b: 12.3, c: 'c',}
+{a: 475, b: 12.3, c: 'd',}
+{a: 295, b: 12.3, c: 'r',}
+<span class="boring">}
+</span></code></pre></pre>
+<p>We would have as a result something like:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &lt;Uuid1&gt;: {a: 123, b: 12.3,},
+    &lt;Uuid2&gt;: {a: 235, b: 12.3, c: 'c',},
+    &lt;Uuid3&gt;: {a: 25, b: 12.3, c: 'c',},
+    &lt;Uuid4&gt;: {a: 475, b: 12.3, c: 'd',},
+    &lt;Uuid5&gt;: {a: 295, b: 12.3, c: 'r',},
+}
+<span class="boring">}
+</span></code></pre></pre>
+<ul>
+<li><input disabled="" type="checkbox"/>
+<a href="https://github.com/naomijub/wooridb/issues/107">Dedup None/Types::Nil values</a></li>
+</ul>
+<h2 id="limit-and-offset"><a class="header" href="#limit-and-offset"><code>LIMIT</code> and <code>OFFSET</code></a></h2>
+<p>The functions <code>LIMIT</code> and <code>OFFSET</code> expect a positive integer as argument, this means that if you define <code>LIMIT 10</code> and <code>OFFSET 5</code> you will skip the first 5 elements from the tree and take only the next 10 elements. <code>LIMIT</code> and <code>OFFSET</code> are also appended to the end of the select query such that <code>SELECT * FROM key LIMIT 100 OFFSET 300</code>.</p>
+<h2 id="count"><a class="header" href="#count"><code>COUNT</code></a></h2>
+<p>This function is appended to the end of a select query and it will return the count for entities found by that select. So a query like <code>SELECT * FROM key WHERE {...} COUNT</code> will return the responses for select where as well as the count of entities found in that select. The aswer will be in the following structure:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>(
+    response: { &quot;map containing the response for the query&quot; },
+    count: usize,
+)
 <span class="boring">}
 </span></code></pre></pre>
 <h1 id="error-messages"><a class="header" href="#error-messages">Error Messages</a></h1>
