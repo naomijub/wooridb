@@ -123,6 +123,51 @@ async fn test_select_all_dedup_ok() {
 
 #[ignore]
 #[actix_rt::test]
+async fn test_select_all_dedup_nil_ok() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts("dedup_nil_test") {
+        let _ = test::call_service(&mut app, req).await;
+    }
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(format!(
+            "INSERT {{a: 235, b: 12.3, c: Nil,}} INTO {}",
+            "dedup_nil_test"
+        ))
+        .uri("/wql/tx")
+        .to_request();
+    let _ = test::call_service(&mut app, req).await;
+
+    let payload = format!("Select * FROM dedup_nil_test DEDUP NIL(c)",);
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    let _: Result<BTreeMap<Uuid, HashMap<String, Types>>, String> = match ron::de::from_str(&body) {
+        Ok(s) => {
+            let s: BTreeMap<Uuid, HashMap<String, Types>> = s;
+            assert_eq!(s.len(), 3);
+            Ok(s)
+        }
+        Err(e) => {
+            println!("{:?}", e);
+            assert!(false);
+            Err(String::new())
+        }
+    };
+    assert!(!body.contains("\"a\": Integer(123)"));
+}
+
+#[ignore]
+#[actix_rt::test]
 async fn test_select_all_dedup_count_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
 
