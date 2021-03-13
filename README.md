@@ -20,9 +20,10 @@ Some other features are:
   - [ ] Non sensitive configurations are done with `Config.toml`.
   - [ ] CORS
 - Authentication and Authorization via session token
-  - [ ] Creating and removing ADMINs/new users.
+  - [ ] Creating and removing ADMINs
+  - [ ] Removing users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
-- [ ] Possible Relation Algebra
+- [x] Some Relation Algebra
 - [x] Entity history
 
 `Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
