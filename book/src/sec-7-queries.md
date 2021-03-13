@@ -228,17 +228,3 @@ Example response:
 #### TODOs:
 - [ ] Support temporality for where clause
 
-### SELECT TODOs - Functions that could/will be implemented from Relation Algebra:
-
-- [ ] Projection
-- [ ] Union
-- [ ] Intersection
-- [ ] Difference (SQL's EXCEPT?)
-- [ ] Join
-- [ ] Product (SQL's CROSS JOIN?)
-- [ ] Rename
-- [ ] Assign
-- [ ] Dedup
-- [ ] Sort
-- [ ] Aggregate
-- [ ] Division
