@@ -45,6 +45,7 @@ actix-web-httpauth = "0.5.0"
 bytes = "1.0.1"
 criterion = "0.3"
 rand = "*"
+edn-rs = "*"
 
 # [[bench]]
 # name = "tx"

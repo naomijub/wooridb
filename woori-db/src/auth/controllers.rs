@@ -45,10 +45,12 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
                 HttpResponse::ServiceUnavailable().body(Error::FailedToCreateUser.to_string())
             }
         } else {
-            HttpResponse::BadRequest().body(Error::AuthBadRequest.to_string())
+            HttpResponse::BadRequest().body(Error::AuthenticationBadRequest.to_string())
         }
     } else {
-        HttpResponse::BadRequest().body(credentials.err().unwrap().to_string())
+        HttpResponse::BadRequest().body(
+            Error::AuthenticationBadRequestBody(credentials.err().unwrap().to_string()).to_string(),
+        )
     }
 }
 
@@ -82,7 +84,9 @@ pub async fn put_user_session(
 
         HttpResponse::BadRequest().body(Error::Unknown.to_string())
     } else {
-        HttpResponse::BadRequest().body(ok_user.err().unwrap().to_string())
+        HttpResponse::BadRequest().body(
+            Error::AuthenticationBadRequestBody(ok_user.err().unwrap().to_string()).to_string(),
+        )
     }
 }
 
@@ -126,7 +130,7 @@ mod test {
         let mut resp = test::call_service(&mut app, req).await;
         let body = resp.take_body().as_str().to_string();
         assert!(resp.status().is_client_error());
-        assert_eq!(body, "(\n error_type: \"AuthBadRequest\",\n error_message: \"Bad request at authentication endpoint\",\n)");
+        assert_eq!(body, "(\n error_type: \"AuthenticationBadRequest\",\n error_message: \"Bad request at authenticating endpoint\",\n)");
     }
 
     #[ignore]

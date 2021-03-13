@@ -100,6 +100,34 @@ jobs:
         cargo test -- --ignored controllers::clauses_test::clause_like
         rm -rf data/*.log
         cargo test -- --ignored controllers::entity_history_test::test_history_ok
+        
+
+  build_algebric_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: DB-tests
+      run: |
+        cargo test -- --ignored controllers::algebra_test::test_select_all_limit_offset_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_dedup_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_order_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_where_group_by_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_with_order_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_limit_count_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_dedup_count_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_group_by_count_ok
+        rm -rf data/*.log
+        cargo test -- --ignored controllers::algebra_test::test_select_all_count_ok
 
   build_feature_tests:
     runs-on: ubuntu-latest

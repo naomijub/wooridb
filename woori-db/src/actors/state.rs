@@ -54,11 +54,11 @@ impl Handler<State> for Executor {
 pub struct PreviousRegistry(pub String);
 
 impl Message for PreviousRegistry {
-    type Result = Result<Option<DataRegister>, Error>;
+    type Result = Result<Option<(DataRegister, HashMap<String, Types>)>, Error>;
 }
 
 impl Handler<PreviousRegistry> for Executor {
-    type Result = Result<Option<DataRegister>, Error>;
+    type Result = Result<Option<(DataRegister, HashMap<String, Types>)>, Error>;
 
     fn handle(&mut self, msg: PreviousRegistry, _: &mut Self::Context) -> Self::Result {
         use ron::de::from_str;
@@ -76,7 +76,8 @@ impl Handler<PreviousRegistry> for Executor {
                 .to_owned();
             let state = &state[..(state.len() - 1)];
 
-            let resp: Result<DataRegister, Error> = match from_str(state) {
+            let resp: Result<(DataRegister, HashMap<String, Types>), Error> = match from_str(state)
+            {
                 Ok(x) => Ok(x),
                 Err(_) => Err(Error::FailedToParseRegistry),
             };

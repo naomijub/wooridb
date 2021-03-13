@@ -1,7 +1,8 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use actix::prelude::*;
 use uuid::Uuid;
+use wql::Types;
 
 use crate::{
     core::pretty_config_inner,
@@ -34,11 +35,13 @@ impl Handler<OffsetCounter> for Executor {
 }
 
 pub struct LocalData {
-    pub data: BTreeMap<String, BTreeMap<Uuid, DataRegister>>,
+    pub data: BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>,
 }
 
 impl LocalData {
-    pub fn new(data: BTreeMap<String, BTreeMap<Uuid, DataRegister>>) -> Self {
+    pub fn new(
+        data: BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>,
+    ) -> Self {
         Self { data }
     }
 }

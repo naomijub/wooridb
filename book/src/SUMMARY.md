@@ -8,4 +8,6 @@
 - [Transactions](./sec-6-tx.md)
 - [Queries](./sec-7-queries.md)
 - [Entity History](./sec-8-history.md)
-- [Errors Messages](./sec-9-errors.md)
+- [Relation Algebra](./sec-9-algebra.md)
+- [Errors Messages](./sec-10-errors.md)
+

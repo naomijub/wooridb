@@ -32,7 +32,10 @@ pub enum Error {
     DateTimeParse(chrono::ParseError),
     FailedToParseDate,
     AdminNotConfigured,
-    AuthBadRequest,
+    #[allow(dead_code)]
+    AuthorizationBadRequest,
+    AuthenticationBadRequest,
+    AuthenticationBadRequestBody(String),
     FailedToCreateUser,
     Unknown,
 }
@@ -145,9 +148,19 @@ impl std::fmt::Display for Error {
                 "Admin credentials not configured".to_string(),
             )
             .write(f),
-            Error::AuthBadRequest => Response::new(
-                String::from("AuthBadRequest"),
-                "Bad request at authentication endpoint".to_string(),
+            Error::AuthorizationBadRequest => Response::new(
+                String::from("AuthorizationBadRequest"),
+                "Bad request at authorizing endpoint".to_string(),
+            )
+            .write(f),
+            Error::AuthenticationBadRequest => Response::new(
+                String::from("AuthenticationBadRequest"),
+                "Bad request at authenticating endpoint".to_string(),
+            )
+            .write(f),
+            Error::AuthenticationBadRequestBody(error) => Response::new(
+                String::from("AuthenticationBadRequest"),
+                format!("Bad request: {}", error),
             )
             .write(f),
             Error::FailedToCreateUser => Response::new(

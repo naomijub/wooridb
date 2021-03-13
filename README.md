@@ -36,6 +36,7 @@ This project is hugely inspired by:
 - [Database System Concept](https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1)
 - [Designing Data Intensive Application](https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&dchild=1&keywords=Designing+Data%E2%80%93Intensive+Applications&qid=1612831724&s=books&sr=1-1)
 - Professor [Andy Pavlo](http://www.cs.cmu.edu/~pavlo/) Database classes. 
+- [Zero Trust in Time Series Data?](https://www.ockam.io/learn/blog/trust_influxdb)
 
 
 ## Installation
@@ -89,11 +90,11 @@ PORT=1438
 
 - `create_entity`           time:   [15.269 ms 15.332 ms 15.396 ms]
 - `insert_entity`           time:   [27.438 ms 28.177 ms 28.958 ms]
-- `update_set_entity`       time:   [24.110 ms 24.857 ms 25.695 ms]
-- `update_content_entity`   time:   [25.076 ms 25.819 ms 26.584 ms]
+- `update_set_entity`       time:   [22.969 ms 23.382 ms 23.839 ms]
+- `update_content_entity`   time:   [23.181 ms 23.578 ms 24.037 ms]
 - `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
 - `evict_entity_id`         time:   [41.387 ms 42.029 ms 42.731 ms] - Filtered 400s
 - `evict_entity`            time:   [31.582 ms 31.805 ms 32.039 ms] - Filtered 400s
-- `select_all` 20 entities  time:   [28.217 ms 30.311 ms 32.479 ms]
-- `select_all` 10 entities  time:   [25.265 ms 26.094 ms 26.932 ms]
-- `select_all` 1 entity     time:   [22.129 ms 22.776 ms 23.434 ms]
+- `select_all` 20 entities  time:   [23.692 ms 24.183 ms 24.690 ms]
+- `select_all` 10 entities  time:   [22.018 ms 22.301 ms 22.586 ms]
+- `select_all` 1 entity     time:   [19.963 ms 20.679 ms 21.412 ms]

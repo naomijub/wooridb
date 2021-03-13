@@ -3,28 +3,31 @@
 [Woori Query language](https://github.com/naomijub/wooridb/tree/main/wql) or `WQL` is WooriDB's Query Language and it is inspired by SparQL, Datalog and SQL. Its main features are:
 
 **Transactions**
-- `CREATE` entity tree key by name.
+- [`CREATE`](#create) entity tree key by name.
     - `UNIQUE`: With unique values for entity map keys inside entity tree.
     - `ENCRYPTS`: With encrypted values for defined key-values inside entity map.
-- `INSERT` entity map into entity tree.
+- [`INSERT`](#insert) entity map into entity tree.
 - `UPDATE`s with `SET` or `CONTENT` entity map.
-    - SET UPDATE replaces the sent entity map as the entity's map content.
-    - CONTENT UPDATE updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. 
-- `MATCH UPDATE` updates entity map content with new content if match condition is satisfied.
-- `DELETE`s the last entity map content for and entity id.
-- `EVICT`
+    - [SET UPDATE](#update-set) replaces the sent entity map as the entity's map content.
+    - [CONTENT UPDATE](#update-content) updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. 
+- [`MATCH UPDATE`](#match-update) updates entity map content with new content if match condition is satisfied.
+- [`DELETE`](#delete)s the last entity map content for and entity id.
+- [`EVICT`](#evict)
     - Evicts specific entity id and entity map
     - Evicts all entities in the entity tree key.
 
 **Queries**
-- `SELECT` the only way to retrieve entity's content.
-- `CHECK` the only way to verify keys that are encrypted.
+- [`SELECT`](#select) the only way to retrieve entity's content.
+    - [`WHERE`](#where-clause) clause is available.
+    - `WHEN` clause is availbale
+- [`CHECK`](#check) the only way to verify keys that are encrypted.
 
 > ALL DATA STRUCTURES HASHMAPS, HASHSETS AND LIST MUST CONTAIN A `,` AFTER EACH ELEMENT. Example `#{name, ssn,}` is valid but `#{name, ssn}` is not valid.
 
 ## Examples
 
 ### CREATE
+
 Creates an entity tree key.
 
 * `CREATE ENTITY my_entity` this will create an entity tree key named `my_entity`, in SQL terms it means `CREATE TABLE my_entity`.
@@ -33,6 +36,7 @@ Creates an entity tree key.
 * Encryted keys cannot be uniques so `CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}` is invalid but `CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}` is valid.
 
 ### INSERT
+
 Inserts an entity id and an entity map into entity tree key.
 
 * `INSERT {a: 123, b: "hello julia",} INTO entity_key` this will insert the entity map `{a: 123, b: "hello julia",}` (key `a` containing as `Type::Integer(123)` and key `b` containing a `Type::String("hello julia")`) and a random Uuid for entity ID into entity tree key `entity_key`.
@@ -40,16 +44,19 @@ Inserts an entity id and an entity map into entity tree key.
 To INSERT entity with a predefined `Uuid` it is necessary to use the keyword `WITH` after the entity tree key followed by as Uuid-V4. `INSERT {a: 123, b: "hello julia",} INTO entity_key WITH 4f6fccb0-20fb-4d8e-af7c-65db30f4954a`.
 
 ### UPDATE SET
+
 Updates the content by replacing the previous entity map in entity tree key `my_entity_name` with the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
 
 * `UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed` this will replace the current entity map stored in entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
 
 ### UPDATE CONTENT
+
 Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key `my_entity_name` with the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`. Non numerical or non string value will just be replaced. If key doesn't  exist it will be created.
 
 * `UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed` this will add `-4` to entity map key `a` and add `32` to entity map key `b` in the current entity map stored in entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
 
 ### MATCH UPDATE
+
 Similar to SET, but it requires a pre-condition to be satisfied.
 
 * `MATCH ALL(a == 1, b >= 3, c != \"hello\", d < 7,) UPDATE this_entity SET {a: 123, g: NiL,} INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536` if all conditions defined inside `ALL` are satisfied the set update will happen.
@@ -65,22 +72,26 @@ Similar to SET, but it requires a pre-condition to be satisfied.
         - `<` means lesser, so if `a < 100`, this means that the entity map key `a` must be lesser than `100`.
 
 ### DELETE
+
 Deletes the last entity map event for an entity ID in entity tree key, that is, it deletes the last state of an entity map.
 
 * `DELETE 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name` this will delete the last state of entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` in entity tree key `my_entity_name` from entity history.
 
 ### EVICT
+
 Removes all occurrences of an entity from the entity tree. It can be just the entity id or the whole entity tree key.
 
 * `EVICT 48c7640e-9287-468a-a07c-2fb00da5eaed FROM my_entity_name` removes all occurrences of the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` from the entity tree key `my_entity_name`, they cannot be queried anymore.
 * `EVICT my_entity` removes the key `my_entity` from the entity tree. It cannot be queried anymore. It is similar to SQL's `DROP TABLE my_entity`.
 
 ### CHECK
+
 Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves  as a way to verify if the passed values are `true` of `false` against encrypted data. 
 
 * `CHECK {pswd: "my-password", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed` this will check if keys `psdw` and `ssn` from entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` in entity tree key `my_entity_name` have the values `"my-password"` for pswd and `3948453` for ssn.
 
 ### SELECT
+
 This is the way to query entities from WooriDB. Similar to SQL and SparQL `SELECT`.
 
 Possible `SELECT`  combinantions:
@@ -97,6 +108,7 @@ Possible `SELECT`  combinantions:
      - `(or (>= ?c 4300.0), (< ?c 6.9),)` selects all entities which entity map key `c` is greater or equal to `4300.0` **or** is smaller than `6.9`.
 
 #### WHERE Clause
+
 Possible functions for the where clause:
 * `in`: `(in ?k1 123 34543 7645 435)`, `?k1` must be present in the set containing `123 34543 7645 435`. NOTE: **for now, please don't use `,`**.
 * `between`: `(between ?k1 0 435)`, `?k1`  must be between starting value `0` and ending value `435`. If you set more than 2 arguments it will return a `ClauseError`.
@@ -105,6 +117,7 @@ Possible functions for the where clause:
 * `or`: All arguments inside the `or` function call will be evaluated to `true` if any of them is `true`. 
 
 #### Relation Algebra
+
 Some relation algebra may be implemented:
 - [ ] Projection
 - [ ] Union
@@ -113,9 +126,9 @@ Some relation algebra may be implemented:
 - [ ] Join
 - [ ] Product (SQL's CROSS JOIN?)
 - [ ] Assign
-- [ ] Dedup
-- [ ] Sort
-- [ ] Aggregate
+- [x] Dedup
+- [x] Sort
+- [x] Aggregate
 - [ ] Division
 
 ### Entity map value TYPES

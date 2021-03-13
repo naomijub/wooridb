@@ -800,6 +800,7 @@ mod check {
 #[cfg(test)]
 mod test_where {
     use super::*;
+    use edn_rs::hmap;
 
     #[test]
     fn where_ok() {
@@ -829,7 +830,8 @@ mod test_where {
                         "?age".to_string(),
                         vec![Types::Integer(30), Types::Integer(35),]
                     )
-                ]
+                ],
+                HashMap::new()
             )
         )
     }
@@ -883,7 +885,40 @@ mod test_where {
                             )
                         ]
                     )
-                ]
+                ],
+                HashMap::new()
+            )
+        )
+    }
+
+    #[test]
+    fn select_where_groupby() {
+        let query = "Select * FROM my_entity WHERE {
+            ?* my_entity:name \"julia\",
+            ?* my_entity:id 349875325,
+        } GROUP BY amazing_key";
+        let wql = Wql::from_str(query);
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::SelectWhere(
+                "my_entity".to_string(),
+                ToSelect::All,
+                vec![
+                    Clause::ContainsKeyValue(
+                        "my_entity".to_string(),
+                        "name".to_string(),
+                        Types::String("julia".to_string())
+                    ),
+                    Clause::ContainsKeyValue(
+                        "my_entity".to_string(),
+                        "id".to_string(),
+                        Types::Integer(349875325)
+                    ),
+                ],
+                hmap! {
+                    "GROUP".to_string() => Algebra::GroupBy(String::from("amazing_key"))
+                }
             )
         )
     }

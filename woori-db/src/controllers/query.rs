@@ -15,7 +15,13 @@ use crate::{
         state::State,
         when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange},
     },
-    core::pretty_config_output,
+    core::{
+        pretty_config_output,
+        query::{
+            dedup_option_states, dedup_states, get_limit_offset_count,
+            get_result_after_manipulation, get_result_after_manipulation_for_options,
+        },
+    },
     model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
 };
 
@@ -29,21 +35,23 @@ pub async fn wql_handler(
 ) -> impl Responder {
     let query = Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::Select(entity, ToSelect::All, Some(uuid))) => {
-            select_all_with_id(entity, uuid, local_data, actor).await
+        Ok(Wql::Select(entity, ToSelect::All, Some(uuid), _)) => {
+            select_all_with_id(entity, uuid, local_data).await
         }
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid))) => {
-            select_keys_with_id(entity, uuid, keys, local_data, actor).await
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid), _)) => {
+            select_keys_with_id(entity, uuid, keys, local_data).await
         }
-        Ok(Wql::Select(entity, ToSelect::All, None)) => select_all(entity, local_data, actor).await,
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), None)) => {
-            select_args(entity, keys, local_data, actor).await
+        Ok(Wql::Select(entity, ToSelect::All, None, functions)) => {
+            select_all(entity, local_data, functions).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::All, uuids)) => {
-            select_all_with_ids(entity, uuids, local_data, actor).await
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), None, functions)) => {
+            select_args(entity, keys, local_data, functions).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids)) => {
-            select_keys_with_ids(entity, keys, uuids, local_data, actor).await
+        Ok(Wql::SelectIds(entity, ToSelect::All, uuids, functions)) => {
+            select_all_with_ids(entity, uuids, local_data, functions).await
+        }
+        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions)) => {
+            select_keys_with_ids(entity, keys, uuids, local_data, functions).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
             select_all_when_controller(entity, date, actor).await
@@ -60,8 +68,9 @@ pub async fn wql_handler(
         Ok(Wql::SelectWhenRange(entity_name, uuid, start_date, end_date)) => {
             select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
         }
-        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses)) => {
-            select_where_controller(entity_name, args_to_select, clauses, local_data, actor).await
+        Ok(Wql::SelectWhere(entity_name, args_to_select, clauses, functions)) => {
+            select_where_controller(entity_name, args_to_select, clauses, local_data, functions)
+                .await
         }
         Ok(Wql::CheckValue(entity, uuid, content)) => {
             check_value_controller(entity, uuid, content, local_data, encryption, actor).await
@@ -112,7 +121,7 @@ pub async fn check_value_controller(
     };
 
     let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
-    let previous_state_str = actor.send(previous_entry.to_owned()).await??;
+    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
     let state = actor.send(State(previous_state_str)).await??;
     let keys = content
         .keys()
@@ -255,7 +264,6 @@ async fn select_all_with_id(
     entity: String,
     uuid: Uuid,
     local_data: DataLocalContext,
-    actor: DataExecutor,
 ) -> Result<String, Error> {
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -276,8 +284,7 @@ async fn select_all_with_id(
         registry
     };
 
-    let content = actor.send(registry).await??;
-    let state = actor.send(State(content)).await??;
+    let state = registry.1;
     let filterd_state = state
         .into_par_iter()
         .filter(|(_, v)| !v.is_hash())
@@ -292,8 +299,9 @@ async fn select_all_with_ids(
     entity: String,
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
-    actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, count) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -314,7 +322,7 @@ async fn select_all_with_ids(
                     .filter(|(_id, reg)| reg.is_some())
                 })
                 .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
-                .collect::<Vec<(Uuid, Option<DataRegister>)>>()
+                .collect::<Vec<(Uuid, Option<(DataRegister, HashMap<String, Types>)>)>>()
         } else {
             return Err(Error::EntityNotCreated(entity));
         };
@@ -323,9 +331,7 @@ async fn select_all_with_ids(
 
     let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
     for (uuid, registry) in registries {
-        if let Some(regs) = registry {
-            let content = actor.send(regs).await??;
-            let state = actor.send(State(content)).await??;
+        if let Some((_, state)) = registry {
             let filtered = state
                 .into_par_iter()
                 .filter(|(_, v)| !v.is_hash())
@@ -336,7 +342,14 @@ async fn select_all_with_ids(
         }
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    let states = states
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
+    let states = dedup_option_states(states, &functions);
+
+    get_result_after_manipulation_for_options(states, functions, count)
 }
 
 async fn select_keys_with_id(
@@ -344,7 +357,6 @@ async fn select_keys_with_id(
     uuid: Uuid,
     keys: Vec<String>,
     local_data: DataLocalContext,
-    actor: DataExecutor,
 ) -> Result<String, Error> {
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registry = {
@@ -366,8 +378,7 @@ async fn select_keys_with_id(
         registry
     };
 
-    let content = actor.send(registry).await??;
-    let state = actor.send(State(content)).await??;
+    let state = registry.1;
     let filtered: HashMap<String, Types> = state
         .into_par_iter()
         .filter(|(k, _)| keys.contains(k))
@@ -384,8 +395,9 @@ async fn select_keys_with_ids(
     keys: Vec<String>,
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
-    actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, count) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -406,18 +418,16 @@ async fn select_keys_with_ids(
                     .filter(|(_id, reg)| reg.is_some())
                 })
                 .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
-                .collect::<Vec<(Uuid, Option<DataRegister>)>>()
+                .collect::<Vec<(Uuid, Option<(DataRegister, HashMap<String, Types>)>)>>()
         } else {
             return Err(Error::EntityNotCreated(entity));
         };
         registries
     };
 
-    let mut states: HashMap<Uuid, Option<HashMap<String, Types>>> = HashMap::new();
+    let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
     for (uuid, registry) in registries {
-        if let Some(regs) = registry {
-            let content = actor.send(regs).await??;
-            let state = actor.send(State(content)).await??;
+        if let Some((_, state)) = registry {
             let filtered: HashMap<String, Types> = state
                 .into_par_iter()
                 .filter(|(k, _)| keys.contains(k))
@@ -428,15 +438,24 @@ async fn select_keys_with_ids(
             states.insert(uuid, None);
         }
     }
+    let states = states
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    let states = dedup_option_states(states, &functions);
+
+    get_result_after_manipulation_for_options(states, functions, count)
 }
 
 async fn select_all(
     entity: String,
     local_data: DataLocalContext,
-    actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, count) = get_limit_offset_count(&functions);
+
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -453,9 +472,7 @@ async fn select_all(
     };
 
     let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
-    for (uuid, regs) in registries {
-        let content = actor.send(regs).await??;
-        let state = actor.send(State(content)).await??;
+    for (uuid, (_, state)) in registries.into_iter().skip(offset).take(limit) {
         let filtered = state
             .into_par_iter()
             .filter(|(_, v)| !v.is_hash())
@@ -463,16 +480,18 @@ async fn select_all(
 
         states.insert(uuid, filtered);
     }
+    let states = dedup_states(states, &functions);
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    get_result_after_manipulation(states, functions, count)
 }
 
 async fn select_args(
     entity: String,
     keys: Vec<String>,
     local_data: DataLocalContext,
-    actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
+    let (limit, offset, count) = get_limit_offset_count(&functions);
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -489,10 +508,8 @@ async fn select_args(
         registries
     };
 
-    let mut states: HashMap<Uuid, HashMap<String, Types>> = HashMap::new();
-    for (uuid, regs) in registries {
-        let content = actor.send(regs).await??;
-        let state = actor.send(State(content)).await??;
+    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+    for (uuid, (_, state)) in registries.into_iter().skip(offset).take(limit) {
         let filtered: HashMap<String, Types> = state
             .into_par_iter()
             .filter(|(k, _)| keys.contains(k))
@@ -501,5 +518,6 @@ async fn select_args(
         states.insert(uuid, filtered);
     }
 
-    Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+    let states = dedup_states(states, &functions);
+    get_result_after_manipulation(states, functions, count)
 }

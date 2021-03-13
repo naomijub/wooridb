@@ -3,27 +3,30 @@ use std::collections::{BTreeMap, HashMap};
 use futures::{future, stream, StreamExt};
 use rayon::prelude::*;
 use uuid::Uuid;
-use wql::{Clause, ToSelect, Types, Value};
+use wql::{Algebra, Clause, ToSelect, Types, Value};
 
 use crate::{
-    actors::state::State,
-    core::{pretty_config_output, registry::get_registries},
-    model::{error::Error, DataExecutor, DataLocalContext, DataRegister},
+    core::registry::get_registries,
+    model::{error::Error, DataLocalContext, DataRegister},
 };
+
+use crate::core::query::{dedup_states, get_limit_offset_count, get_result_after_manipulation};
 
 pub async fn select_where_controller(
     entity: String,
     args_to_select: ToSelect,
     clauses: Vec<Clause>,
     local_data: DataLocalContext,
-    actor: DataExecutor,
+    functions: HashMap<String, wql::Algebra>,
 ) -> Result<String, Error> {
-    let states = select_where(entity, args_to_select, clauses, local_data, actor);
+    let states = select_where(entity, args_to_select, clauses, local_data, &functions);
+    let count = if let Some(Algebra::Count) = functions.get("COUNT") {
+        true
+    } else {
+        false
+    };
 
-    Ok(ron::ser::to_string_pretty(
-        &states.await?,
-        pretty_config_output(),
-    )?)
+    get_result_after_manipulation(states.await?, functions, count)
 }
 
 pub async fn select_where(
@@ -31,8 +34,9 @@ pub async fn select_where(
     args_to_select: ToSelect,
     clauses: Vec<Clause>,
     local_data: DataLocalContext,
-    actor: DataExecutor,
+    functions: &HashMap<String, wql::Algebra>,
 ) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
+    let (limit, offset, _) = get_limit_offset_count(functions);
     let args_to_key = clauses
         .clone()
         .into_par_iter()
@@ -45,9 +49,15 @@ pub async fn select_where(
         })
         .collect::<HashMap<String, String>>();
     let registries = get_registries(&entity, &local_data)?;
-    let states = generate_state(&registries, args_to_select, &actor).await?;
-    let states = filter_where_clauses(states, args_to_key, &clauses).await;
+    let states = generate_state(&registries, args_to_select).await?;
+    let states = filter_where_clauses(states, args_to_key, &clauses)
+        .await
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .collect();
 
+    let states = dedup_states(states, &functions);
     Ok(states)
 }
 
@@ -185,20 +195,18 @@ fn or_clauses(
 }
 
 async fn generate_state(
-    registries: &BTreeMap<Uuid, DataRegister>,
+    registries: &BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
     args_to_select: ToSelect,
-    actor: &DataExecutor,
 ) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
     let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
-    for (uuid, regs) in registries {
-        let content = actor.send(regs.to_owned()).await??;
-        let state = actor
-            .send(State(content))
-            .await??
+    for (uuid, (_, state)) in registries {
+        let state = state
             .into_par_iter()
-            .filter(|(_, v)| !v.is_hash());
+            .filter(|(_, v)| !v.is_hash())
+            .map(|(k, v)| (k.to_owned(), v.to_owned()));
         let filtered = if let ToSelect::Keys(ref keys) = args_to_select {
             state
+                .into_par_iter()
                 .filter(|(k, _)| keys.contains(k))
                 .collect::<HashMap<String, Types>>()
         } else {

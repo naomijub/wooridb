@@ -15,6 +15,7 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 - `Debug mode`: `make debug` in project root.
 
 ### Docker
+
 you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-2`**. To execute the docker container run:
 
 * `docker run -p 1438:1438 naomijubs/wooridb:beta-2 debug` for debug mode.
@@ -35,6 +36,7 @@ ADMIN_PASSWORD=your-admin-pswd
 * `BLOB` will not be supported. Check out [To BLOB or Not To BLOB: Large Object Storage in a Database or a Filesystem](https://www.microsoft.com/en-us/research/publication/to-blob-or-not-to-blob-large-object-storage-in-a-database-or-a-filesystem/).
 
 ###  Configurations
+
 * To run the project in `debug` mode it is important to export the following environment variables `HASHING_COST, PORT`. Default values are:
 ```
 HASHING_COST=16

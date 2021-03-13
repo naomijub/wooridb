@@ -26,7 +26,7 @@ pub async fn wql_validator(
         if let Some(true) = allow {
             Ok(req)
         } else {
-            Err(crate::model::error::Error::AuthBadRequest.into())
+            Err(crate::model::error::Error::AuthorizationBadRequest.into())
         }
     } else if req.path().starts_with("/wql/query") {
         let allow = req
@@ -38,7 +38,7 @@ pub async fn wql_validator(
         if let Some(true) = allow {
             Ok(req)
         } else {
-            Err(crate::model::error::Error::AuthBadRequest.into())
+            Err(crate::model::error::Error::AuthorizationBadRequest.into())
         }
     } else {
         Ok(req)
@@ -64,7 +64,7 @@ pub async fn history_validator(
         if let Some(true) = allow {
             Ok(req)
         } else {
-            Err(crate::model::error::Error::AuthBadRequest.into())
+            Err(crate::model::error::Error::AuthorizationBadRequest.into())
         }
     } else {
         Ok(req)
