@@ -8,6 +8,7 @@ use crate::{
     },
     core::{pretty_config_inner, wql::update_content_state},
     model::{
+        error::error_to_http,
         wql::{InsertArgs, MatchUpdateArgs, UpdateArgs},
         DataAtomicUsize, DataEncryptContext, DataExecutor, DataLocalContext, DataU32,
         DataUniquenessContext,
@@ -114,7 +115,7 @@ pub async fn wql_handler(
     };
 
     match response {
-        Err(e) => HttpResponse::BadRequest().body(e.to_string()),
+        Err(e) => error_to_http(e),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
