@@ -84,7 +84,6 @@ PORT=1438
 
 ## TODOS
 - [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
-- [ ] Benchmarks. PRs [61](https://github.com/naomijub/wooridb/pull/61) [93](https://github.com/naomijub/wooridb/pull/93)
 
 ## Current Benchmarks
 >  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
@@ -99,3 +98,52 @@ PORT=1438
 - `select_all` 20 entities  time:   [23.692 ms 24.183 ms 24.690 ms]
 - `select_all` 10 entities  time:   [22.018 ms 22.301 ms 22.586 ms]
 - `select_all` 1 entity     time:   [19.963 ms 20.679 ms 21.412 ms]
+
+> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+
+- `history_10_registries_for_entity`   time:   [23.732 ms 24.811 ms 25.982 ms]
+- `history_20_registries_for_entity`   time:   [26.011 ms 26.847 ms 27.690 ms]
+
+
+### artillery.io 
+> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+
+[**Insert**](./insert-report.json)
+
+Config file:
+```yml
+config:
+  target: "http://localhost:1438"
+  phases:
+    - duration: 100
+      arrivalRate: 10
+  defaults:
+    headers:
+      Content-Type: "application/wql"
+scenarios:
+  - flow:
+      - post:
+          url: "/wql/tx"
+          body: "INSERT {name: \"name\", last_name: \"last name\", age: 20, blood: 'O'} INTO person"
+```
+
+[**Select**](./select-report.json)
+
+Contains 1000 registries of `{name: \"name\", last_name: \"last name\", age: 20, blood: 'O'}`.
+
+Config file:
+```yml
+config:
+  target: "http://localhost:1438"
+  phases:
+    - duration: 100
+      arrivalRate: 10
+  defaults:
+    headers:
+      Content-Type: "application/wql"
+scenarios:
+  - flow:
+      - post:
+          url: "/wql/query"
+          body: "SELECT * FROM person"
+```            
