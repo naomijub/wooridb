@@ -1,4 +1,4 @@
-use crate::model::error::Error;
+use crate::model::error::{Error, error_to_http};
 use crate::{
     actors::history::History,
     core::pretty_config_output,
@@ -20,7 +20,7 @@ pub async fn history_handler(
     let response = history_controller(body, local_data, actor);
 
     match response.await {
-        Err(e) => HttpResponse::BadRequest().body(e.to_string()),
+        Err(e) => error_to_http(e),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
