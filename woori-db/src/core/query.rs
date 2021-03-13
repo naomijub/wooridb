@@ -9,7 +9,7 @@ use wql::{Algebra, Types};
 
 use crate::{model::error::Error, schemas::query::CountResponse};
 
-use super::pretty_config_output;
+use super::{pretty_config_inner, pretty_config_output};
 
 pub(crate) fn get_limit_offset_count(
     functions: &HashMap<String, wql::Algebra>,
@@ -133,7 +133,7 @@ pub(crate) fn get_result_after_manipulation(
             let size = states.len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -200,7 +200,7 @@ pub(crate) fn get_result_after_manipulation(
                 let size = groups.keys().len();
                 CountResponse::to_response(
                     size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_output())?,
+                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
                 )
             } else {
                 Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
@@ -211,7 +211,7 @@ pub(crate) fn get_result_after_manipulation(
             let size = states.keys().len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -252,7 +252,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
             let size = states.len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -331,7 +331,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
                 let size = groups.keys().len();
                 CountResponse::to_response(
                     size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_output())?,
+                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
                 )
             } else {
                 Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
@@ -342,7 +342,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
             let size = states.keys().len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
