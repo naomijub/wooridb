@@ -96,7 +96,3 @@ Woori DB has a variety of Error messages, from WQL when parsing the transaction 
     - "Entity HashMap could not be created"
     - "Value Type could not be created from {some value}". Could not create `Types` from `some value`.
     - "WHERE clause cannot be empty"
-
-
-## Issues:
-- [ ] [Split `AuthBadRequest` into `AuthenticationBadRequest` and `AuthorizationBadRequest`](https://github.com/naomijub/wooridb/issues/79)
