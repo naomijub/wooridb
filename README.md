@@ -75,7 +75,7 @@ HASHING_COST=16
 PORT=1438
 ```
 
-## Milestone to stablish version
+## Milestone to stable-ish version
 - [ ] [issues](https://github.com/naomijub/wooridb/issues?q=is%3Aissue+is%3Aopen+label%3AMilestone)
 
 ## Current Benchmarks
