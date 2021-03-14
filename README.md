@@ -22,7 +22,7 @@ Some other features are:
 - Authentication and Authorization via session token
   - [ ] Creating and removing ADMINs
   - [ ] Removing users.
-- [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
+- [Conditional Update](https://naomijub.github.io/wooridb/sec-6-tx.html#match-update)
 - [x] Some Relation Algebra
 - [x] Entity history
 
