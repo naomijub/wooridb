@@ -11,20 +11,13 @@ Some other features are:
   - [ ] EDN to be supported via feature.
 - Entities are indexed by `entity_name` (Entity Tree), `DateTime` (Time Serial) and `Uuid` (Entity ID). Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
-  - [ ] `S3` as a backend is to be developed.
-  - [ ] `Postgres` as a backend is to be developed.
-  - [ ] `DynamoDB` as a backend is to be developed.
 - Able to handle very large numbers when using the `P` suffix.
   - Ex: `98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P`.
 - Configuration is done via environment variables.
-  - [ ] Non sensitive configurations are done with `Config.toml`.
-  - [ ] CORS
 - Authentication and Authorization via session token
-  - [ ] Creating and removing ADMINs
-  - [ ] Removing users.
 - [Conditional Update](https://naomijub.github.io/wooridb/sec-6-tx.html#match-update)
-- [x] Some Relation Algebra
-- [x] Entity history
+- Some Relation Algebra
+- Entity history
 
 `Woori` means `our` and although I developed this DB initially alone, it is in my culture to call everything that is done for our community and by our community **ours**.
 
@@ -82,8 +75,8 @@ HASHING_COST=16
 PORT=1438
 ```
 
-## TODOS
-- [ ] Read infos from ztsd files [issue 28](https://github.com/naomijub/wooridb/issues/28)
+## Milestone to stablish version
+- [ ] [issues](https://github.com/naomijub/wooridb/issues?q=is%3Aissue+is%3Aopen+label%3AMilestone)
 
 ## Current Benchmarks
 >  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
