@@ -9,7 +9,7 @@ use wql::{Algebra, Types};
 
 use crate::{model::error::Error, schemas::query::CountResponse};
 
-use super::pretty_config_output;
+use super::{pretty_config_inner, pretty_config_output};
 
 pub(crate) fn get_limit_offset_count(
     functions: &HashMap<String, wql::Algebra>,
@@ -38,10 +38,27 @@ pub(crate) fn dedup_states(
     functions: &HashMap<String, wql::Algebra>,
 ) -> BTreeMap<Uuid, HashMap<String, Types>> {
     if let Some(Algebra::Dedup(k)) = functions.get("DEDUP") {
+        let key = if k.starts_with("NIL(") {
+            String::from(&k[4..k.len() - 1])
+        } else {
+            k.to_owned()
+        };
+
         let mut set: HashSet<String> = HashSet::new();
         let mut new_states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
         for (id, state) in states {
-            if !set.contains(&format!("{:?}", state.get(k).unwrap_or(&Types::Nil))) {
+            let k_value = state.get(&key);
+
+            if k.starts_with("NIL(")
+                && k_value.is_some()
+                && k_value != Some(&Types::Nil)
+                && !set.contains(&format!("{:?}", k_value.unwrap()))
+            {
+                set.insert(format!("{:?}", k_value.unwrap()));
+                new_states.insert(id.to_owned(), state.to_owned());
+            } else if !k.starts_with("NIL(")
+                && !set.contains(&format!("{:?}", state.get(k).unwrap_or(&Types::Nil)))
+            {
                 set.insert(format!("{:?}", state.get(k).unwrap_or(&Types::Nil)));
                 new_states.insert(id, state);
             }
@@ -56,18 +73,29 @@ pub(crate) fn dedup_option_states(
     states: BTreeMap<Uuid, Option<HashMap<String, Types>>>,
     functions: &HashMap<String, wql::Algebra>,
 ) -> BTreeMap<Uuid, Option<HashMap<String, Types>>> {
-    if let Some(Algebra::Dedup(k)) = functions.get("DEDUP") {
+    let dedup = functions.get("DEDUP");
+    if let Some(Algebra::Dedup(k)) = dedup {
+        let key = if k.starts_with("NIL(") {
+            String::from(&k[4..k.len() - 1])
+        } else {
+            k.to_owned()
+        };
+
         let mut set: HashSet<String> = HashSet::new();
         let mut new_states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
         for (id, state) in states.iter().filter(|(_, s)| s.is_some()) {
-            if !set.contains(&format!(
-                "{:?}",
-                state.clone().unwrap().get(k).unwrap_or(&Types::Nil)
-            )) {
-                set.insert(format!(
-                    "{:?}",
-                    state.clone().unwrap().get(k).unwrap_or(&Types::Nil)
-                ));
+            let some_state = state.clone().unwrap();
+            let k_value = some_state.get(&key);
+
+            if k.starts_with("NIL(")
+                && k_value.is_some()
+                && k_value != Some(&Types::Nil)
+                && !set.contains("")
+            {
+                set.insert(format!("{:?}", k_value.unwrap()));
+                new_states.insert(id.to_owned(), state.to_owned());
+            } else if !set.contains(&format!("{:?}", k_value.unwrap_or(&Types::Nil))) {
+                set.insert(format!("{:?}", k_value.unwrap_or(&Types::Nil)));
                 new_states.insert(id.to_owned(), state.to_owned());
             }
         }
@@ -105,7 +133,7 @@ pub(crate) fn get_result_after_manipulation(
             let size = states.len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -172,7 +200,7 @@ pub(crate) fn get_result_after_manipulation(
                 let size = groups.keys().len();
                 CountResponse::to_response(
                     size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_output())?,
+                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
                 )
             } else {
                 Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
@@ -183,7 +211,7 @@ pub(crate) fn get_result_after_manipulation(
             let size = states.keys().len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -224,7 +252,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
             let size = states.len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
@@ -303,7 +331,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
                 let size = groups.keys().len();
                 CountResponse::to_response(
                     size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_output())?,
+                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
                 )
             } else {
                 Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
@@ -314,7 +342,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
             let size = states.keys().len();
             CountResponse::to_response(
                 size,
-                ron::ser::to_string_pretty(&states, pretty_config_output())?,
+                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
             )
         } else {
             Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)

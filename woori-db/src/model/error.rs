@@ -1,5 +1,5 @@
 use actix::MailboxError;
-use actix_web::error;
+use actix_web::{error, HttpResponse};
 use std::io;
 
 use uuid::Uuid;
@@ -38,6 +38,39 @@ pub enum Error {
     AuthenticationBadRequestBody(String),
     FailedToCreateUser,
     Unknown,
+}
+
+pub fn error_to_http(e: Error) -> HttpResponse {
+    match &e {
+        Error::Io(_) => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::QueryFormat(_) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::EntityAlreadyCreated(_) => HttpResponse::UnprocessableEntity().body(e.to_string()),
+        Error::EntityNotCreated(_) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::EntityNotCreatedWithUniqueness(_) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::Serialization(_) => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::UuidNotCreatedForEntity(_, _) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::FailedToParseState => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::FailedToParseRegistry => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::UnknownCondition => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::FailedMatchCondition => HttpResponse::PreconditionFailed().body(e.to_string()),
+        Error::DuplicatedUnique(_, _, _) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::SelectBadRequest => HttpResponse::MethodNotAllowed().body(e.to_string()),
+        Error::NonSelectQuery => HttpResponse::MethodNotAllowed().body(e.to_string()),
+        Error::ActixMailbox(_) => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::LockData => HttpResponse::ServiceUnavailable().body(e.to_string()),
+        Error::Ron(_) => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::InvalidUuid(_) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::UpdateContentEncryptKeys(_) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::CheckNonEncryptedKeys(_) => HttpResponse::BadRequest().body(e.to_string()),
+        Error::DateTimeParse(_) => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::FailedToParseDate => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::AdminNotConfigured => HttpResponse::Unauthorized().body(e.to_string()),
+        Error::AuthorizationBadRequest => HttpResponse::Unauthorized().body(e.to_string()),
+        Error::AuthenticationBadRequest => HttpResponse::Forbidden().body(e.to_string()),
+        Error::AuthenticationBadRequestBody(_) => HttpResponse::Forbidden().body(e.to_string()),
+        Error::FailedToCreateUser => HttpResponse::BadRequest().body(e.to_string()),
+        Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
+    }
 }
 
 impl std::fmt::Display for Error {

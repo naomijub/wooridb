@@ -22,7 +22,10 @@ use crate::{
             get_result_after_manipulation, get_result_after_manipulation_for_options,
         },
     },
-    model::{error::Error, DataEncryptContext, DataExecutor, DataLocalContext, DataRegister},
+    model::{
+        error::{error_to_http, Error},
+        DataEncryptContext, DataExecutor, DataLocalContext, DataRegister,
+    },
 };
 
 use super::clauses::select_where_controller;
@@ -80,7 +83,7 @@ pub async fn wql_handler(
     };
 
     match response {
-        Err(e) => HttpResponse::BadRequest().body(e.to_string()),
+        Err(e) => error_to_http(e),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }

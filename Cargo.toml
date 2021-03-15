@@ -55,6 +55,10 @@ edn-rs = "*"
 # name = "query"
 # harness = false
 
+# [[bench]]
+# name = "history"
+# harness = false
+
 [profile.release]
 panic = 'unwind'
 opt-level = 3
