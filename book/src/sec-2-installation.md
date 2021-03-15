@@ -16,7 +16,7 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 
 ### Docker
 
-you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-4`**. To execute the docker container run:
+you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is [**`beta-4`**](https://github.com/naomijub/wooridb/releases/tag/0.1.4). To execute the docker container run:
 
 * `docker run -p 1438:1438 naomijubs/wooridb:beta-4 debug` for debug mode.
 * `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-4 run`  for size optimization.

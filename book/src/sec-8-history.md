@@ -62,5 +62,5 @@ Example response:
     "b": Float(12.3),
     "c": Boolean(true),
     "a": Integer(34),
-},,}
+},}
 ```
