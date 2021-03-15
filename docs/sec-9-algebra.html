@@ -268,10 +268,17 @@
 }
 <span class="boring">}
 </span></code></pre></pre>
-<ul>
-<li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/107">Dedup None/Types::Nil values</a></li>
-</ul>
+<p>Also it is possible to eliminate <code>Nil</code> and <code>Types::Nil</code> values for a <code>DEDUP</code> key. This is done by calling the function <code>NIL()</code> (It needs to be <strong>UPPERCASE</strong>) with the key used for the <code>DEDUP</code>. So for the previous data the response for the query <code>SELECT * FROM key DEDUP NIL(c)</code> would be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &lt;Uuid2&gt;: {a: 235, b: 12.3, c: 'c',},
+    &lt;Uuid4&gt;: {a: 475, b: 12.3, c: 'd',},
+    &lt;Uuid5&gt;: {a: 295, b: 12.3, c: 'r',},
+}
+<span class="boring">}
+</span></code></pre></pre>
 <h2 id="limit-and-offset"><a class="header" href="#limit-and-offset"><code>LIMIT</code> and <code>OFFSET</code></a></h2>
 <p>The functions <code>LIMIT</code> and <code>OFFSET</code> expect a positive integer as argument, this means that if you define <code>LIMIT 10</code> and <code>OFFSET 5</code> you will skip the first 5 elements from the tree and take only the next 10 elements. <code>LIMIT</code> and <code>OFFSET</code> are also appended to the end of the select query such that <code>SELECT * FROM key LIMIT 100 OFFSET 300</code>.</p>
 <h2 id="count"><a class="header" href="#count"><code>COUNT</code></a></h2>
