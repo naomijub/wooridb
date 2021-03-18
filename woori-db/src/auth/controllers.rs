@@ -15,7 +15,7 @@ use crate::{
 use super::{
     io,
     models::{AdminInfo, User},
-    schemas::{CreateUserWithAdmin, UserId},
+    schemas::{CreateUserWithAdmin, DeleteUsersWithAdmin, UserId},
 };
 
 pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Responder {
@@ -43,6 +43,33 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
                 }
             } else {
                 HttpResponse::ServiceUnavailable().body(Error::FailedToCreateUser.to_string())
+            }
+        } else {
+            HttpResponse::BadRequest().body(Error::AuthenticationBadRequest.to_string())
+        }
+    } else {
+        HttpResponse::BadRequest().body(
+            Error::AuthenticationBadRequestBody(credentials.err().unwrap().to_string()).to_string(),
+        )
+    }
+}
+
+pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Responder {
+    let credentials: Result<DeleteUsersWithAdmin, Error> = match from_str(&body) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Error::Ron(e)),
+    };
+
+    if let Ok(cred) = credentials {
+        if admin.is_valid_hash(&cred.admin_password, &cred.admin_id) {
+            if io::remove_users_from_log(&cred.users_ids).is_ok() {
+                match ron::ser::to_string_pretty(&cred.users_ids, pretty_config_output()) {
+                    Ok(ron) => HttpResponse::Created().body(ron),
+                    Err(_) => HttpResponse::ServiceUnavailable()
+                        .body(Error::FailedToDeleteUsers.to_string()),
+                }
+            } else {
+                HttpResponse::ServiceUnavailable().body(Error::FailedToDeleteUsers.to_string())
             }
         } else {
             HttpResponse::BadRequest().body(Error::AuthenticationBadRequest.to_string())
@@ -93,7 +120,10 @@ pub async fn put_user_session(
 #[cfg(test)]
 mod test {
     use crate::{
-        auth::{io::assert_users_content, schemas::UserId},
+        auth::{
+            io::{assert_users_content, assert_users_not_content},
+            schemas::UserId,
+        },
         http::routes,
     };
     use actix_http::body::ResponseBody;
@@ -116,6 +146,43 @@ mod test {
         assert_users_content("roles: [User,],date:");
         assert_users_content("hash: ");
         assert_users_content("id: ");
+    }
+
+    #[ignore]
+    #[actix_rt::test]
+    async fn delete_user_ok() {
+        let mut app = test::init_service(App::new().configure(routes)).await;
+        let req = test::TestRequest::post()
+            .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
+            .uri("/auth/createUser")
+            .to_request();
+
+        let _ = test::call_service(&mut app, req).await;
+
+        let req = test::TestRequest::post()
+            .set_payload("(admin_id: \"your_admin\",admin_password: \"your_password\",user_info: (user_password: \"my_password\",role: [User,],),)")
+            .uri("/auth/createUser")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+        let user: UserId = ron::de::from_str(&body).unwrap();
+
+        assert!(resp.status().is_success());
+        assert!(body.contains("user_id"));
+        assert_users_content(&user.user_id.to_string());
+        assert_users_content("id: ");
+
+        let req = test::TestRequest::post()
+            .set_payload(format!("(admin_id: \"your_admin\",admin_password: \"your_password\", users_ids: [\"{}\",],)", user.user_id))
+            .uri("/auth/deleteUsers")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+        let body = resp.take_body().as_str().to_string();
+        assert!(body.contains(&user.user_id.to_string()));
+        assert!(resp.status().is_success());
+        assert_users_not_content(&user.user_id.to_string());
     }
 
     #[ignore]

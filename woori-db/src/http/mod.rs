@@ -73,6 +73,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
             web::scope("/auth")
                 .data(admin_info)
                 .route("/createUser", web::post().to(auth::create_user))
+                .route("/deleteUsers", web::post().to(auth::delete_users))
                 .route("/putUserSession", web::put().to(auth::put_user_session)),
         )
         .service(

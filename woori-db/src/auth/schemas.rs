@@ -9,6 +9,13 @@ pub struct CreateUserWithAdmin {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct DeleteUsersWithAdmin {
+    pub admin_id: String,
+    pub admin_password: String,
+    pub users_ids: Vec<Uuid>,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct UserInfo {
     pub user_password: String,
     pub role: Vec<Role>,

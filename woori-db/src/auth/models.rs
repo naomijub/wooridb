@@ -73,7 +73,7 @@ impl User {
             date,
         };
         Ok(format!(
-            "{}\n",
+            "{}\r\n",
             ron::ser::to_string_pretty(&value, pretty_config_inner())?
         ))
     }

@@ -37,6 +37,8 @@ jobs:
         cargo test --release -- --ignored auth::controllers::test::create_new_user_wrong_admin
         cargo test --release -- --ignored auth::controllers::test::get_token_test
         rm -rf data/*.log
+        cargo test --release -- --ignored auth::controllers::test::delete_user_ok
+        rm -rf data/*.log
         cargo test --release -- --ignored auth::controllers::routes_test_with_auth::history_with_token
 
   build_side_effects_tests:
