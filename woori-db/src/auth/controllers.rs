@@ -64,7 +64,7 @@ pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Res
         if admin.is_valid_hash(&cred.admin_password, &cred.admin_id) {
             if io::remove_users_from_log(&cred.users_ids).is_ok() {
                 match ron::ser::to_string_pretty(&cred.users_ids, pretty_config_output()) {
-                    Ok(ron) => HttpResponse::Created().body(ron),
+                    Ok(ron) => HttpResponse::Ok().body(ron),
                     Err(_) => HttpResponse::ServiceUnavailable()
                         .body(Error::FailedToDeleteUsers.to_string()),
                 }
