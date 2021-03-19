@@ -256,8 +256,6 @@ EDN to be supported via feature.</li>
 <li><input disabled="" type="checkbox"/>
 <code>S3</code> as a backend is to be developed.</li>
 <li><input disabled="" type="checkbox"/>
-<code>Postgres</code> as a backend is to be developed.</li>
-<li><input disabled="" type="checkbox"/>
 <code>DynamoDB</code> as a backend is to be developed.</li>
 </ul>
 </li>
@@ -276,8 +274,6 @@ CORS</li>
 <ul>
 <li><input disabled="" type="checkbox"/>
 Creating and removing ADMINs.</li>
-<li><input disabled="" type="checkbox"/>
-Removing Users.</li>
 </ul>
 </li>
 <li><a href="https://github.com/naomijub/wooridb#match-update-entity">Conditional Update</a></li>
@@ -561,6 +557,22 @@ Response to this request will be <code>(user_id: \&quot;&lt;some-uuid&gt;\&quot;
 <h3 id="making-auth-requests-to-wqltx-and-wqlquery"><a class="header" href="#making-auth-requests-to-wqltx-and-wqlquery">Making auth requests to <code>/wql/tx</code> and <code>/wql/query</code>.</a></h3>
 <p>To avoid authentication and authorization errors, add your token to the authorization bearer header, <code>Authorization: Bearer &lt;your session token&gt;</code>. 
 Your user needs the correct session token and the correct role for this request.</p>
+<h2 id="deleting-users"><a class="header" href="#deleting-users">Deleting users</a></h2>
+<ul>
+<li><code>ADMIN</code> is the only user role capable of creating new users. For now there can only be one <code>ADMIN</code>.</li>
+</ul>
+<p>To delete a list of users, <code>POST</code> at <code>/auth/deleteUsers</code> with your admin credentials and the users ids you want to delete as follows (in RON format):</p>
+<pre><code class="language-ron">(
+  admin_id: &quot;your_admin&quot;,
+  admin_password: &quot;your_password&quot;,
+  users_ids: [
+    &quot;&lt;uui1&gt;&quot;,
+    &quot;&lt;uui2&gt;&quot;,
+    &quot;&lt;uui3&gt;&quot;,
+  ],
+)
+</code></pre>
+<p>The response will be a vector containing all Uuids sent or an error <code>FailedToDeleteUsers</code>.</p>
 <h3 id="todos"><a class="header" href="#todos">TODOs:</a></h3>
 <ul>
 <li><input disabled="" type="checkbox"/>
