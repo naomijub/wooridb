@@ -13,7 +13,6 @@
 - Entities are also indexed by `entity_name` (entity tree key) and `Uuid` (entity id). Entity map format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
   - [ ] `S3` as a backend is to be developed.
-  - [ ] `Postgres` as a backend is to be developed.
   - [ ] `DynamoDB` as a backend is to be developed.
 - Able to handle very large numbers when using the `P` suffix.
   - Ex: `98347883122138743294728345738925783257325789353593473247832493483478935673.9347324783249348347893567393473247832493483478935673P`.
@@ -21,7 +20,6 @@
   - [ ] CORS
 - Authentication and Authorization via session token
   - [ ] Creating and removing ADMINs.
-  - [ ] Removing Users.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
 - [ ] File compression done with `zstd`.
 - [x] Entity id history

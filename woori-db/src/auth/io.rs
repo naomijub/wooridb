@@ -1,12 +1,13 @@
 use std::{
     fs::OpenOptions,
-    io::{BufRead, BufReader, Write},
+    io::{BufRead, BufReader, Seek, SeekFrom, Write},
 };
 
 use crate::model::error::Error;
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{DateTime, Utc};
 use ron::from_str;
+use uuid::Uuid;
 
 use super::models::{AdminInfo, User, UserRegistry};
 use super::schemas;
@@ -50,6 +51,39 @@ pub fn to_users_log(user: &User) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn remove_users_from_log(users: &Vec<Uuid>) -> Result<(), Error> {
+    let users_info_log = "data/users_info.log";
+
+    let file = OpenOptions::new().read(true).open(users_info_log)?;
+
+    let lines = BufReader::new(file)
+        .lines()
+        .filter(|line| {
+            if line.is_ok() {
+                !users
+                    .into_iter()
+                    .any(|user| line.as_ref().unwrap().contains(&user.to_string()))
+            } else {
+                false
+            }
+        })
+        .filter_map(|line| line.ok())
+        .collect::<Vec<String>>()
+        .join("\r\n");
+
+    // Improve this, OpenOptions is not overwriting this file
+    std::fs::remove_file(users_info_log)?;
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .open(users_info_log)?;
+
+    file.seek(SeekFrom::Start(0))?;
+    file.write_all(lines.as_bytes())?;
+
+    Ok(())
+}
+
 pub async fn find_user(user: schemas::User) -> Result<UserRegistry, Error> {
     let users_info_log = "data/users_info.log";
 
@@ -83,4 +117,19 @@ pub fn assert_users_content(pat: &str) {
     file.read_to_string(&mut s).unwrap();
 
     assert!(s.contains(pat));
+}
+
+#[cfg(test)]
+pub fn assert_users_not_content(pat: &str) {
+    use chrono::prelude::*;
+    use std::io::Read;
+
+    let utc: DateTime<Utc> = Utc::now();
+    let user_log = utc.format("data/users_info.log").to_string();
+
+    let mut file = OpenOptions::new().read(true).open(user_log).unwrap();
+    let mut s = String::new();
+    file.read_to_string(&mut s).unwrap();
+
+    assert!(!s.contains(pat));
 }
