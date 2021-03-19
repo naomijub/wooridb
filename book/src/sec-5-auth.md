@@ -49,6 +49,24 @@ Response will be a plain/text with your token.
 To avoid authentication and authorization errors, add your token to the authorization bearer header, `Authorization: Bearer <your session token>`. 
 Your user needs the correct session token and the correct role for this request.
 
+## Deleting users
+* `ADMIN` is the only user role capable of creating new users. For now there can only be one `ADMIN`.
+
+To delete a list of users, `POST` at `/auth/deleteUsers` with your admin credentials and the users ids you want to delete as follows (in RON format):
+```ron
+(
+  admin_id: "your_admin",
+  admin_password: "your_password",
+  users_ids: [
+    "<uui1>",
+    "<uui2>",
+    "<uui3>",
+  ],
+)
+```
+
+The response will be a vector containing all Uuids sent or an error `FailedToDeleteUsers`.
+
 ### TODOs:
 * [ ] Adding other admins and removing admins is not yet implemented.
 * [ ] Configure session token expiration time.

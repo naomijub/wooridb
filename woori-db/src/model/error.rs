@@ -37,6 +37,7 @@ pub enum Error {
     AuthenticationBadRequest,
     AuthenticationBadRequestBody(String),
     FailedToCreateUser,
+    FailedToDeleteUsers,
     Unknown,
 }
 
@@ -69,6 +70,7 @@ pub fn error_to_http(e: Error) -> HttpResponse {
         Error::AuthenticationBadRequest => HttpResponse::Forbidden().body(e.to_string()),
         Error::AuthenticationBadRequestBody(_) => HttpResponse::Forbidden().body(e.to_string()),
         Error::FailedToCreateUser => HttpResponse::BadRequest().body(e.to_string()),
+        Error::FailedToDeleteUsers => HttpResponse::BadRequest().body(e.to_string()),
         Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
     }
 }
@@ -199,6 +201,11 @@ impl std::fmt::Display for Error {
             Error::FailedToCreateUser => Response::new(
                 String::from("FailedToCreateUser"),
                 "Failed to create requested user".to_string(),
+            )
+            .write(f),
+            Error::FailedToDeleteUsers => Response::new(
+                String::from("FailedToDeleteUsers"),
+                "Failed to delete requested users".to_string(),
             )
             .write(f),
             Error::Unknown => Response::new(
