@@ -50,14 +50,16 @@ pub struct InsertEntityContent {
     pub name: String,
     pub content: String,
     pub uuid: Option<Uuid>,
+    pub datetime: DateTime<Utc>,
 }
 
 impl InsertEntityContent {
-    pub fn new(name: &str, content: &str, uuid: Option<Uuid>) -> Self {
+    pub fn new(name: &str, content: &str, uuid: Option<Uuid>, datetime: DateTime<Utc>) -> Self {
         Self {
             name: name.to_owned(),
             content: content.to_owned(),
             uuid,
+            datetime
         }
     }
 }
@@ -250,6 +252,7 @@ impl Handler<EvictEntityId> for Executor {
 #[cfg(test)]
 mod test {
     use actix::Actor;
+    use chrono::Utc;
 
     use crate::io::read;
 
@@ -276,6 +279,7 @@ mod test {
             name: String::from("insert-my-entity"),
             content: String::from("this is the content"),
             uuid: None,
+            datetime: Utc::now()
         };
         let actor = Executor::new().start();
 

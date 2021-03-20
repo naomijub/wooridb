@@ -156,11 +156,12 @@ async fn test_insert_post_ok() {
         .uri("/wql/tx")
         .to_request();
 
-    let resp = test::call_service(&mut app, req).await;
+    let  resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success());
 
     read::assert_content("INSERT|");
-    read::assert_content("|test_ok|{\"a\": Integer(123),};");
+    read::assert_content("|test_ok|");
+    read::assert_content("\"a\": Integer(123)");
     clear();
 }
 
@@ -187,7 +188,9 @@ async fn test_insert_with_id_post_ok() {
 
     read::assert_content("INSERT|");
     read::assert_content(&uuid);
-    read::assert_content("|test_ok_with_id|{\"a\": Integer(123),};");
+    read::assert_content("|test_ok_with_id|");
+    read::assert_content("\"tx_time\":");
+    read::assert_content("\"a\": Integer(123)");
     clear();
 }
 

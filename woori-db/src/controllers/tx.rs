@@ -31,6 +31,7 @@ use crate::{
 };
 
 use actix_web::{HttpResponse, Responder};
+use chrono::{DateTime, Utc};
 use rayon::prelude::*;
 use ron::ser::to_string_pretty;
 use std::{
@@ -39,7 +40,7 @@ use std::{
     sync::{atomic::Ordering, Arc, Mutex},
 };
 use uuid::Uuid;
-use wql::Wql;
+use wql::{Types, Wql};
 
 pub async fn wql_handler(
     body: String,
@@ -281,7 +282,8 @@ pub async fn insert_controller(
     actor: DataExecutor,
 ) -> Result<String, Error> {
     let mut offset = bytes_counter.load(Ordering::SeqCst);
-    let encrypted_content = actor
+    let datetime: DateTime<Utc> = Utc::now();   
+    let mut encrypted_content = actor
         .send(EncryptContent::new(
             &args.entity,
             args.content,
@@ -289,6 +291,8 @@ pub async fn insert_controller(
             *hashing_cost.into_inner(),
         ))
         .await??;
+    encrypted_content.insert(String::from("tx_time"), Types::DateTime(datetime));
+
     let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
         .map_err(Error::Serialization)?;
 
@@ -317,6 +321,7 @@ pub async fn insert_controller(
             &args.entity,
             &content_log,
             args.uuid,
+            datetime,
         ))
         .await??;
 

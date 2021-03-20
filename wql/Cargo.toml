@@ -16,6 +16,7 @@ edition = "2018"
 uuid = { version = "0.8", features = ["serde", "v4"] }
 serde = { version = "1.0.121", features = ["derive"] }
 bcrypt = "0.8"
+chrono = { version = "0.4.19", features = ["serde"] }
 
 [dev-dependencies]
 edn-rs = "0.16.12"
