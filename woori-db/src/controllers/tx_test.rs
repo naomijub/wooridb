@@ -156,7 +156,7 @@ async fn test_insert_post_ok() {
         .uri("/wql/tx")
         .to_request();
 
-    let  resp = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success());
 
     read::assert_content("INSERT|");
@@ -191,6 +191,33 @@ async fn test_insert_with_id_post_ok() {
     read::assert_content("|test_ok_with_id|");
     read::assert_content("\"tx_time\":");
     read::assert_content("\"a\": Integer(123)");
+    clear();
+}
+
+#[actix_rt::test]
+async fn test_insert_with_tx_time_err() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload("CREATE ENTITY test_insert_err")
+        .uri("/wql/tx")
+        .to_request();
+
+    let _ = test::call_service(&mut app, req).await;
+    let uuid = Uuid::new_v4().to_string();
+    let payload = format!(
+        "INSERT {{a: 123, tx_time: 4}} INTO test_insert_err WITH {}",
+        uuid
+    );
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/tx")
+        .to_request();
+
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_client_error());
+
     clear();
 }
 

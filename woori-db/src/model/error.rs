@@ -25,6 +25,7 @@ pub enum Error {
     NonSelectQuery,
     ActixMailbox(MailboxError),
     LockData,
+    KeyTxTimeNotAllowed,
     Ron(ron::Error),
     InvalidUuid(uuid::Error),
     UpdateContentEncryptKeys(Vec<String>),
@@ -71,6 +72,7 @@ pub fn error_to_http(e: Error) -> HttpResponse {
         Error::AuthenticationBadRequestBody(_) => HttpResponse::Forbidden().body(e.to_string()),
         Error::FailedToCreateUser => HttpResponse::BadRequest().body(e.to_string()),
         Error::FailedToDeleteUsers => HttpResponse::BadRequest().body(e.to_string()),
+        Error::KeyTxTimeNotAllowed => HttpResponse::BadRequest().body(e.to_string()),
         Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
     }
 }
@@ -211,6 +213,11 @@ impl std::fmt::Display for Error {
             Error::Unknown => Response::new(
                 String::from("Unknown"),
                 "Request credentials failed".to_string(),
+            )
+            .write(f),
+            Error::KeyTxTimeNotAllowed => Response::new(
+                String::from("KeyTxTimeNotAllowed"),
+                "Key `tx_time` is not allowed".to_string(),
             )
             .write(f),
         }

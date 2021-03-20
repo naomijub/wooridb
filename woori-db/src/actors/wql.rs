@@ -59,7 +59,7 @@ impl InsertEntityContent {
             name: name.to_owned(),
             content: content.to_owned(),
             uuid,
-            datetime
+            datetime,
         }
     }
 }
@@ -279,7 +279,7 @@ mod test {
             name: String::from("insert-my-entity"),
             content: String::from("this is the content"),
             uuid: None,
-            datetime: Utc::now()
+            datetime: Utc::now(),
         };
         let actor = Executor::new().start();
 

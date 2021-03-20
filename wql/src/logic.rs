@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use super::{FromStr, HashMap, MatchCondition, Types};
@@ -316,6 +317,8 @@ pub fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types, String
         Ok(Types::Nil)
     } else if value.starts_with('\'') && value.ends_with('\'') && value.len() == 3 {
         Ok(Types::Char(value.chars().nth(1).unwrap()))
+    } else if value.parse::<DateTime<Utc>>().is_ok() {
+        Ok(Types::DateTime(value.parse::<DateTime<Utc>>().unwrap()))
     } else {
         Err(format!("Value Type could not be created from {}", value))
     }

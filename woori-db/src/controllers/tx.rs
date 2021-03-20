@@ -281,8 +281,11 @@ pub async fn insert_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    if args.content.contains_key("tx_time") {
+        return Err(Error::KeyTxTimeNotAllowed);
+    }
     let mut offset = bytes_counter.load(Ordering::SeqCst);
-    let datetime: DateTime<Utc> = Utc::now();   
+    let datetime: DateTime<Utc> = Utc::now();
     let mut encrypted_content = actor
         .send(EncryptContent::new(
             &args.entity,

@@ -169,7 +169,7 @@ pub fn update_content_state(previous_state: &mut HashMap<String, Types>, k: Stri
         Types::Precise(p) => {
             *local_state = Types::Precise(p);
         }
-        Types::DateTime(date) => { 
+        Types::DateTime(date) => {
             *local_state = Types::DateTime(date);
         }
     }
@@ -194,7 +194,7 @@ mod test {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
             uuid: None,
-            datetime: Utc::now()
+            datetime: Utc::now(),
         };
         let (_, _, s) = insert_entity_content(&entity);
 
@@ -210,7 +210,7 @@ mod test {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
             uuid: Some(uuid),
-            datetime: Utc::now()
+            datetime: Utc::now(),
         };
         let (_, _, s) = insert_entity_content(&entity);
 
