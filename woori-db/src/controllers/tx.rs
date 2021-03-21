@@ -1,3 +1,4 @@
+use crate::core::tx_time;
 use crate::{
     actors::{
         encrypts::{CreateWithEncryption, EncryptContent, WriteWithEncryption},
@@ -39,7 +40,7 @@ use std::{
     sync::{atomic::Ordering, Arc, Mutex},
 };
 use uuid::Uuid;
-use wql::Wql;
+use wql::{Types, Wql};
 
 pub async fn wql_handler(
     body: String,
@@ -280,6 +281,7 @@ pub async fn insert_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    let datetime = tx_time(&args.content)?;
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
@@ -287,8 +289,10 @@ pub async fn insert_controller(
             args.content,
             encryption.into_inner(),
             *hashing_cost.into_inner(),
+            datetime,
         ))
         .await??;
+
     let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
         .map_err(Error::Serialization)?;
 
@@ -317,6 +321,7 @@ pub async fn insert_controller(
             &args.entity,
             &content_log,
             args.uuid,
+            datetime,
         ))
         .await??;
 
@@ -366,6 +371,7 @@ pub async fn update_set_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    let datetime = tx_time(&args.content)?;
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
@@ -373,6 +379,7 @@ pub async fn update_set_controller(
             args.content,
             encryption.into_inner(),
             *hashing_cost.into_inner(),
+            datetime,
         ))
         .await??;
     let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
@@ -429,6 +436,7 @@ pub async fn update_set_controller(
             &state_log,
             &content_log,
             args.id,
+            datetime,
             &to_string_pretty(&previous_entry.clone(), pretty_config_inner())
                 .map_err(Error::Serialization)?,
         ))
@@ -476,6 +484,7 @@ pub async fn update_content_controller(
     encryption: DataEncryptContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    let datetime = tx_time(&args.content)?;
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     if let Ok(guard) = encryption.lock() {
         if guard.contains_key(&args.entity) {
@@ -490,8 +499,10 @@ pub async fn update_content_controller(
     } else {
         return Err(Error::LockData);
     };
+    let mut content = args.content;
+    content.insert("tx_time".to_owned(), Types::DateTime(datetime));
     let content_log =
-        to_string_pretty(&args.content, pretty_config_inner()).map_err(Error::Serialization)?;
+        to_string_pretty(&content, pretty_config_inner()).map_err(Error::Serialization)?;
 
     {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -512,7 +523,7 @@ pub async fn update_content_controller(
     actor
         .send(CheckForUniqueKeys {
             entity: args.entity.to_owned(),
-            content: args.content.to_owned(),
+            content: content.to_owned(),
             uniqueness,
         })
         .await??;
@@ -530,7 +541,7 @@ pub async fn update_content_controller(
     let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
     let mut previous_state = actor.send(State(previous_state_str)).await??;
 
-    args.content
+    content
         .into_iter()
         .for_each(|(k, v)| update_content_state(&mut previous_state, k, v));
 
@@ -684,6 +695,7 @@ pub async fn match_update_set_controller(
     hashing_cost: DataU32,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    let datetime = tx_time(&args.content)?;
     let previous_entry = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -719,6 +731,7 @@ pub async fn match_update_set_controller(
             args.content.clone(),
             encryption.into_inner(),
             *hashing_cost.into_inner(),
+            datetime,
         ))
         .await??;
     let content_log = to_string_pretty(&encrypted_content, pretty_config_inner())
@@ -747,6 +760,7 @@ pub async fn match_update_set_controller(
             current_state: state_log.clone(),
             content_log,
             id: args.id,
+            datetime,
             previous_registry: to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
         })

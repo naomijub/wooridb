@@ -58,7 +58,7 @@ The request above will insert an entity with the following structure in `my_enti
 
 ```rust
 {"my_entity_name": {
-    Uuid(00d025c9-eda8-4190-a33a-29998bd77bd3): {a: 123, c: "hello", d: "world",},
+    Uuid(00d025c9-eda8-4190-a33a-29998bd77bd3): {a: 123, c: "hello", d: "world", tx_time: DateTime("2014-11-28T12:00:09Z"),},
 }}
 ```
 
@@ -74,7 +74,7 @@ Updates the content of an entity map for an entity tree key and an entity id. Th
 
 ### `UPDATE SET`
 [UPDATE SET WQL Reference](./sec-4-wql.md#update-set)
-`SET` updates defines the current value of the entity map to the ones being passed, so if your entity map is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state of the entity map will be `{a: 432, b: 12.5, c: \"hello\",}`. 
+`SET` updates defines the current value of the entity map to the ones being passed, so if your entity map is `{a: 123, b: 12.5,}` and your set update has the hashmap `{a: 432, c: \"hello\",}`, the current state of the entity map will be `{a: 432, b: 12.5, c: \"hello\", tx_time: DateTime(\"2014-11-28T12:00:09Z\"),}`. 
 
 Example request:  
 ```sql
@@ -88,14 +88,14 @@ Example response:
 (
  entity: "my_entity_name",
  uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- state: "{\"b\": Integer(32),\"a\": Integer(-4),}",
+ state: "{\"b\": Integer(32),\"a\": Integer(-4), \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
  message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
 )
 ```
 
 ### `UPDATE CONTENT`
 [UPDATE CONTENT WQL Reference](./sec-4-wql.md#update-content)
-`CONTENT` updates are a way to add numerical values and concatenate Strings, so if your entity map is `{a: 432, c: \"hello\",}` and your content update has the hashmap `{a: -5, c: \"world\", b: 12.5}` the current state of the entity map will be `{a: 427, c: \"helloworld\", b: 12.5}`. 
+`CONTENT` updates are a way to add numerical values and concatenate Strings, so if your entity map is `{a: 432, c: \"hello\",}` and your content update has the hashmap `{a: -5, c: \"world\", b: 12.5, tx_time: DateTime(\"2014-11-28T12:00:09Z\"),}` the current state of the entity map will be `{a: 427, c: \"helloworld\", b: 12.5, tx_time: DateTime(\"2014-11-28T12:00:09Z\"),}`. 
 
 Example request:
 ```sql
@@ -109,7 +109,7 @@ Example response:
 (
  entity: "my_entity_name",
  uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- state: "{\"b\": Integer(39),\"a\": Integer(-38),}",
+ state: "{\"b\": Integer(39),\"a\": Integer(-38), \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
  message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
 )
 ```
@@ -132,7 +132,7 @@ Example response:
 (
  entity: "my_entity_name",
  uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- state: "{\"b\": Integer(39),\"a\": Integer(123),\"g\": Nil,}",
+ state: "{\"b\": Integer(39),\"a\": Integer(123),\"g\": Nil, \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
  message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
 )
 ```
@@ -200,3 +200,7 @@ Example response:
  message: "Entity my_entity evicted",
 )
 ```
+
+## TX_TIME
+
+Whenever you make a transaction to WooriDB (`INSERT, UPDATES, MATCH`) a field named `tx_time` will be added to the entity map, this field is of type `Types::Datetime(chrono::Datetime<Utc>)`.

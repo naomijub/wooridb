@@ -98,7 +98,8 @@ pub fn assert_encrypt(pat: &str) {
 }
 
 pub fn read_log(registry: DataRegister) -> Result<String, Error> {
-    let mut file = OpenOptions::new().read(true).open(registry.file_name)?;
+    let file_name = registry.file_name;
+    let mut file = OpenOptions::new().read(true).open(file_name)?;
     file.seek(SeekFrom::Start(registry.offset as u64))?;
     let mut res = String::with_capacity(registry.bytes_length);
     file.take(registry.bytes_length as u64)
@@ -199,6 +200,7 @@ pub fn encryption() -> Result<BTreeMap<String, HashSet<String>>, error::Error> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "test_read")]
 mod test {
     use std::{fs::OpenOptions, io::Write};
 
@@ -230,7 +232,6 @@ mod test {
         file.write(log.as_bytes()).unwrap()
     }
 
-    #[cfg(feature = "test_read")]
     #[test]
     fn encryption_test() {
         let encrypt = encryption().unwrap();
@@ -242,7 +243,6 @@ mod test {
         assert!(s.contains("cpf"));
     }
 
-    #[cfg(feature = "test_read")]
     #[test]
     fn offset_test() {
         let offset = offset();
@@ -250,7 +250,6 @@ mod test {
         assert_eq!(offset.unwrap(), 701);
     }
 
-    #[cfg(feature = "test_read")]
     #[test]
     fn local_data_test() {
         let local_data = local_data();
@@ -262,7 +261,6 @@ mod test {
             );
     }
 
-    #[cfg(feature = "test_read")]
     #[test]
     fn unique_data_test() {
         let unique_data = unique_data();

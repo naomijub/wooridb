@@ -43,7 +43,7 @@ pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, U
         Uuid::new_v4()
     };
 
-    let date: DateTime<Utc> = Utc::now();
+    let date = content.datetime;
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
         "{}|{}|{}|{}|{};",
@@ -58,7 +58,7 @@ pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, U
 
 pub fn update_set_entity_content(content: &UpdateSetEntityContent) -> (DateTime<Utc>, String) {
     let uuid = content.id;
-    let date: DateTime<Utc> = Utc::now();
+    let date = content.datetime;
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
         "{}|{}|{}|{}|{}|{}|{};",
@@ -169,6 +169,9 @@ pub fn update_content_state(previous_state: &mut HashMap<String, Types>, k: Stri
         Types::Precise(p) => {
             *local_state = Types::Precise(p);
         }
+        Types::DateTime(date) => {
+            *local_state = Types::DateTime(date);
+        }
     }
 }
 
@@ -191,6 +194,7 @@ mod test {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
             uuid: None,
+            datetime: Utc::now(),
         };
         let (_, _, s) = insert_entity_content(&entity);
 
@@ -206,6 +210,7 @@ mod test {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
             uuid: Some(uuid),
+            datetime: Utc::now(),
         };
         let (_, _, s) = insert_entity_content(&entity);
 
@@ -223,6 +228,7 @@ mod test {
             current_state: "state".to_string(),
             content_log: "log".to_string(),
             id,
+            datetime: Utc::now(),
             previous_registry: "reg".to_string(),
         };
 

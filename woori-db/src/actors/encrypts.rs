@@ -4,6 +4,7 @@ use std::{
 };
 
 use actix::prelude::*;
+use chrono::{DateTime, Utc};
 use rayon::prelude::*;
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};
@@ -69,10 +70,12 @@ pub struct EncryptContent {
 impl EncryptContent {
     pub fn new(
         entity: &str,
-        content: HashMap<String, Types>,
+        mut content: HashMap<String, Types>,
         encrypts: Arc<Arc<Mutex<EncryptContext>>>,
         hashing_cost: u32,
+        datetime: DateTime<Utc>,
     ) -> Self {
+        content.insert("tx_time".to_owned(), Types::DateTime(datetime));
         Self {
             entity: entity.to_owned(),
             content,

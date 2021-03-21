@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use language_parser::read_symbol;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -86,7 +87,7 @@ pub enum Types {
     Map(HashMap<String, Types>),
     Hash(String),
     Precise(String),
-    //DateTime
+    DateTime(DateTime<Utc>),
     Nil,
 }
 
@@ -103,6 +104,7 @@ impl Types {
             Types::Map(_) => Types::Map(HashMap::new()),
             Types::Hash(_) => Types::Hash(String::new()),
             Types::Precise(_) => Types::Precise(String::from("0")),
+            Types::DateTime(_) => Types::DateTime(Utc::now()),
             Types::Nil => Types::Nil,
         }
     }
@@ -113,7 +115,9 @@ impl Types {
             Types::Char(c) => format!("{}", c),
             Types::Integer(i) => format!("{}", i),
             Types::String(s) => s.to_string(),
+            Types::DateTime(date) => date.to_string(),
             Types::Uuid(id) => format!("{}", id),
+            // TODO: Replace by ordered-float
             Types::Float(f) => format!("{}", f),
             Types::Boolean(b) => format!("{}", b),
             Types::Vector(vec) => format!("{:?}", vec),
