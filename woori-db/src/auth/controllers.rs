@@ -339,7 +339,7 @@ mod routes_test_with_auth {
         let body = resp.take_body().as_str().to_string();
 
         assert!(resp.status().is_success());
-        assert!(body.contains("{\n  \"a\": Integer(123),\n }"))
+        assert!(body.contains("\"a\": Integer(123)"))
     }
 
     #[ignore]

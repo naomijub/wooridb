@@ -58,7 +58,7 @@ pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, U
 
 pub fn update_set_entity_content(content: &UpdateSetEntityContent) -> (DateTime<Utc>, String) {
     let uuid = content.id;
-    let date: DateTime<Utc> = Utc::now();
+    let date = content.datetime;
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
         "{}|{}|{}|{}|{}|{}|{};",
@@ -228,6 +228,7 @@ mod test {
             current_state: "state".to_string(),
             content_log: "log".to_string(),
             id,
+            datetime: Utc::now(),
             previous_registry: "reg".to_string(),
         };
 

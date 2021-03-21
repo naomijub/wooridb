@@ -84,6 +84,7 @@ pub struct UpdateSetEntityContent {
     pub current_state: String,
     pub content_log: String,
     pub id: Uuid,
+    pub datetime: DateTime<Utc>,
     pub previous_registry: String,
 }
 
@@ -93,6 +94,7 @@ impl UpdateSetEntityContent {
         current_state: &str,
         content_log: &str,
         id: Uuid,
+        datetime: DateTime<Utc>,
         previous_registry: &str,
     ) -> Self {
         Self {
@@ -100,6 +102,7 @@ impl UpdateSetEntityContent {
             content_log: content_log.to_owned(),
             current_state: current_state.to_owned(),
             id,
+            datetime,
             previous_registry: previous_registry.to_owned(),
         }
     }
@@ -298,6 +301,7 @@ mod test {
             "this is the content",
             "this is the current state",
             uuid,
+            Utc::now(),
             "this is the previous registry",
         );
         let actor = Executor::new().start();
@@ -320,6 +324,7 @@ mod test {
             "this is the content",
             "this is the current state",
             uuid,
+            Utc::now(),
             "this is the previous registry",
         );
         let actor = Executor::new().start();

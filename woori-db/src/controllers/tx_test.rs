@@ -162,6 +162,7 @@ async fn test_insert_post_ok() {
     read::assert_content("INSERT|");
     read::assert_content("|test_ok|");
     read::assert_content("\"a\": Integer(123)");
+    read::assert_content("\"tx_time\":");
     clear();
 }
 
@@ -329,6 +330,7 @@ async fn test_update_set_post_ok() {
     read::assert_content("\"a\": Integer(12),");
     read::assert_content("\"b\": Float(12.3),");
     read::assert_content("\"c\": Nil,");
+    read::assert_content("\"tx_time\":");
     clear();
 }
 

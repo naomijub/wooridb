@@ -4,7 +4,6 @@ use actix_web::{body::Body, test, App};
 use chrono::Utc;
 use std::{thread, time};
 
-#[ignore]
 #[actix_rt::test]
 async fn test_history_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
@@ -80,7 +79,6 @@ async fn test_history_ok() {
     clear();
 }
 
-#[ignore]
 #[actix_rt::test]
 async fn test_start_end_time_ok() {
     let mut app = test::init_service(App::new().configure(routes)).await;
