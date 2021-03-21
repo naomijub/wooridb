@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::core::wql::{
     create_entity, delete_entity_content, evict_entity_content, evict_entity_id_content,
-    insert_entity_content, update_content_entity_content, update_set_entity_content,
+    update_content_entity_content, update_set_entity_content,
 };
 
 pub struct Executor;
@@ -42,7 +42,7 @@ impl Handler<CreateEntity> for Executor {
     fn handle(&mut self, msg: CreateEntity, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let entity = create_entity(&msg.name);
-        write_to_log(&entity)
+        write_to_log(&entity, Utc::now())
     }
 }
 
@@ -64,18 +64,24 @@ impl InsertEntityContent {
     }
 }
 
-impl Message for InsertEntityContent {
-    type Result = Result<(DateTime<Utc>, Uuid, usize, bool), Error>;
+pub struct InsertEntityContentWrite {
+    pub name: String,
+    pub content: String,
+    pub uuid: Uuid,
+    pub datetime: DateTime<Utc>,
 }
 
-impl Handler<InsertEntityContent> for Executor {
-    type Result = Result<(DateTime<Utc>, Uuid, usize, bool), Error>;
+impl Message for InsertEntityContentWrite {
+    type Result = Result<(Uuid, usize), Error>;
+}
 
-    fn handle(&mut self, msg: InsertEntityContent, _: &mut Self::Context) -> Self::Result {
+impl Handler<InsertEntityContentWrite> for Executor {
+    type Result = Result<(Uuid, usize), Error>;
+
+    fn handle(&mut self, msg: InsertEntityContentWrite, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
-        let (date, uuid, content) = insert_entity_content(&msg);
-        let (bytes_written, is_empty) = write_to_log(&content)?;
-        Ok((date, uuid, bytes_written, is_empty))
+        let (bytes_written, _) = write_to_log(&msg.content, msg.datetime)?;
+        Ok((msg.uuid, bytes_written))
     }
 }
 
@@ -118,7 +124,7 @@ impl Handler<UpdateSetEntityContent> for Executor {
     fn handle(&mut self, msg: UpdateSetEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = update_set_entity_content(&msg);
-        let (bytes_written, is_empty) = write_to_log(&content)?;
+        let (bytes_written, is_empty) = write_to_log(&content, date)?;
         Ok((date, bytes_written, is_empty))
     }
 }
@@ -160,7 +166,7 @@ impl Handler<UpdateContentEntityContent> for Executor {
     fn handle(&mut self, msg: UpdateContentEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = update_content_entity_content(&msg);
-        let (bytes_written, is_empty) = write_to_log(&content)?;
+        let (bytes_written, is_empty) = write_to_log(&content, date)?;
         Ok((date, bytes_written, is_empty))
     }
 }
@@ -193,7 +199,7 @@ impl Handler<DeleteId> for Executor {
     fn handle(&mut self, msg: DeleteId, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let (date, content) = delete_entity_content(&msg);
-        let (bytes_written, is_empty) = write_to_log(&content)?;
+        let (bytes_written, is_empty) = write_to_log(&content, date)?;
         Ok((date, bytes_written, is_empty))
     }
 }
@@ -220,7 +226,7 @@ impl Handler<EvictEntity> for Executor {
     fn handle(&mut self, msg: EvictEntity, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let content = evict_entity_content(&msg.name);
-        Ok(write_to_log(&content)?)
+        Ok(write_to_log(&content, Utc::now())?)
     }
 }
 
@@ -248,7 +254,7 @@ impl Handler<EvictEntityId> for Executor {
     fn handle(&mut self, msg: EvictEntityId, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
         let content = evict_entity_id_content(&msg);
-        Ok(write_to_log(&content)?)
+        Ok(write_to_log(&content, Utc::now())?)
     }
 }
 
@@ -256,11 +262,12 @@ impl Handler<EvictEntityId> for Executor {
 mod test {
     use actix::Actor;
     use chrono::Utc;
+    use uuid::Uuid;
 
     use crate::io::read;
 
     use super::{
-        CreateEntity, DeleteId, EvictEntity, EvictEntityId, Executor, InsertEntityContent,
+        CreateEntity, DeleteId, EvictEntity, EvictEntityId, Executor, InsertEntityContentWrite,
         UpdateSetEntityContent,
     };
 
@@ -278,10 +285,10 @@ mod test {
 
     #[actix_rt::test]
     async fn insert_test() {
-        let insert = InsertEntityContent {
+        let insert = InsertEntityContentWrite {
             name: String::from("insert-my-entity"),
             content: String::from("this is the content"),
-            uuid: None,
+            uuid: Uuid::new_v4(),
             datetime: Utc::now(),
         };
         let actor = Executor::new().start();

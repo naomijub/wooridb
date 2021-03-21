@@ -47,9 +47,9 @@ criterion = "0.3"
 rand = "*"
 edn-rs = "*"
 
-# [[bench]]
-# name = "tx"
-# harness = false
+[[bench]]
+name = "tx"
+harness = false
 
 # [[bench]]
 # name = "query"

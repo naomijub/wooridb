@@ -5,7 +5,10 @@ use crate::{
         recovery::{LocalData, OffsetCounter},
         state::{MatchUpdate, PreviousRegistry, State},
         uniques::{CreateWithUniqueKeys, WriteWithUniqueKeys},
-        wql::{DeleteId, InsertEntityContent, UpdateContentEntityContent, UpdateSetEntityContent},
+        wql::{
+            DeleteId, InsertEntityContent, InsertEntityContentWrite, UpdateContentEntityContent,
+            UpdateSetEntityContent,
+        },
     },
     core::{pretty_config_inner, wql::update_content_state},
     model::{
@@ -36,6 +39,7 @@ use rayon::prelude::*;
 use ron::ser::to_string_pretty;
 use std::{
     collections::{BTreeMap, HashMap},
+    path::Path,
     str::FromStr,
     sync::{atomic::Ordering, Arc, Mutex},
 };
@@ -282,6 +286,8 @@ pub async fn insert_controller(
     actor: DataExecutor,
 ) -> Result<String, Error> {
     let datetime = tx_time(&args.content)?;
+    let date_log = datetime.format("data/%Y_%m_%d.log").to_string();
+
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
         .send(EncryptContent::new(
@@ -315,51 +321,58 @@ pub async fn insert_controller(
             uniqueness,
         ))
         .await??;
+    let insert_entity = InsertEntityContent::new(&args.entity, &content_log, args.uuid, datetime);
+    use crate::core::wql::insert_entity_content;
+    let (datetime, uuid, content) = insert_entity_content(&insert_entity);
 
-    let content_value = actor
-        .send(InsertEntityContent::new(
-            &args.entity,
-            &content_log,
-            args.uuid,
-            datetime,
-        ))
-        .await??;
+    let bytes_length = content.len();
 
-    if content_value.3 {
+    if !Path::new(&date_log).exists() {
         bytes_counter.store(0, Ordering::SeqCst);
         offset = 0;
     }
 
-    let local_data_register = DataRegister {
-        offset,
-        bytes_length: content_value.2,
-        file_name: content_value.0.format("data/%Y_%m_%d.log").to_string(),
-    };
-
-    let local_data = {
-        let mut local_data = if let Ok(guard) = local_data.lock() {
-            guard
-        } else {
-            return Err(Error::LockData);
+    let key = args.entity.clone();
+    let t1 = std::thread::spawn(move || {
+        let local_data_register = DataRegister {
+            offset,
+            bytes_length,
+            file_name: date_log,
         };
-        if let Some(map) = local_data.get_mut(&args.entity) {
-            map.insert(content_value.1, (local_data_register, encrypted_content));
-        }
-        local_data.clone()
-    };
 
-    actor.send(LocalData::new(local_data)).await??;
+        let local_data = {
+            let mut local_data = if let Ok(guard) = local_data.lock() {
+                guard
+            } else {
+                return Err(Error::LockData);
+            };
+            if let Some(map) = local_data.get_mut(&key) {
+                map.insert(uuid, (local_data_register, encrypted_content));
+            }
+            local_data.clone()
+        };
+        return Ok(local_data);
+    });
+    let _ = actor
+        .send(InsertEntityContentWrite {
+            name: args.entity.clone(),
+            content: content.clone(),
+            uuid,
+            datetime,
+        })
+        .await??;
 
-    bytes_counter.fetch_add(content_value.2, Ordering::SeqCst);
+    let local_data = t1.join().unwrap();
+
+    actor.send(LocalData::new(local_data?)).await??;
+
+    bytes_counter.fetch_add(bytes_length, Ordering::SeqCst);
     actor
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
 
-    let message = format!(
-        "Entity {} inserted with Uuid {}",
-        &args.entity, &content_value.1
-    );
-    Ok(InsertEntityResponse::new(args.entity, content_value.1, message).write())
+    let message = format!("Entity {} inserted with Uuid {}", &args.entity, &uuid);
+    Ok(InsertEntityResponse::new(args.entity, uuid, message).write())
 }
 
 pub async fn update_set_controller(

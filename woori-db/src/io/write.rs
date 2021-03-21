@@ -3,8 +3,7 @@ use std::io::{Error, Seek, SeekFrom};
 use std::path::Path;
 use std::{fs::OpenOptions, io::Write};
 
-pub fn write_to_log(log: &str) -> Result<(usize, bool), Error> {
-    let utc: DateTime<Utc> = Utc::now();
+pub fn write_to_log(log: &str, utc: DateTime<Utc>) -> Result<(usize, bool), Error> {
     let date_log = utc.format("data/%Y_%m_%d.log").to_string();
     let is_empty = !Path::new(&date_log).exists();
 
@@ -91,7 +90,7 @@ mod test {
 
     #[test]
     fn write_log() {
-        let _ = write_to_log("oh crazy log");
+        let _ = write_to_log("oh crazy log", Utc::now());
         assert_content("oh crazy log");
     }
 

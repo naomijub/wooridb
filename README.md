@@ -82,7 +82,7 @@ PORT=1438
 >  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
 
 - `create_entity`           time:   [15.269 ms 15.332 ms 15.396 ms]
-- `insert_entity`           time:   [27.438 ms 28.177 ms 28.958 ms]
+- `insert_entity`           time:   [25.967 ms 26.726 ms 27.603 ms]
 - `update_set_entity`       time:   [22.969 ms 23.382 ms 23.839 ms]
 - `update_content_entity`   time:   [23.181 ms 23.578 ms 24.037 ms]
 - `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
