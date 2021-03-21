@@ -70,11 +70,11 @@ Example response:
 ```rust
 {
   48c7640e-9287-468a-a07c-2fb00da5eaed: 
-    {a: 123, b: 43.3, c: "hello", d: "world",}, 
+    {a: 123, b: 43.3, c: "hello", d: "world", tx_time: DateTime("2014-11-28T12:00:09Z"),}, 
   57c7640e-9287-448a-d07c-3db01da5earg: 
-    {a: 456, b: 73.3, c: "hello", d: "brasil",}, 
+    {a: 456, b: 73.3, c: "hello", d: "brasil", tx_time: DateTime("2014-11-28T12:00:09Z"),}, 
   54k6640e-5687-445a-d07c-5hg61da5earg: 
-    {a: 789, b: 93.3, c: "hello", d: "korea",},
+    {a: 789, b: 93.3, c: "hello", d: "korea", tx_time: DateTime("2014-11-28T12:00:09Z"),},
 }
 ```
 
@@ -102,7 +102,7 @@ Example request `SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da
 
 Example response:
 > It will return only the entity map contained inside inside entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
-`{a: 123, b: 43.3, c: \"hello\", d: \"world\",}`.
+`{a: 123, b: 43.3, c: \"hello\", d: \"world\", tx_time: DateTime(\"2014-11-28T12:00:09Z\"),}`.
 
 ### SELECTing a set of entities IDs and maps FROM entity tree key:
 Select a few entities maps (by their IDs) from entity tree `my_entity`. Key `IN` receives a set of Uuids
@@ -148,7 +148,7 @@ Select all occurrences of an entity id from entity tree `entity_name` in a time 
   
 Example request: 
 ```sql
-SELECT * 
+SELECT #{a, b, c, d} 
 FROM entity_name 
 ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 
 WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
@@ -194,12 +194,14 @@ Example response:
   "origin": String("Africa"),
   "age": Integer(34),
   "name": String("Diego F"),
+  "tx_time": DateTime("2014-11-28T12:00:09Z"),
  },
  "ea3228d0-0164-453b-bae2-f726c4a9b979": {
   "origin": String("Bukhara"),
   "race": String("brown"),
   "age": Integer(33),
   "name": String("julia naomi"),
+  "tx_time": DateTime("2014-11-28T12:00:09Z"),
  },
 }
 ```
@@ -221,6 +223,7 @@ Example response:
   "name": String("Otavio"),
   "origin": String("Brasil"),
   "race": String("Multiracial"),
+  "tx_time": DateTime("2014-11-28T12:00:09Z"),
  },
 }
 ```
