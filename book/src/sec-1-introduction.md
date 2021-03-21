@@ -6,7 +6,7 @@ WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which mean
 `Woori` means `our`, in Korean, and although I developed this DB initially alone, it is in my culture and my hunsband's culture to call everything that is done for our communities and by our communities **ours**. I chose *Woori* instead of *shelanu* or *bizdin* because it easier to pronunce.
 
 ## Project inspirations
-- [Crux](https://github.com/juxt/crux) a general purpose bitemporal graph query database with support for SQL and Datalog. It was the ideallogical source of WooriDB. I had developed a rust client called [Transistor](https://github.com/naomijub/transistor) which gave me the base of what I wanted to have in WooriDB.
+- [Crux](https://github.com/juxt/crux) a general purpose bitemporal graph query database with support for SQL and Datalog. It was the ideallogical source of WooriDB. I had developed a rust client called [Transistor](https://github.com/naomijub/transistor) which gave me the basic concepts of what I wanted WooriDB to have.
 - [Datomic](https://www.datomic.com/) is a transactional database with a flexible data model, temporality and rich queries. I worked with Datomic at [Nubank](https://nubank.com.br/sobre-nos/) and it is the reason I found Juxt/Crux.
 - [Prometheus](https://github.com/prometheus/prometheus) An open-source monitoring system with a dimensional data model, flexible query language, efficient **time series database** and modern alerting approach.
 - [SparQL](https://en.wikipedia.org/wiki/SPARQL) SPARQL is a query language for  RDF graph databases, it is flexible enough for query information based on datetime indexes.
