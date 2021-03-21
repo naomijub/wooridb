@@ -631,6 +631,7 @@ mod evict {
 #[cfg(test)]
 mod test_data_sructures {
     use super::*;
+    use edn_rs::hmap;
     #[test]
     fn insert_vec() {
         let wql = Wql::from_str(
@@ -644,6 +645,20 @@ mod test_data_sructures {
             wql.unwrap(),
             Wql::Insert("my_entity".to_string(), hashmap(), None)
         );
+    }
+
+    #[test]
+    fn insert_time() {
+        use chrono::{DateTime, Utc};
+        let wql = Wql::from_str(
+            "INSERT {
+            time: 2014-11-28T12:00:09Z,
+        } INTO my_entity",
+        );
+
+        let hm = hmap! {"time".to_string() => Types::DateTime("2014-11-28T12:00:09Z".parse::<DateTime<Utc>>().unwrap())};
+
+        assert_eq!(wql.unwrap(), Wql::Insert("my_entity".to_string(), hm, None));
     }
 
     #[test]

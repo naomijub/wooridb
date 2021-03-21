@@ -4,7 +4,7 @@ pub mod clauses;
 #[cfg(test)]
 pub mod clauses_test;
 pub(crate) mod entity_history;
-#[cfg(test)]
+#[cfg(all(test, feature = "history"))]
 pub mod entity_history_test;
 pub(crate) mod query;
 #[cfg(test)]

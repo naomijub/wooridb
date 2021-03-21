@@ -25,6 +25,10 @@ test:
 	cargo test --features test_read io::read::test::offset_test
 	cargo test --features test_read io::read::unique_data_test
 	rm -rf data/*.log
+	cargo test --features history -- controllers::entity_history_test::test_history_ok
+	rm -rf data/*.log
+	cargo test --features test_read io::read::test::read_log_range
+	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_update_content_post_ok
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_update_set_post_ok
@@ -77,8 +81,6 @@ test:
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::clauses_test::clause_like
 	rm -rf data/*.log
-	cargo test -- --ignored controllers::entity_history_test::test_history_ok
-	rm -rf data/*.log
 	cargo test --release -- --ignored auth::controllers::routes_test_with_auth::query_and_tx_with_token
 	rm -rf data/*.log
 	cargo test --release -- --ignored auth::controllers::routes_test_with_auth::history_with_token
@@ -104,7 +106,8 @@ test:
 	cargo test -- --ignored controllers::algebra_test::test_select_all_count_ok
 
 full-test: test
-	cargo test -- --ignored controllers::entity_history_test::test_start_end_time_ok
+	rm -rf data/*.log
+	cargo test --features history -- controllers::entity_history_test::test_start_end_time_ok
 	rm -rf data/*.log
 
 release:

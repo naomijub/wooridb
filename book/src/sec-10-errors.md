@@ -39,6 +39,7 @@ Woori DB has a variety of Error messages, from WQL when parsing the transaction 
 - `AuthBadRequest` - Authentication & Authorization error.
 - `FailedToCreateUser` - Failed to create new user.
 - `Unknown` - Unknown error.
+- `KeyTxTimeNotAllowed` - the key `tx_time` is not allowed in entities map for inserts and updates.
 
 ## WQL Parsing
 - `Query symbol error`: 
