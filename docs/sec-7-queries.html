@@ -236,11 +236,11 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </span><span class="boring">fn main() {
 </span>{
   48c7640e-9287-468a-a07c-2fb00da5eaed: 
-    {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;world&quot;,}, 
+    {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;world&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),}, 
   57c7640e-9287-448a-d07c-3db01da5earg: 
-    {a: 456, b: 73.3, c: &quot;hello&quot;, d: &quot;brasil&quot;,}, 
+    {a: 456, b: 73.3, c: &quot;hello&quot;, d: &quot;brasil&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),}, 
   54k6640e-5687-445a-d07c-5hg61da5earg: 
-    {a: 789, b: 93.3, c: &quot;hello&quot;, d: &quot;korea&quot;,},
+    {a: 789, b: 93.3, c: &quot;hello&quot;, d: &quot;korea&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),},
 }
 <span class="boring">}
 </span></code></pre></pre>
@@ -267,7 +267,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <p>Example response:</p>
 <blockquote>
 <p>It will return only the entity map contained inside inside entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.
-<code>{a: 123, b: 43.3, c: \&quot;hello\&quot;, d: \&quot;world\&quot;,}</code>.</p>
+<code>{a: 123, b: 43.3, c: \&quot;hello\&quot;, d: \&quot;world\&quot;, tx_time: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}</code>.</p>
 </blockquote>
 <h3 id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
 <p>Select a few entities maps (by their IDs) from entity tree <code>my_entity</code>. Key <code>IN</code> receives a set of Uuids</p>
@@ -312,7 +312,7 @@ Support <code>IDS IN</code></li>
 <li><code>IDS IN</code> will not be supported as the wuery is too extensive.</li>
 </ul>
 <p>Example request: </p>
-<pre><code class="language-sql">SELECT * 
+<pre><code class="language-sql">SELECT #{a, b, c, d} 
 FROM entity_name 
 ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 
 WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
@@ -359,12 +359,14 @@ WHERE {
   &quot;origin&quot;: String(&quot;Africa&quot;),
   &quot;age&quot;: Integer(34),
   &quot;name&quot;: String(&quot;Diego F&quot;),
+  &quot;tx_time&quot;: DateTime(&quot;2014-11-28T12:00:09Z&quot;),
  },
  &quot;ea3228d0-0164-453b-bae2-f726c4a9b979&quot;: {
   &quot;origin&quot;: String(&quot;Bukhara&quot;),
   &quot;race&quot;: String(&quot;brown&quot;),
   &quot;age&quot;: Integer(33),
   &quot;name&quot;: String(&quot;julia naomi&quot;),
+  &quot;tx_time&quot;: DateTime(&quot;2014-11-28T12:00:09Z&quot;),
  },
 }
 <span class="boring">}
@@ -387,6 +389,7 @@ WHERE {
   &quot;name&quot;: String(&quot;Otavio&quot;),
   &quot;origin&quot;: String(&quot;Brasil&quot;),
   &quot;race&quot;: String(&quot;Multiracial&quot;),
+  &quot;tx_time&quot;: DateTime(&quot;2014-11-28T12:00:09Z&quot;),
  },
 }
 <span class="boring">}

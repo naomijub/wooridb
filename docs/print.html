@@ -509,8 +509,8 @@ Division</li>
 <code>Precise(String)</code> contains a very large integer or a very large float,</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <code>Nil</code> contains a <code>null/nil</code> value,</li>
-<li><input disabled="" type="checkbox"/>
-<code>DateTime</code> to be added.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+<code>DateTime</code> contains a DateTime<Utc> </li>
 </ul>
 <h1 id="authorization-and-authentication"><a class="header" href="#authorization-and-authentication">Authorization and Authentication</a></h1>
 <p>Authentication and authorization only work with release mode, so <code>cargo run --release</code> is required. </p>
@@ -636,7 +636,7 @@ INTO my_entity_name
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>{&quot;my_entity_name&quot;: {
-    Uuid(00d025c9-eda8-4190-a33a-29998bd77bd3): {a: 123, c: &quot;hello&quot;, d: &quot;world&quot;,},
+    Uuid(00d025c9-eda8-4190-a33a-29998bd77bd3): {a: 123, c: &quot;hello&quot;, d: &quot;world&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),},
 }}
 <span class="boring">}
 </span></code></pre></pre>
@@ -651,7 +651,7 @@ WITH &lt;ENTITY-UUID&gt;
 <p>Updates the content of an entity map for an entity tree key and an entity id. There are two possible updates:</p>
 <h3 id="update-set-1"><a class="header" href="#update-set-1"><code>UPDATE SET</code></a></h3>
 <p><a href="./sec-4-wql.html#update-set">UPDATE SET WQL Reference</a>
-<code>SET</code> updates defines the current value of the entity map to the ones being passed, so if your entity map is <code>{a: 123, b: 12.5,}</code> and your set update has the hashmap <code>{a: 432, c: \&quot;hello\&quot;,}</code>, the current state of the entity map will be <code>{a: 432, b: 12.5, c: \&quot;hello\&quot;,}</code>. </p>
+<code>SET</code> updates defines the current value of the entity map to the ones being passed, so if your entity map is <code>{a: 123, b: 12.5,}</code> and your set update has the hashmap <code>{a: 432, c: \&quot;hello\&quot;,}</code>, the current state of the entity map will be <code>{a: 432, b: 12.5, c: \&quot;hello\&quot;, tx_time: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}</code>. </p>
 <p>Example request:</p>
 <pre><code class="language-sql">UPDATE my_entity_name 
 SET {a: -4, b: 32,} 
@@ -664,14 +664,14 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 </span>(
  entity: &quot;my_entity_name&quot;,
  uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- state: &quot;{\&quot;b\&quot;: Integer(32),\&quot;a\&quot;: Integer(-4),}&quot;,
+ state: &quot;{\&quot;b\&quot;: Integer(32),\&quot;a\&quot;: Integer(-4), \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
  message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="update-content-1"><a class="header" href="#update-content-1"><code>UPDATE CONTENT</code></a></h3>
 <p><a href="./sec-4-wql.html#update-content">UPDATE CONTENT WQL Reference</a>
-<code>CONTENT</code> updates are a way to add numerical values and concatenate Strings, so if your entity map is <code>{a: 432, c: \&quot;hello\&quot;,}</code> and your content update has the hashmap <code>{a: -5, c: \&quot;world\&quot;, b: 12.5}</code> the current state of the entity map will be <code>{a: 427, c: \&quot;helloworld\&quot;, b: 12.5}</code>. </p>
+<code>CONTENT</code> updates are a way to add numerical values and concatenate Strings, so if your entity map is <code>{a: 432, c: \&quot;hello\&quot;,}</code> and your content update has the hashmap <code>{a: -5, c: \&quot;world\&quot;, b: 12.5, tx_time: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}</code> the current state of the entity map will be <code>{a: 427, c: \&quot;helloworld\&quot;, b: 12.5, tx_time: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}</code>. </p>
 <p>Example request:</p>
 <pre><code class="language-sql">UPDATE my_entity_name 
 CONTENT {a: -34, b: 7,} 
@@ -684,7 +684,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 </span>(
  entity: &quot;my_entity_name&quot;,
  uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(-38),}&quot;,
+ state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(-38), \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
  message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
 )
 <span class="boring">}
@@ -705,7 +705,7 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 </span>(
  entity: &quot;my_entity_name&quot;,
  uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(123),\&quot;g\&quot;: Nil,}&quot;,
+ state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(123),\&quot;g\&quot;: Nil, \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
  message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
 )
 <span class="boring">}
@@ -771,6 +771,8 @@ Delete entity with ID at transaction-time</li>
 )
 <span class="boring">}
 </span></code></pre></pre>
+<h2 id="tx_time"><a class="header" href="#tx_time">TX_TIME</a></h2>
+<p>Whenever you make a transaction to WooriDB (<code>INSERT, UPDATES, MATCH</code>) a field named <code>tx_time</code> will be added to the entity map, this field is of type <code>Types::Datetime(chrono::Datetime&lt;Utc&gt;)</code>.</p>
 <h1 id="queries"><a class="header" href="#queries">Queries</a></h1>
 <p>Query is the name of all operations that read the database, like <code>SELECT, CHECK</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/query</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/query -d 'SELECT * FROM my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
 <blockquote>
@@ -840,11 +842,11 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </span><span class="boring">fn main() {
 </span>{
   48c7640e-9287-468a-a07c-2fb00da5eaed: 
-    {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;world&quot;,}, 
+    {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;world&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),}, 
   57c7640e-9287-448a-d07c-3db01da5earg: 
-    {a: 456, b: 73.3, c: &quot;hello&quot;, d: &quot;brasil&quot;,}, 
+    {a: 456, b: 73.3, c: &quot;hello&quot;, d: &quot;brasil&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),}, 
   54k6640e-5687-445a-d07c-5hg61da5earg: 
-    {a: 789, b: 93.3, c: &quot;hello&quot;, d: &quot;korea&quot;,},
+    {a: 789, b: 93.3, c: &quot;hello&quot;, d: &quot;korea&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),},
 }
 <span class="boring">}
 </span></code></pre></pre>
@@ -871,7 +873,7 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <p>Example response:</p>
 <blockquote>
 <p>It will return only the entity map contained inside inside entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.
-<code>{a: 123, b: 43.3, c: \&quot;hello\&quot;, d: \&quot;world\&quot;,}</code>.</p>
+<code>{a: 123, b: 43.3, c: \&quot;hello\&quot;, d: \&quot;world\&quot;, tx_time: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}</code>.</p>
 </blockquote>
 <h3 id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
 <p>Select a few entities maps (by their IDs) from entity tree <code>my_entity</code>. Key <code>IN</code> receives a set of Uuids</p>
@@ -916,7 +918,7 @@ Support <code>IDS IN</code></li>
 <li><code>IDS IN</code> will not be supported as the wuery is too extensive.</li>
 </ul>
 <p>Example request: </p>
-<pre><code class="language-sql">SELECT * 
+<pre><code class="language-sql">SELECT #{a, b, c, d} 
 FROM entity_name 
 ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 
 WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
@@ -963,12 +965,14 @@ WHERE {
   &quot;origin&quot;: String(&quot;Africa&quot;),
   &quot;age&quot;: Integer(34),
   &quot;name&quot;: String(&quot;Diego F&quot;),
+  &quot;tx_time&quot;: DateTime(&quot;2014-11-28T12:00:09Z&quot;),
  },
  &quot;ea3228d0-0164-453b-bae2-f726c4a9b979&quot;: {
   &quot;origin&quot;: String(&quot;Bukhara&quot;),
   &quot;race&quot;: String(&quot;brown&quot;),
   &quot;age&quot;: Integer(33),
   &quot;name&quot;: String(&quot;julia naomi&quot;),
+  &quot;tx_time&quot;: DateTime(&quot;2014-11-28T12:00:09Z&quot;),
  },
 }
 <span class="boring">}
@@ -991,6 +995,7 @@ WHERE {
   &quot;name&quot;: String(&quot;Otavio&quot;),
   &quot;origin&quot;: String(&quot;Brasil&quot;),
   &quot;race&quot;: String(&quot;Multiracial&quot;),
+  &quot;tx_time&quot;: DateTime(&quot;2014-11-28T12:00:09Z&quot;),
  },
 }
 <span class="boring">}
@@ -1013,20 +1018,24 @@ Support temporality for where clause</li>
 &quot;2021-03-02T05:00:19.813514240Z&quot;: {
     &quot;a&quot;: Integer(123),
     &quot;b&quot;: Float(12.3),
+    &quot;tx_time&quot;: DateTime(&quot;2021-03-02T05:00:19.813514240Z&quot;),
 },
 &quot;2021-03-02T05:00:19.816357939Z&quot;: {
     &quot;b&quot;: Float(12.3),
     &quot;a&quot;: Integer(123),
+    &quot;tx_time&quot;: DateTime(&quot;2021-03-02T05:00:19.816357939Z&quot;),
 },
 &quot;2021-03-02T05:00:19.817189987Z&quot;: {
     &quot;b&quot;: Float(12.3),
     &quot;c&quot;: Boolean(true),
     &quot;a&quot;: Integer(34),
+    &quot;tx_time&quot;: DateTime(&quot;2021-03-02T05:00:19.817189987Z&quot;),
 },
 &quot;2021-03-02T05:00:19.818031113Z&quot;: {
     &quot;b&quot;: Float(12.3),
     &quot;a&quot;: Integer(321),
     &quot;c&quot;: Char('h'),
+    &quot;tx_time&quot;: DateTime(&quot;2021-03-02T05:00:19.818031113Z&quot;),
 },}
 <span class="boring">}
 </span></code></pre></pre>
@@ -1058,11 +1067,13 @@ Support temporality for where clause</li>
 &quot;2021-03-02T05:00:19.816357939Z&quot;: {
     &quot;b&quot;: Float(12.3),
     &quot;a&quot;: Integer(123),
+    &quot;tx_time&quot;: DateTime(&quot;2021-03-02T05:00:19.816357939Z&quot;),
 },
 &quot;2021-03-02T05:00:19.817189987Z&quot;: {
     &quot;b&quot;: Float(12.3),
     &quot;c&quot;: Boolean(true),
     &quot;a&quot;: Integer(34),
+    &quot;tx_time&quot;: DateTime(&quot;2021-03-02T05:00:19.817189987Z&quot;),
 },}
 <span class="boring">}
 </span></code></pre></pre>
@@ -1232,6 +1243,7 @@ Support temporality for where clause</li>
 <li><code>AuthBadRequest</code> - Authentication &amp; Authorization error.</li>
 <li><code>FailedToCreateUser</code> - Failed to create new user.</li>
 <li><code>Unknown</code> - Unknown error.</li>
+<li><code>KeyTxTimeNotAllowed</code> - the key <code>tx_time</code> is not allowed in entities map for inserts and updates.</li>
 </ul>
 <h2 id="wql-parsing"><a class="header" href="#wql-parsing">WQL Parsing</a></h2>
 <ul>
