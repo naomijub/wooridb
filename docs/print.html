@@ -170,25 +170,25 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>WooriDB is a general purpose (<strong>EXPERIMENTAL</strong>) time serial database, which means it contains all entities registries indexed by DateTime and <code>Uuid</code>. It is schemaless, deep key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. </p>
+<p>WooriDB is a general purpose (<strong>EXPERIMENTAL</strong>) time serial database, which means it contains all entity registries indexed by DateTime and <code>Uuid</code>. It is schemaless, deep key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog.</p>
 <h2 id="name-origin"><a class="header" href="#name-origin">Name origin</a></h2>
 <p><code>Woori</code> means <code>our</code>, in Korean, and although I developed this DB initially alone, it is in my culture and my hunsband's culture to call everything that is done for our communities and by our communities <strong>ours</strong>. I chose <em>Woori</em> instead of <em>shelanu</em> or <em>bizdin</em> because it easier to pronunce.</p>
 <h2 id="project-inspirations"><a class="header" href="#project-inspirations">Project inspirations</a></h2>
 <ul>
-<li><a href="https://github.com/juxt/crux">Crux</a> a general purpose bitemporal graph query database with support for SQL and Datalog. It was the ideallogical source of WooriDB. I had developed a rust client called <a href="https://github.com/naomijub/transistor">Transistor</a> which gave me the basis of what I wanted to have in WooriDB.</li>
-<li><a href="https://www.datomic.com/">Datomic</a> is a transactional database with a flexible data model, temporality and rich queries. I worked with Datomic at <a href="https://nubank.com.br/sobre-nos/">Nubank</a> and it is the reason I found Juxt/Crux. </li>
+<li><a href="https://github.com/juxt/crux">Crux</a> a general purpose bitemporal graph query database with support for SQL and Datalog. It was the ideallogical source of WooriDB. I had developed a rust client called <a href="https://github.com/naomijub/transistor">Transistor</a> which gave me the basic concepts of what I wanted WooriDB to have.</li>
+<li><a href="https://www.datomic.com/">Datomic</a> is a transactional database with a flexible data model, temporality and rich queries. I worked with Datomic at <a href="https://nubank.com.br/sobre-nos/">Nubank</a> and it is the reason I found Juxt/Crux.</li>
 <li><a href="https://github.com/prometheus/prometheus">Prometheus</a> An open-source monitoring system with a dimensional data model, flexible query language, efficient <strong>time series database</strong> and modern alerting approach.</li>
-<li><a href="https://en.wikipedia.org/wiki/SPARQL">SparQL</a> SPARQL is a query language for  RDF graph databases, it is flexible enough for query information based on datetime indexes. </li>
+<li><a href="https://en.wikipedia.org/wiki/SPARQL">SparQL</a> SPARQL is a query language for  RDF graph databases, it is flexible enough for query information based on datetime indexes.</li>
 <li>Book <a href="https://www.amazon.com.br/Database-Internals-Alex-Petrov/dp/1492040347/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&amp;dchild=1&amp;keywords=Database+Internals%3A&amp;qid=1612831621&amp;sr=8-1">Database Internals</a></li>
 <li>Book <a href="https://www.amazon.com.br/dp/B073MPV4YC/ref=dp-kindle-redirect?_encoding=UTF8&amp;btkr=1">Database System Concept</a></li>
 <li>Book <a href="https://www.amazon.com.br/Designing-Data-Intensive-Applications-Reliable-Maintainable-ebook/dp/B06XPJML5D/ref=sr_1_1?__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&amp;dchild=1&amp;keywords=Designing+Data%E2%80%93Intensive+Applications&amp;qid=1612831724&amp;s=books&amp;sr=1-1">Designing Data Intensive Application</a></li>
 <li>Professor <a href="http://www.cs.cmu.edu/%7Epavlo/">Andy Pavlo</a> Database Design Course. </li>
 <li><a href="https://www.ockam.io/learn/blog/trust_influxdb">Zero Trust in Time Series Data?</a></li>
 </ul>
-<h2 id="naming-conventios"><a class="header" href="#naming-conventios">Naming conventios:</a></h2>
+<h2 id="naming-conventions"><a class="header" href="#naming-conventions">Naming conventions:</a></h2>
 <ul>
-<li>Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.</li>
-<li>Entity ID is the id of an entity inside Entity tree.</li>
+<li>Entity Tree is similar to a SQL table, it is the data structure that contains all ids and entities map relations.</li>
+<li>Entity ID is the id of an entity inside of an Entity Tree.</li>
 <li>Entity map is the content of and entity associated with the entity id.</li>
 </ul>
 <h1 id="installation-and-important-information"><a class="header" href="#installation-and-important-information">Installation and Important Information</a></h1>
@@ -205,12 +205,12 @@
 <li><code>Debug mode</code>: <code>make debug</code> in project root.</li>
 </ul>
 <h3 id="docker"><a class="header" href="#docker">Docker</a></h3>
-<p>you can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. The current most stable tag is <a href="https://github.com/naomijub/wooridb/releases/tag/0.1.4"><strong><code>beta-4</code></strong></a>. To execute the docker container run:</p>
+<p>You can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. Currently the most stable tag is <a href="https://github.com/naomijub/wooridb/releases/tag/0.1.4"><strong><code>beta-4</code></strong></a>. To execute the docker container run:</p>
 <ul>
 <li><code>docker run -p 1438:1438 naomijubs/wooridb:beta-4 debug</code> for debug mode.</li>
-<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-4 run</code>  for size optimization.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-4 run</code> for size optimization.</li>
 <li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-4 release</code> for performance optimization.</li>
-<li>All <code>-e/--env</code> can be replaced by a <code>--env-file path/to/your/.env</code>. Your <code>.env</code>file should contain the following fields:</li>
+<li>All <code>-e/--env</code> can be replaced by a <code>--env-file path/to/your/.env</code>. Your <code>.env</code> file should contain the following fields:</li>
 </ul>
 <pre><code>HASHING_COST=16
 PORT=1438
@@ -309,7 +309,7 @@ Division</li>
 </ul>
 </li>
 </ul>
-<h2 id="naming-conventios-1"><a class="header" href="#naming-conventios-1">Naming conventios:</a></h2>
+<h2 id="naming-conventions-1"><a class="header" href="#naming-conventions-1">Naming conventions:</a></h2>
 <ul>
 <li>Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.</li>
 <li>Entity ID is the id of an entity inside Entity tree.</li>
