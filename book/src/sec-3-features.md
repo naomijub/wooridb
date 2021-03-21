@@ -36,7 +36,7 @@
     - [x] Aggregate
     - [ ] Division
 
-## Naming conventios:
+## Naming conventions:
 - Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.
 - Entity ID is the id of an entity inside Entity tree.
 - Entity map is the content of and entity associated with the entity id.
