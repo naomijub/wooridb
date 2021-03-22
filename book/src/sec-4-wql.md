@@ -11,15 +11,15 @@
     - [SET UPDATE](#update-set) replaces the sent entity map as the entity's map content.
     - [CONTENT UPDATE](#update-content) updates numerical and string the current entity's map content with the sent entity map value and the other values work the same way as SET. 
 - [`MATCH UPDATE`](#match-update) updates entity map content with new content if match condition is satisfied.
-- [`DELETE`](#delete)s the last entity map content for and entity id.
+- [`DELETE`](#delete)s the last entity map content for an entity id.
 - [`EVICT`](#evict)
-    - Evicts specific entity id and entity map
+    - Evicts a specific entity id and entity map
     - Evicts all entities in the entity tree key.
 
 **Queries**
-- [`SELECT`](#select) the only way to retrieve entity's content.
+- [`SELECT`](#select) the only way to retrieve an entity's content.
     - [`WHERE`](#where-clause) clause is available.
-    - `WHEN` clause is availbale
+    - `WHEN` clause is available
 - [`CHECK`](#check) the only way to verify keys that are encrypted.
 
 > ALL DATA STRUCTURES HASHMAPS, HASHSETS AND LIST MUST CONTAIN A `,` AFTER EACH ELEMENT. Example `#{name, ssn,}` is valid but `#{name, ssn}` is not valid.
@@ -32,8 +32,8 @@ Creates an entity tree key.
 
 * `CREATE ENTITY my_entity` this will create an entity tree key named `my_entity`, in SQL terms it means `CREATE TABLE my_entity`.
 * `CREATE ENTITY my_entity UNIQUES #{name, ssn,}` the entity tree key named `my_entity` will only allow unique values for the entities keys `name` and `ssn` in its maps.
-* `CREATE ENTITY my_entity ENCRYPTS #{pswd,}` the entity tree key named `my_entity` will encrypt the entities keys that are `pswd`. The hashing cost of the encrypt is defined by the environment variable `HASHING_COST`, recommended is between 10 and 14.
-* Encryted keys cannot be uniques so `CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}` is invalid but `CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}` is valid.
+* `CREATE ENTITY my_entity ENCRYPTS #{pswd,}` the entity tree key named `my_entity` will encrypt the entities keys that are `pswd`. The hashing cost of the encrypt is defined by the environment variable `HASHING_COST`, the recommended is between 10 and 14.
+* Encrypted keys cannot be unique so `CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}` is invalid but `CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}` is valid.
 
 ### INSERT
 
@@ -51,25 +51,25 @@ Updates the content by replacing the previous entity map in entity tree key `my_
 
 ### UPDATE CONTENT
 
-Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key `my_entity_name` with the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`. Non numerical or non string value will just be replaced. If key doesn't  exist it will be created.
+Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key `my_entity_name` with the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`. Non numerical or non string value will just be replaced. If the key doesn't exist it will be created.
 
 * `UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed` this will add `-4` to entity map key `a` and add `32` to entity map key `b` in the current entity map stored in entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
 
 ### MATCH UPDATE
 
-Similar to SET, but it requires a pre-condition to be satisfied.
+Similar to SET, but it requires a precondition to be satisfied.
 
 * `MATCH ALL(a == 1, b >= 3, c != \"hello\", d < 7,) UPDATE this_entity SET {a: 123, g: NiL,} INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536` if all conditions defined inside `ALL` are satisfied the set update will happen.
     - `ALL` is an logical `and` between all conditions, meaning that all of them must be true.
     - `ANY` is an logical `or` between all conditions, meaning that at least one of them must be true.
     - **NULL KEYS**, `ALL` returns an error if a null key is present and `ANY` just ignores null keys.
     - Possible conditions are:
-        - `==` means equals, so if `a == 100`, this means that the entity map key `a` must equals to `100`.
-        - `!=` means not equals, so if `a != 100`, this means that the entity map key `a` must not equals to `100`.
-        - `>=` means greater or equal, so if `a >= 100`, this means that the entity map key `a` must br greater or equals to `100`.
-        - `<=` means lesser or equal, so if `a <= 100`, this means that the entity map key `a` must be lesser or equals to `100`.
-        - `>` means greater, so if `a > 100`, this means that the entity map key `a` must be greater than `100`. 
-        - `<` means lesser, so if `a < 100`, this means that the entity map key `a` must be lesser than `100`.
+        - `==` means equals, so if `a == 100`, this means that the entity map key `a` must equal to `100`.
+        - `!=` means not equal, so if `a != 100`, this means that the entity map key `a` must not equal to `100`.
+        - `>=` means greater or equal, so if `a >= 100`, this means that the entity map key `a` must br greater or equal to `100`.
+        - `<=` means lesser or equal, so if `a <= 100`, this means that the entity map key `a` must be lesser or equal to `100`.
+        - `>` means greater, so if `a > 100`, this means that the entity map key `a` must be greater than `100`.
+        - `<` means lesser, so if `a < 100`, this means that the entity map key `a` must be less than `100`.
 
 ### DELETE
 
@@ -86,7 +86,7 @@ Removes all occurrences of an entity from the entity tree. It can be just the en
 
 ### CHECK
 
-Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves  as a way to verify if the passed values are `true` of `false` against encrypted data. 
+Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves as a way to verify if the passed values are `true` of `false` against encrypted data.
 
 * `CHECK {pswd: "my-password", ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed` this will check if keys `psdw` and `ssn` from entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` in entity tree key `my_entity_name` have the values `"my-password"` for pswd and `3948453` for ssn.
 
@@ -94,7 +94,7 @@ Checks for encrypted key data validity. This transaction only works with keys th
 
 This is the way to query entities from WooriDB. Similar to SQL and SparQL `SELECT`.
 
-Possible `SELECT`  combinantions:
+Possible `SELECT` combinations:
 * `SELECT * FROM my_entity_name` selects all entity ids and entity maps for the entity tree key `my_entity_name` with all the possible entities map keys.
 * `SELECT #{name, last_name, age,} FROM my_entity_name` selects all entity ids and entity maps for the entity tree key `my_entity_name` with only the keys `name, last_name, age` for the entities map.
 * `SELECT * FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed` selects the entity map containing the entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` from the entity tree key `my_entity_name` with all the possible entities map keys.
@@ -102,10 +102,10 @@ Possible `SELECT`  combinantions:
 * `SELECT * FROM my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}` this will return the entities map containing the entities ids `#{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}` from entity tree key `my_entity_name`. Keys set is available.
 * `Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00` this will select the last entity map state for the entity id `0a1b16ed-886c-4c99-97c9-0b977778ec13` in entity tree key `my_entity` at date `2014-11-28`. Requires to use DateTime UTC, for now.
 * `SELECT * FROM entity_name ID <uuid> WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z` this will select the all entity map states for the entity id `0a1b16ed-886c-4c99-97c9-0b977778ec13` in entity tree key `my_entity` in the time range starting at `2014-11-28T09:00:09Z` and ending at `2014-11-28T21:00:09Z`.
-* `SELECT * FROM my_entity WHERE { ?* my_entity:a ?a, ?* my_entity:c ?c, (== ?a 123),(or (>= ?c 4300.0), (< ?c 6.9),),}` this will select all enitities ids and entities maps from entity tree key `my_entity` that satisfy the where clause.
-     - `?* my_entity:a ?a` and `?* my_entity:c ?c` define that the entity keys `a` and `c` from entity tree key `my_entity` will receive the attributed value `?a` and `?c` repectively.
+* `SELECT * FROM my_entity WHERE { ?* my_entity:a ?a, ?* my_entity:c ?c, (== ?a 123),(or (>= ?c 4300.0), (< ?c 6.9),),}` this will select all entities ids and entities maps from entity tree key `my_entity` that satisfy the where clause.
+     - `?* my_entity:a ?a` and `?* my_entity:c ?c` define that the entity keys `a` and `c` from entity tree key `my_entity` will receive the attributed value `?a` and `?c` respectively.
      - `(== ?a 123)` selects all entities which entity map key `a` is equal to `123`.
-     - `(or (>= ?c 4300.0), (< ?c 6.9),)` selects all entities which entity map key `c` is greater or equal to `4300.0` **or** is smaller than `6.9`.
+     - `(or (>= ?c 4300.0), (< ?c 6.9),)` selects all entities which entity map key `c` is greater than or equal to `4300.0` **or** is smaller than `6.9`.
 
 #### WHERE Clause
 
@@ -141,7 +141,7 @@ Some relation algebra may be implemented:
 
 - [x] `Char(char)` contains the type char defined by `'c'`,
 - [x] `Integer(isize)` contains the type isize, just a number without `.`,
-- [x] `String(String)` contains any value passed wuth `"this is a string"`,
+- [x] `String(String)` contains any value passed with `"this is a string"`,
 - [x] `Uuid(Uuid)` contains an `Uuid V4`,
 - [x] `Float(f64)` contains the type f64, any number containing `.`,
 - [x] `Boolean(bool)` contains type boolean `true` of `false`,
