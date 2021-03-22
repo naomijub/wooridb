@@ -8,6 +8,7 @@ use wql::{Algebra, Clause, ToSelect, Types, Value};
 use crate::{
     core::registry::get_registries,
     model::{error::Error, DataLocalContext, DataRegister},
+    schemas::query::Response as QueryResponse,
 };
 
 use crate::core::query::{dedup_states, get_limit_offset_count, get_result_after_manipulation};
@@ -18,7 +19,7 @@ pub async fn select_where_controller(
     clauses: Vec<Clause>,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let states = select_where(entity, args_to_select, clauses, local_data, &functions);
     let count = if let Some(Algebra::Count) = functions.get("COUNT") {
         true

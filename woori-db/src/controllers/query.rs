@@ -5,7 +5,6 @@ use std::{
 
 use actix_web::{HttpResponse, Responder};
 use rayon::prelude::*;
-use ron::ser::to_string_pretty;
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
 
@@ -15,17 +14,15 @@ use crate::{
         state::State,
         when::{ReadEntitiesAt, ReadEntityIdAt, ReadEntityRange},
     },
-    core::{
-        pretty_config_output,
-        query::{
-            dedup_option_states, dedup_states, get_limit_offset_count,
-            get_result_after_manipulation, get_result_after_manipulation_for_options,
-        },
+    core::query::{
+        dedup_option_states, dedup_states, get_limit_offset_count, get_result_after_manipulation,
+        get_result_after_manipulation_for_options,
     },
     model::{
         error::{error_to_http, Error},
         DataEncryptContext, DataExecutor, DataLocalContext, DataRegister,
     },
+    schemas::query::Response as QueryResponse,
 };
 
 use super::clauses::select_where_controller;
@@ -84,7 +81,10 @@ pub async fn wql_handler(
 
     match response {
         Err(e) => error_to_http(e),
-        Ok(resp) => HttpResponse::Ok().body(resp),
+        Ok(resp) => match resp.to_string() {
+            Ok(body) => HttpResponse::Ok().body(body),
+            Err(e) => error_to_http(e),
+        },
     }
 }
 
@@ -95,7 +95,7 @@ pub async fn check_value_controller(
     local_data: DataLocalContext,
     encryption: DataEncryptContext,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     if let Ok(guard) = encryption.lock() {
         if guard.contains_key(&entity) {
             let encrypts = guard.get(&entity).unwrap();
@@ -146,7 +146,7 @@ async fn select_all_when_range_controller(
     start_date: String,
     end_date: String,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
     let start_date: DateTime<Utc> = start_date
         .parse::<DateTime<Utc>>()
@@ -165,13 +165,13 @@ async fn select_all_when_range_controller(
         ))
         .await??;
 
-    Ok(to_string_pretty(&result, pretty_config_output())?)
+    Ok(result.into())
 }
 async fn select_all_when_controller(
     entity: String,
     date: String,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
@@ -182,7 +182,7 @@ async fn select_all_when_controller(
     let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor.send(ReadEntitiesAt::new(&entity, date_log)).await??;
 
-    Ok(to_string_pretty(&result, pretty_config_output())?)
+    Ok(result.into())
 }
 
 async fn select_all_id_when_controller(
@@ -190,7 +190,7 @@ async fn select_all_id_when_controller(
     date: String,
     uuid: Uuid,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
@@ -203,7 +203,7 @@ async fn select_all_id_when_controller(
         .send(ReadEntityIdAt::new(&entity, uuid, date_log))
         .await??;
 
-    Ok(to_string_pretty(&result, pretty_config_output())?)
+    Ok(result.into())
 }
 
 async fn select_keys_id_when_controller(
@@ -212,7 +212,7 @@ async fn select_keys_id_when_controller(
     keys: Vec<String>,
     uuid: Uuid,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
@@ -229,7 +229,7 @@ async fn select_keys_id_when_controller(
         .filter(|(k, _)| keys.contains(k))
         .collect::<HashMap<String, Types>>();
 
-    Ok(to_string_pretty(&result, pretty_config_output())?)
+    Ok(result.into())
 }
 
 async fn select_keys_when_controller(
@@ -237,7 +237,7 @@ async fn select_keys_when_controller(
     date: String,
     keys: Vec<String>,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
     let date = date
         .parse::<DateTime<Utc>>()
@@ -260,14 +260,14 @@ async fn select_keys_when_controller(
         })
         .collect::<HashMap<String, HashMap<String, Types>>>();
 
-    Ok(to_string_pretty(&result, pretty_config_output())?)
+    Ok(result.into())
 }
 
 async fn select_all_with_id(
     entity: String,
     uuid: Uuid,
     local_data: DataLocalContext,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -292,10 +292,7 @@ async fn select_all_with_id(
         .into_par_iter()
         .filter(|(_, v)| !v.is_hash())
         .collect::<HashMap<String, Types>>();
-    Ok(ron::ser::to_string_pretty(
-        &filterd_state,
-        pretty_config_output(),
-    )?)
+    Ok(filterd_state.into())
 }
 
 async fn select_all_with_ids(
@@ -303,7 +300,7 @@ async fn select_all_with_ids(
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let (limit, offset, count) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -360,7 +357,7 @@ async fn select_keys_with_id(
     uuid: Uuid,
     keys: Vec<String>,
     local_data: DataLocalContext,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -387,10 +384,7 @@ async fn select_keys_with_id(
         .filter(|(k, _)| keys.contains(k))
         .filter(|(_, v)| !v.is_hash())
         .collect();
-    Ok(ron::ser::to_string_pretty(
-        &filtered,
-        pretty_config_output(),
-    )?)
+    Ok(filtered.into())
 }
 
 async fn select_keys_with_ids(
@@ -399,7 +393,7 @@ async fn select_keys_with_ids(
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let (limit, offset, count) = get_limit_offset_count(&functions);
     let registries = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -456,7 +450,7 @@ async fn select_all(
     entity: String,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let (limit, offset, count) = get_limit_offset_count(&functions);
 
     let registries = {
@@ -493,7 +487,7 @@ async fn select_args(
     keys: Vec<String>,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     let (limit, offset, count) = get_limit_offset_count(&functions);
     let keys = keys.into_par_iter().collect::<HashSet<String>>();
     let registries = {
