@@ -16,7 +16,7 @@ Woori DB has a variety of Error messages, from WQL when parsing the transaction 
 - `Io(io::Error)` - Failed to read or write file.
 - `QueryFormat(String)` - WQL error.
 - `EntityAlreadyCreated(<entity_name>)` - Entity `entity_name` already created in the database.
-- `EntityNotCreated(<entity_name>)` - tx or query at entity tree dooes not contain key `entity_name`.
+- `EntityNotCreated(<entity_name>)` - tx or query at entity tree does not contain key `entity_name`.
 - `EntityNotCreatedWithUniqueness(<entity_name>)` - this error only occurs if a failed write to the bank happened. Migration to fix data inconsistency may be needed.
 - `Serialization(ron::Error)` - Ron serialization error in wql context.
 - `UuidNotCreatedForEntity(<entity_name>, Uuid)` - If you try to `UPDATE/DELETE/EVICT/SELECT` an Uuid that `entity_name` does not contain.
@@ -72,7 +72,7 @@ Woori DB has a variety of Error messages, from WQL when parsing the transaction 
         -   "SELECT expression should be followed by `*` for ALL keys or `#{key_names...}` for some keys" and "SELECT arguments set should start with `#{` and end with `}`"
         -   "Uuids in `IDS IN` are reuired to be inside a `#{` and `}`"
         -   "START date and END date should be the same date."
-        -   "WHERE clauses must be contained inside ` {...}`"
+        -   "WHERE clauses must be contained inside `{...}`"
 
 - `Required content`:
     - "MATCH requires ALL or ANY symbols". It is necessary to include `ANY` or `ALL` conditions after `MATCH` keyword.
