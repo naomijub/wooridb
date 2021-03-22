@@ -4,13 +4,13 @@ Query is the name of all operations that read the database, like `SELECT, CHECK`
 
 > **Reminder**
 > A comma is required at the end of every data structure representation.
-> Ex.: `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`. 
+> Ex.: `{a: 123, b: 456,}`, `#{a, b, c,}`, `(a, b, c,)`.
 > No need for `;` at the end of each expression.
 
 ## `CHECK`
 [CHECK WQL Reference](./sec-4-wql.md#check)
 
-Checks for encrypted data, in entity map, validity. It requires an entity tree name after `FROM` and an entity id as Uuid after `ID`. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false` against encrypted data. 
+Checks for encrypted data, in entity map, validity. It requires an entity tree name after `FROM` and an entity id as Uuid after `ID`. This transaction only works with keys that are encrypted and it serves to verify if the passed values are `true` of `false` against encrypted data.
 
 Considering entity tree key `my_entity_name` with entity id `48c7640e-9287-468a-a07c-2fb00da5eaed` with entity map `{pswd: Hash("my-password"), name: "Julia"}`
 
@@ -21,19 +21,19 @@ CHECK {pswd: \"my-password\",}
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 ```
 
-Example  response:
+Example response:
 ```rust
 {"pswd": true,}
 ```
 
 ### Exmample 2:
-Example request: 
+Example request:
 ```sql
 CHECK {pswd: \"my-password\", ssn: "1234",} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 ```
 
-Example  response:
+Example response:
 ```rust
 (
  error_type: "CheckNonEncryptedKeys",
@@ -42,13 +42,13 @@ Example  response:
 ```
 
 ### Example 3:
-Example request: 
+Example request:
 ```sql
 CHECK {pswd: \"your-password\",} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 ```
 
-Example  response:
+Example response:
 ```rust
 {"pswd": false,}
 ```
@@ -61,44 +61,44 @@ This is the way to query entities from WooriDB. Similar to SQL and SparQL `SELEC
 > `*` and `#{keys...}` can be used in all select modes.
 
 ### SELECTing all entity map keys FROM entity tree key:
-Same as SQL using the token `*` will defined that all keys in the entity map will be returned. The query `SELECT * FROM entity_name` selects  all entity ids and entity maps found inside entity tree key `entity_name`. It is equivalent to SQL's `Select * From table`. 
+Same as SQL using the token `*` will defined that all keys in the entity map will be returned. The query `SELECT * FROM entity_name` selects all entity ids and entity maps found inside entity tree key `entity_name`. It is equivalent to SQL's `Select * From table`.
 
-Example request: `SELECT * from my_entity_name`. 
+Example request: `SELECT * from my_entity_name`.
 
 Example response:
 > This query will return a `BTreeMap<Uuid, HashMap<String, Types>>`
 ```rust
 {
-  48c7640e-9287-468a-a07c-2fb00da5eaed: 
-    {a: 123, b: 43.3, c: "hello", d: "world", tx_time: DateTime("2014-11-28T12:00:09Z"),}, 
-  57c7640e-9287-448a-d07c-3db01da5earg: 
-    {a: 456, b: 73.3, c: "hello", d: "brasil", tx_time: DateTime("2014-11-28T12:00:09Z"),}, 
-  54k6640e-5687-445a-d07c-5hg61da5earg: 
+  48c7640e-9287-468a-a07c-2fb00da5eaed:
+    {a: 123, b: 43.3, c: "hello", d: "world", tx_time: DateTime("2014-11-28T12:00:09Z"),},
+  57c7640e-9287-448a-d07c-3db01da5earg:
+    {a: 456, b: 73.3, c: "hello", d: "brasil", tx_time: DateTime("2014-11-28T12:00:09Z"),},
+  54k6640e-5687-445a-d07c-5hg61da5earg:
     {a: 789, b: 93.3, c: "hello", d: "korea", tx_time: DateTime("2014-11-28T12:00:09Z"),},
 }
 ```
 
 ### SELECTing a set of entity map keys FROM entity tree key:
-Differently from SQL, WQL requires the keys to be inside a set like `#{a, b, c,}`, which will return only the keys `a, b, c`. It is equivalent to `SELECT a, b, c FROM table`. 
+Differently from SQL, WQL requires the keys to be inside a set like `#{a, b, c,}`, which will return only the keys `a, b, c`. It is equivalent to `SELECT a, b, c FROM table`.
 
-Example request: `SELECT #{a, b, c,} FROM my_entity_name`. 
+Example request: `SELECT #{a, b, c,} FROM my_entity_name`.
 
 Example response:
 ```rust
 {
-    48c7640e-9287-468a-a07c-2fb00da5eaed: 
-        {a: 123, b: 43.3, c: "hello",}, 
-    57c7640e-9287-448a-d07c-3db01da5earg: 
-        {a: 456, b: 73.3, c: "hello",}, 
-    54k6640e-5687-445a-d07c-5hg61da5earg: 
+    48c7640e-9287-468a-a07c-2fb00da5eaed:
+        {a: 123, b: 43.3, c: "hello",},
+    57c7640e-9287-448a-d07c-3db01da5earg:
+        {a: 456, b: 73.3, c: "hello",},
+    54k6640e-5687-445a-d07c-5hg61da5earg:
         {a: 789, b: 93.3, c: "hello",},
 }
 ``` 
 
 ### SELECTing one entity map FROM entity tree key:
-Select one entity map (by its ID) from entity tree `my_entity`. By including the key `ID` after the `FROM entity_name` it is possible to select a single entity. The content for `ID`is the entity id's Uuid. It is equivalent to SQL's `Select * From table WHERE id = <uuid>`. 
+Select one entity map (by its ID) from entity tree `my_entity`. By including the key `ID` after the `FROM entity_name` it is possible to select a single entity. The content for `ID` is the entity id's Uuid. It is equivalent to SQL's `Select * From table WHERE id = <uuid>`.
 
-Example request `SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed`. 
+Example request `SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed`.
 
 Example response:
 > It will return only the entity map contained inside inside entity id `48c7640e-9287-468a-a07c-2fb00da5eaed`.
@@ -107,28 +107,28 @@ Example response:
 ### SELECTing a set of entities IDs and maps FROM entity tree key:
 Select a few entities maps (by their IDs) from entity tree `my_entity`. Key `IN` receives a set of Uuids
 
-Example request: 
+Example request:
 ```sql
 SELECT #{a, b, c,} 
-FROM my_entity_name 
+FROM my_entity_name
 IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg}
 ```
-  
+
 Example response:
 ```rust
 {
-    48c7640e-9287-468a-a07c-2fb00da5eaed: 
-        {a: 123, b: 43.3, c: "hello",}, 
-    57c7640e-9287-448a-d07c-3db01da5earg: 
-        {a: 456, b: 73.3, c: "hello",}, 
+    48c7640e-9287-468a-a07c-2fb00da5eaed:
+        {a: 123, b: 43.3, c: "hello",},
+    57c7640e-9287-448a-d07c-3db01da5earg:
+        {a: 456, b: 73.3, c: "hello",},
 }
 ```
 
 ### SELECTing the last entity map for entity id at DATETIME<UTC> FROM entity tree key:
-Select an entity on a defined past day using the `WHEN AT` keys.  Key `WHEN AT` is the date to search. Time will be discarded. The `ID` field can be used before `WHEN` to define a specific entity id, `IDS IN` is not supported. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`. 
+Select an entity on a defined past day using the `WHEN AT` keys. Key `WHEN AT` is the date to search. Time will be discarded. The `ID` field can be used before `WHEN` to define a specific entity id, `IDS IN` is not supported. Date format should be `"2014-11-28T21:00:09+09:00"` or `"2014-11-28T21:00:09Z"`.
   
-Example requests: 
-* `Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00` 
+Example requests:
+* `Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00`
 * OR `Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z`.
 
 Example response:
@@ -138,30 +138,30 @@ Example response:
 - [ ] Support `IDS IN`
 
 ### SELECTing all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:
-Select all occurrences of an entity id from entity tree `entity_name` in a time range. The time range must be on the same day as `WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`. 
+Select all occurrences of an entity id from entity tree `entity_name` in a time range. The time range must be on the same day as `WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z`.
 
 - Key `WHEN` defines it as a temporal query.
 - Key `START` is the `DateTime<Utc>` to start the range query.
 - Key `END` is the `DateTime<Utc>` to end the range query.
 - Same day validation occurs. Returning the error message `"START date and END date should be the same date."`.
-- `IDS IN` will not be supported as the wuery is too extensive.
+- `IDS IN` will not be supported as the query is too extensive.
   
-Example request: 
+Example request:
 ```sql
-SELECT #{a, b, c, d} 
-FROM entity_name 
-ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 
+SELECT #{a, b, c, d}
+FROM entity_name
+ID 0a1b16ed-886c-4c99-97c9-0b977778ec13
 WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
-``` 
+```
 
 Example response:
 ```rust
 {
-    "2014-11-28T09:00:09Z": 
+    "2014-11-28T09:00:09Z":
         {a: 34, b: 4.3, c: "hello", d: "Julia",},
-    "2014-11-28T13:00:09Z": 
+    "2014-11-28T13:00:09Z":
         {a: 23, b: -3.3, c: "hello", d: "World",},
-    "2014-11-28T19:00:09Z": 
+    "2014-11-28T19:00:09Z":
         {a: 78, b: 67.3, c: "hello", d: "Julia",},
     "2014-11-28T21:00:09Z":
         {a: 123, b: 43.3, c: "hello", d: "Gasp",},
@@ -172,16 +172,16 @@ Example response:
 This is probably the most different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. Selects entities ids and maps with positive WHERE clauses. Key `WHERE` receives all clauses inside a `{...}` block.
 
 To use `select` with the `where` clause you can use the following expression:
-* `SELECT * FROM my_entity WHERE {<clauses>}` 
+* `SELECT * FROM my_entity WHERE {<clauses>}`
 
 #### Example 1:
 Example Request:
 ```sql
-SELECT * FROM test_entity 
+SELECT * FROM test_entity
 WHERE {
-    ?* test_entity:age ?age, 
-    ?* test_entity:race ?race, 
-    (> ?age 25), 
+    ?* test_entity:age ?age,
+    ?* test_entity:race ?race,
+    (> ?age 25),
     (in ?race "Black" "brown"),
 }
 ```
@@ -208,9 +208,9 @@ Example response:
 #### Example 2:
 Example request:
 ```sql
-SELECT * FROM test_entity 
+SELECT * FROM test_entity
 WHERE {
-    ?* test_entity:age ?age, 
+    ?* test_entity:age ?age,
     (between ?age 18 27),
 }
 ```
@@ -230,4 +230,3 @@ Example response:
 
 #### TODOs:
 - [ ] Support temporality for where clause
-
