@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use crate::{core::pretty_config_output, model::error::Error, schemas::pretty_config};
+use crate::{core::pretty_config_output, model::error::Error};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -16,11 +16,6 @@ impl CountResponse {
     pub fn new(count: usize, response: String) -> Self {
         Self { count, response }
     }
-
-    // pub fn to_response(count: usize, response: String) -> Result<String, Error> {
-    //     let resp = Self { count, response };
-    //     Ok(ron::ser::to_string_pretty(&resp, pretty_config())?)
-    // }
 }
 
 pub enum Response {
