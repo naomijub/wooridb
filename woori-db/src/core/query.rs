@@ -12,8 +12,6 @@ use crate::{
     schemas::query::{CountResponse, Response as QueryResponse},
 };
 
-use super::pretty_config_inner;
-
 pub(crate) fn get_limit_offset_count(
     functions: &HashMap<String, wql::Algebra>,
 ) -> (usize, usize, bool) {
@@ -134,11 +132,7 @@ pub(crate) fn get_result_after_manipulation(
         }
         if should_count {
             let size = states.len();
-            Ok(CountResponse::new(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
-            .into())
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
             Ok(states.into())
         }
@@ -196,11 +190,7 @@ pub(crate) fn get_result_after_manipulation(
         } else {
             if should_count {
                 let size = groups.keys().len();
-                Ok(CountResponse::new(
-                    size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
-                )
-                .into())
+                Ok(CountResponse::new(size, groups.into()).into())
             } else {
                 Ok(groups.into())
             }
@@ -208,11 +198,7 @@ pub(crate) fn get_result_after_manipulation(
     } else {
         if should_count {
             let size = states.keys().len();
-            Ok(CountResponse::new(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
-            .into())
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
             Ok(states.into())
         }
@@ -250,11 +236,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
         }
         if should_count {
             let size = states.len();
-            Ok(CountResponse::new(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
-            .into())
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
             Ok(states.into())
         }
@@ -324,11 +306,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
         } else {
             if should_count {
                 let size = groups.keys().len();
-                Ok(CountResponse::new(
-                    size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
-                )
-                .into())
+                Ok(CountResponse::new(size, groups.into()).into())
             } else {
                 Ok(groups.into())
             }
@@ -336,11 +314,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
     } else {
         if should_count {
             let size = states.keys().len();
-            Ok(CountResponse::new(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
-            .into())
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
             Ok(states.into())
         }
