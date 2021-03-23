@@ -1,4 +1,4 @@
-use crate::schemas::pretty_config;
+use crate::core::pretty_config_output;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -14,7 +14,7 @@ impl CreateEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config())
+        ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
@@ -36,7 +36,7 @@ impl InsertEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config())
+        ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
@@ -58,7 +58,7 @@ impl DeleteOrEvictEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config())
+        ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }
@@ -82,7 +82,7 @@ impl UpdateEntityResponse {
     }
 
     pub fn write(&self) -> String {
-        ron::ser::to_string_pretty(self, pretty_config())
+        ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
 }

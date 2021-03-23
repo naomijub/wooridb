@@ -7,9 +7,10 @@ use rayon::prelude::*;
 use uuid::Uuid;
 use wql::{Algebra, Types};
 
-use crate::{model::error::Error, schemas::query::CountResponse};
-
-use super::{pretty_config_inner, pretty_config_output};
+use crate::{
+    model::error::Error,
+    schemas::query::{CountResponse, Response as QueryResponse},
+};
 
 pub(crate) fn get_limit_offset_count(
     functions: &HashMap<String, wql::Algebra>,
@@ -109,7 +110,7 @@ pub(crate) fn get_result_after_manipulation(
     states: BTreeMap<Uuid, HashMap<String, Types>>,
     functions: HashMap<String, wql::Algebra>,
     should_count: bool,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     if let (Some(Algebra::OrderBy(k, ord)), None) = (functions.get("ORDER"), functions.get("GROUP"))
     {
         let mut states = states
@@ -131,12 +132,9 @@ pub(crate) fn get_result_after_manipulation(
         }
         if should_count {
             let size = states.len();
-            CountResponse::to_response(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
-            Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+            Ok(states.into())
         }
     } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
         let mut groups: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>> = HashMap::new();
@@ -174,10 +172,7 @@ pub(crate) fn get_result_after_manipulation(
                     })
                     .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
 
-                Ok(ron::ser::to_string_pretty(
-                    &group_states,
-                    pretty_config_output(),
-                )?)
+                Ok(group_states.into())
             } else {
                 let group_states = group_states
                     .iter_mut()
@@ -190,31 +185,22 @@ pub(crate) fn get_result_after_manipulation(
                         (key.to_owned(), states.to_owned())
                     })
                     .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
-                Ok(ron::ser::to_string_pretty(
-                    &group_states,
-                    pretty_config_output(),
-                )?)
+                Ok(group_states.into())
             }
         } else {
             if should_count {
                 let size = groups.keys().len();
-                CountResponse::to_response(
-                    size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
-                )
+                Ok(CountResponse::new(size, groups.into()).into())
             } else {
-                Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+                Ok(groups.into())
             }
         }
     } else {
         if should_count {
             let size = states.keys().len();
-            CountResponse::to_response(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
-            Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+            Ok(states.into())
         }
     }
 }
@@ -223,7 +209,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
     states: BTreeMap<Uuid, Option<HashMap<String, Types>>>,
     functions: HashMap<String, wql::Algebra>,
     should_count: bool,
-) -> Result<String, Error> {
+) -> Result<QueryResponse, Error> {
     if let (Some(Algebra::OrderBy(k, ord)), None) = (functions.get("ORDER"), functions.get("GROUP"))
     {
         let states = states
@@ -250,12 +236,9 @@ pub(crate) fn get_result_after_manipulation_for_options(
         }
         if should_count {
             let size = states.len();
-            CountResponse::to_response(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
-            Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+            Ok(states.into())
         }
     } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
         let mut groups: HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>> =
@@ -305,10 +288,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
                     })
                     .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
 
-                Ok(ron::ser::to_string_pretty(
-                    &group_states,
-                    pretty_config_output(),
-                )?)
+                Ok(group_states.into())
             } else {
                 let group_states = group_states
                     .iter_mut()
@@ -321,31 +301,22 @@ pub(crate) fn get_result_after_manipulation_for_options(
                         (key.to_owned(), states.to_owned())
                     })
                     .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
-                Ok(ron::ser::to_string_pretty(
-                    &group_states,
-                    pretty_config_output(),
-                )?)
+                Ok(group_states.into())
             }
         } else {
             if should_count {
                 let size = groups.keys().len();
-                CountResponse::to_response(
-                    size,
-                    ron::ser::to_string_pretty(&groups, pretty_config_inner())?,
-                )
+                Ok(CountResponse::new(size, groups.into()).into())
             } else {
-                Ok(ron::ser::to_string_pretty(&groups, pretty_config_output())?)
+                Ok(groups.into())
             }
         }
     } else {
         if should_count {
             let size = states.keys().len();
-            CountResponse::to_response(
-                size,
-                ron::ser::to_string_pretty(&states, pretty_config_inner())?,
-            )
+            Ok(CountResponse::new(size, states.into()).into())
         } else {
-            Ok(ron::ser::to_string_pretty(&states, pretty_config_output())?)
+            Ok(states.into())
         }
     }
 }
