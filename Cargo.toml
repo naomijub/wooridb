@@ -13,6 +13,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 test_read = []
+history = []
+json = ["serde_json"]
 
 [[bin]]
 name = "wooridb"
@@ -25,7 +27,6 @@ actix-rt = "1.1.1"
 actix-http = "2.2.0"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
 serde = { version = "1.0.121", features = ["derive"] }
-serde_json = "1.0.61"
 serde_derive = "1.0.121"
 rayon = "1.5"
 num_cpus = "1.13"
@@ -40,6 +41,7 @@ glob = "0.3.0"
 zstd = "0.6.0+zstd.1.4.8"
 bcrypt = "0.8"
 actix-web-httpauth = "0.5.0"
+serde_json = { version = "1.0", optional = true }
 
 [dev-dependencies]
 bytes = "1.0.1"

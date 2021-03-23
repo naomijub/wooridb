@@ -85,6 +85,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::All(state) => {
@@ -92,6 +96,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::Order(state) => {
@@ -99,6 +107,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::GroupBy(state) => {
@@ -106,6 +118,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::OrderedGroupBy(state) => {
@@ -113,6 +129,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::OptionOrder(state) => {
@@ -120,6 +140,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::OptionGroupBy(state) => {
@@ -127,6 +151,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::OptionSelect(state) => {
@@ -134,6 +162,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::CheckValues(state) => {
@@ -141,6 +173,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::TimeRange(state) => {
@@ -148,6 +184,10 @@ impl CountResponse {
                     count,
                     response: state,
                 };
+                #[cfg(feature = "json")]
+                return Ok(serde_json::to_string(&resp)?);
+
+                #[cfg(not(feature = "json"))]
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
             Response::DateSelect(state) => {

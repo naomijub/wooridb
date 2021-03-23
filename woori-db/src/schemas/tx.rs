@@ -14,6 +14,9 @@ impl CreateEntityResponse {
     }
 
     pub fn write(&self) -> String {
+        #[cfg(feature = "json")]
+        return serde_json::to_string(self).unwrap_or_else(|_| "SERVER ERROR".to_string());
+        #[cfg(not(feature = "json"))]
         ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
@@ -36,6 +39,9 @@ impl InsertEntityResponse {
     }
 
     pub fn write(&self) -> String {
+        #[cfg(feature = "json")]
+        return serde_json::to_string(self).unwrap_or_else(|_| "SERVER ERROR".to_string());
+        #[cfg(not(feature = "json"))]
         ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
@@ -58,6 +64,9 @@ impl DeleteOrEvictEntityResponse {
     }
 
     pub fn write(&self) -> String {
+        #[cfg(feature = "json")]
+        return serde_json::to_string(self).unwrap_or_else(|_| "SERVER ERROR".to_string());
+        #[cfg(not(feature = "json"))]
         ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }
@@ -82,6 +91,9 @@ impl UpdateEntityResponse {
     }
 
     pub fn write(&self) -> String {
+        #[cfg(feature = "json")]
+        return serde_json::to_string(self).unwrap_or_else(|_| "SERVER ERROR".to_string());
+        #[cfg(not(feature = "json"))]
         ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_string())
     }

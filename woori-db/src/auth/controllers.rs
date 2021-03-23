@@ -19,6 +19,12 @@ use super::{
 };
 
 pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Responder {
+    #[cfg(feature = "json")]
+    let credentials: Result<CreateUserWithAdmin, Error> = match serde_json::from_str(&body) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Error::SerdeJson(e)),
+    };
+    #[cfg(not(feature = "json"))]
     let credentials: Result<CreateUserWithAdmin, Error> = match from_str(&body) {
         Ok(x) => Ok(x),
         Err(e) => Err(Error::Ron(e)),
@@ -33,6 +39,13 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
                     let user_response = UserId {
                         user_id: new_user_id,
                     };
+                    #[cfg(feature = "json")]
+                    match serde_json::to_string(&user_response) {
+                        Ok(ron) => HttpResponse::Created().body(ron),
+                        Err(_) => HttpResponse::ServiceUnavailable()
+                            .body(Error::FailedToCreateUser.to_string()),
+                    }
+                    #[cfg(not(feature = "json"))]
                     match ron::ser::to_string_pretty(&user_response, pretty_config_output()) {
                         Ok(ron) => HttpResponse::Created().body(ron),
                         Err(_) => HttpResponse::ServiceUnavailable()
@@ -55,6 +68,12 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
 }
 
 pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Responder {
+    #[cfg(feature = "json")]
+    let credentials: Result<DeleteUsersWithAdmin, Error> = match serde_json::from_str(&body) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Error::SerdeJson(e)),
+    };
+    #[cfg(not(feature = "json"))]
     let credentials: Result<DeleteUsersWithAdmin, Error> = match from_str(&body) {
         Ok(x) => Ok(x),
         Err(e) => Err(Error::Ron(e)),
@@ -63,10 +82,17 @@ pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Res
     if let Ok(cred) = credentials {
         if admin.is_valid_hash(&cred.admin_password, &cred.admin_id) {
             if io::remove_users_from_log(&cred.users_ids).is_ok() {
-                match ron::ser::to_string_pretty(&cred.users_ids, pretty_config_output()) {
-                    Ok(ron) => HttpResponse::Ok().body(ron),
+                #[cfg(feature = "json")]
+                match serde_json::to_string(&cred.users_ids) {
+                    Ok(ron) => HttpResponse::Created().body(ron),
                     Err(_) => HttpResponse::ServiceUnavailable()
-                        .body(Error::FailedToDeleteUsers.to_string()),
+                        .body(Error::FailedToCreateUser.to_string()),
+                }
+                #[cfg(not(feature = "json"))]
+                match ron::ser::to_string_pretty(&cred.users_ids, pretty_config_output()) {
+                    Ok(ron) => HttpResponse::Created().body(ron),
+                    Err(_) => HttpResponse::ServiceUnavailable()
+                        .body(Error::FailedToCreateUser.to_string()),
                 }
             } else {
                 HttpResponse::ServiceUnavailable().body(Error::FailedToDeleteUsers.to_string())
@@ -85,6 +111,12 @@ pub async fn put_user_session(
     body: String,
     session_context: web::Data<Arc<Mutex<SessionContext>>>,
 ) -> impl Responder {
+    #[cfg(feature = "json")]
+    let ok_user: Result<super::schemas::User, Error> = match serde_json::from_str(&body) {
+        Ok(x) => Ok(x),
+        Err(e) => Err(Error::Unknown),
+    };
+    #[cfg(not(feature = "json"))]
     let ok_user: Result<super::schemas::User, Error> = match ron::de::from_str(&body) {
         Ok(u) => Ok(u),
         Err(_) => Err(Error::Unknown),
