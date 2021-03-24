@@ -6,6 +6,8 @@ pub mod clauses_test;
 pub(crate) mod entity_history;
 #[cfg(all(test, feature = "history"))]
 pub mod entity_history_test;
+#[cfg(all(test, feature = "history", feature = "json"))]
+pub mod json_history_test;
 pub(crate) mod query;
 #[cfg(test)]
 pub mod query_test;
