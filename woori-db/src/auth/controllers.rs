@@ -114,13 +114,17 @@ pub async fn put_user_session(
     #[cfg(feature = "json")]
     let ok_user: Result<super::schemas::User, Error> = match serde_json::from_str(&body) {
         Ok(x) => Ok(x),
-        Err(_) => Err(Error::Unknown),
+        Err(e) => {
+            println!("{:?}", e);
+            Err(Error::Unknown)
+        }
     };
     #[cfg(not(feature = "json"))]
     let ok_user: Result<super::schemas::User, Error> = match ron::de::from_str(&body) {
         Ok(u) => Ok(u),
         Err(_) => Err(Error::Unknown),
     };
+
     if let Ok(user) = ok_user {
         let user_registry = io::find_user(user.clone()).await;
         if let Ok(reg) = user_registry {

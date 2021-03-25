@@ -13,6 +13,14 @@ debug:
 	cargo package --manifest-path wql/Cargo.toml
 	cargo run --manifest-path woori-db/Cargo.toml
 
+json:
+	cargo package --manifest-path wql/Cargo.toml
+	cargo run --manifest-path woori-db/Cargo.toml --release --features json
+
+history:
+	cargo package --manifest-path wql/Cargo.toml
+	cargo run --manifest-path woori-db/Cargo.toml --release --features history
+
 push:
 	docker build -t naomijubs/wooridb:$(tag) .
 	docker push naomijubs/wooridb:$(tag)
