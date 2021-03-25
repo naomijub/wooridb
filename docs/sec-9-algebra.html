@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html" class="active"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html" class="active"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li><li class="chapter-item expanded "><a href="sec-11-json.html"><strong aria-hidden="true">11.</strong> Using Json</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -184,7 +184,7 @@
 <li><code>SELECT */#{...} FROM  tree_key_name IDS IN #{...}</code></li>
 </ul>
 <h2 id="group-by"><a class="header" href="#group-by"><code>GROUP BY</code></a></h2>
-<p>This groups the responses of the select query in the following type <code>HashMap&lt;String, BTreeMap&lt;Uuid, HashMap&lt;String, Types&gt;&gt;&gt;</code> (for <code>group by</code> associated with <code>order by</code> the type is <code>HashMap&lt;String, Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;&gt;</code>). So the query <code>SELECT * FROM key GROUP BY c</code>for the following 6 entities:</p>
+<p>This groups the responses of the select query in the following type <code>HashMap&lt;String, BTreeMap&lt;Uuid, HashMap&lt;String, Types&gt;&gt;&gt;</code> (for <code>group by</code> associated with <code>order by</code> the type is <code>HashMap&lt;String, Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;&gt;</code>). So the query <code>SELECT * FROM key GROUP BY c</code> for the following 6 entities:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -240,7 +240,7 @@
 </span></code></pre></pre>
 <ul>
 <li><input disabled="" type="checkbox"/>
-<a href="https://github.com/naomijub/wooridb/issues/101">Order By with multiple arguments</a>. The problem here is how to have multiple <code>.and_then(...)</code> alter de <code>partial_cmp</code>.</li>
+<a href="https://github.com/naomijub/wooridb/issues/101">Order By with multiple arguments</a>. The problem here is how to have multiple <code>.and_then(...)</code> alter the <code>partial_cmp</code>.</li>
 </ul>
 <h2 id="dedup"><a class="header" href="#dedup"><code>DEDUP</code></a></h2>
 <p>This functios is capable of removing duplicates key-values in responses. By using <code>SELECT * FROM key DEDUP a</code> for the following 6 entities:</p>

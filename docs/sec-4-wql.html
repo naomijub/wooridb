@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html" class="active"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html" class="active"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li><li class="chapter-item expanded "><a href="sec-11-json.html"><strong aria-hidden="true">11.</strong> Using Json</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -185,20 +185,20 @@
 </ul>
 </li>
 <li><a href="#match-update"><code>MATCH UPDATE</code></a> updates entity map content with new content if match condition is satisfied.</li>
-<li><a href="#delete"><code>DELETE</code></a>s the last entity map content for and entity id.</li>
+<li><a href="#delete"><code>DELETE</code></a>s the last entity map content for an entity id.</li>
 <li><a href="#evict"><code>EVICT</code></a>
 <ul>
-<li>Evicts specific entity id and entity map</li>
+<li>Evicts a specific entity id and entity map</li>
 <li>Evicts all entities in the entity tree key.</li>
 </ul>
 </li>
 </ul>
 <p><strong>Queries</strong></p>
 <ul>
-<li><a href="#select"><code>SELECT</code></a> the only way to retrieve entity's content.
+<li><a href="#select"><code>SELECT</code></a> the only way to retrieve an entity's content.
 <ul>
 <li><a href="#where-clause"><code>WHERE</code></a> clause is available.</li>
-<li><code>WHEN</code> clause is availbale</li>
+<li><code>WHEN</code> clause is available</li>
 </ul>
 </li>
 <li><a href="#check"><code>CHECK</code></a> the only way to verify keys that are encrypted.</li>
@@ -212,8 +212,8 @@
 <ul>
 <li><code>CREATE ENTITY my_entity</code> this will create an entity tree key named <code>my_entity</code>, in SQL terms it means <code>CREATE TABLE my_entity</code>.</li>
 <li><code>CREATE ENTITY my_entity UNIQUES #{name, ssn,}</code> the entity tree key named <code>my_entity</code> will only allow unique values for the entities keys <code>name</code> and <code>ssn</code> in its maps.</li>
-<li><code>CREATE ENTITY my_entity ENCRYPTS #{pswd,}</code> the entity tree key named <code>my_entity</code> will encrypt the entities keys that are <code>pswd</code>. The hashing cost of the encrypt is defined by the environment variable <code>HASHING_COST</code>, recommended is between 10 and 14.</li>
-<li>Encryted keys cannot be uniques so <code>CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}</code> is invalid but <code>CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}</code> is valid.</li>
+<li><code>CREATE ENTITY my_entity ENCRYPTS #{pswd,}</code> the entity tree key named <code>my_entity</code> will encrypt the entities keys that are <code>pswd</code>. The hashing cost of the encrypt is defined by the environment variable <code>HASHING_COST</code>, the recommended is between 10 and 14.</li>
+<li>Encrypted keys cannot be unique so <code>CREATE ENTITY my_entity UNIQUES #{name, ssn, pswd,} ENCRYPTS #{pswd,}</code> is invalid but <code>CREATE ENTITY my_entity UNIQUES #{name, ssn,} ENCRYPTS #{pswd,}</code> is valid.</li>
 </ul>
 <h3 id="insert"><a class="header" href="#insert">INSERT</a></h3>
 <p>Inserts an entity id and an entity map into entity tree key.</p>
@@ -227,12 +227,12 @@
 <li><code>UPDATE my_entity_name SET {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will replace the current entity map stored in entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</li>
 </ul>
 <h3 id="update-content"><a class="header" href="#update-content">UPDATE CONTENT</a></h3>
-<p>Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>. Non numerical or non string value will just be replaced. If key doesn't  exist it will be created.</p>
+<p>Updates the content by numerical addition or string concatenation of the previous entity map in entity tree key <code>my_entity_name</code> with the entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>. Non numerical or non string value will just be replaced. If the key doesn't exist it will be created.</p>
 <ul>
 <li><code>UPDATE my_entity_name CONTENT {a: -4, b: 32,} INTO 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will add <code>-4</code> to entity map key <code>a</code> and add <code>32</code> to entity map key <code>b</code> in the current entity map stored in entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</li>
 </ul>
 <h3 id="match-update"><a class="header" href="#match-update">MATCH UPDATE</a></h3>
-<p>Similar to SET, but it requires a pre-condition to be satisfied.</p>
+<p>Similar to SET, but it requires a precondition to be satisfied.</p>
 <ul>
 <li><code>MATCH ALL(a == 1, b &gt;= 3, c != \&quot;hello\&quot;, d &lt; 7,) UPDATE this_entity SET {a: 123, g: NiL,} INTO d6ca73c0-41ff-4975-8a60-fc4a061ce536</code> if all conditions defined inside <code>ALL</code> are satisfied the set update will happen.
 <ul>
@@ -241,12 +241,12 @@
 <li><strong>NULL KEYS</strong>, <code>ALL</code> returns an error if a null key is present and <code>ANY</code> just ignores null keys.</li>
 <li>Possible conditions are:
 <ul>
-<li><code>==</code> means equals, so if <code>a == 100</code>, this means that the entity map key <code>a</code> must equals to <code>100</code>.</li>
-<li><code>!=</code> means not equals, so if <code>a != 100</code>, this means that the entity map key <code>a</code> must not equals to <code>100</code>.</li>
-<li><code>&gt;=</code> means greater or equal, so if <code>a &gt;= 100</code>, this means that the entity map key <code>a</code> must br greater or equals to <code>100</code>.</li>
-<li><code>&lt;=</code> means lesser or equal, so if <code>a &lt;= 100</code>, this means that the entity map key <code>a</code> must be lesser or equals to <code>100</code>.</li>
-<li><code>&gt;</code> means greater, so if <code>a &gt; 100</code>, this means that the entity map key <code>a</code> must be greater than <code>100</code>. </li>
-<li><code>&lt;</code> means lesser, so if <code>a &lt; 100</code>, this means that the entity map key <code>a</code> must be lesser than <code>100</code>.</li>
+<li><code>==</code> means equals, so if <code>a == 100</code>, this means that the entity map key <code>a</code> must equal to <code>100</code>.</li>
+<li><code>!=</code> means not equal, so if <code>a != 100</code>, this means that the entity map key <code>a</code> must not equal to <code>100</code>.</li>
+<li><code>&gt;=</code> means greater or equal, so if <code>a &gt;= 100</code>, this means that the entity map key <code>a</code> must br greater or equal to <code>100</code>.</li>
+<li><code>&lt;=</code> means lesser or equal, so if <code>a &lt;= 100</code>, this means that the entity map key <code>a</code> must be lesser or equal to <code>100</code>.</li>
+<li><code>&gt;</code> means greater, so if <code>a &gt; 100</code>, this means that the entity map key <code>a</code> must be greater than <code>100</code>.</li>
+<li><code>&lt;</code> means lesser, so if <code>a &lt; 100</code>, this means that the entity map key <code>a</code> must be less than <code>100</code>.</li>
 </ul>
 </li>
 </ul>
@@ -264,13 +264,13 @@
 <li><code>EVICT my_entity</code> removes the key <code>my_entity</code> from the entity tree. It cannot be queried anymore. It is similar to SQL's <code>DROP TABLE my_entity</code>.</li>
 </ul>
 <h3 id="check"><a class="header" href="#check">CHECK</a></h3>
-<p>Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves  as a way to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data. </p>
+<p>Checks for encrypted key data validity. This transaction only works with keys that are encrypted and it serves as a way to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data.</p>
 <ul>
 <li><code>CHECK {pswd: &quot;my-password&quot;, ssn: 3948453,} FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code> this will check if keys <code>psdw</code> and <code>ssn</code> from entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> in entity tree key <code>my_entity_name</code> have the values <code>&quot;my-password&quot;</code> for pswd and <code>3948453</code> for ssn.</li>
 </ul>
 <h3 id="select"><a class="header" href="#select">SELECT</a></h3>
 <p>This is the way to query entities from WooriDB. Similar to SQL and SparQL <code>SELECT</code>.</p>
-<p>Possible <code>SELECT</code>  combinantions:</p>
+<p>Possible <code>SELECT</code> combinations:</p>
 <ul>
 <li><code>SELECT * FROM my_entity_name</code> selects all entity ids and entity maps for the entity tree key <code>my_entity_name</code> with all the possible entities map keys.</li>
 <li><code>SELECT #{name, last_name, age,} FROM my_entity_name</code> selects all entity ids and entity maps for the entity tree key <code>my_entity_name</code> with only the keys <code>name, last_name, age</code> for the entities map.</li>
@@ -279,11 +279,11 @@
 <li><code>SELECT * FROM my_entity_name IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}</code> this will return the entities map containing the entities ids <code>#{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg, 54k6640e-5687-445a-d07c-5hg61da5earg,}</code> from entity tree key <code>my_entity_name</code>. Keys set is available.</li>
 <li><code>Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00</code> this will select the last entity map state for the entity id <code>0a1b16ed-886c-4c99-97c9-0b977778ec13</code> in entity tree key <code>my_entity</code> at date <code>2014-11-28</code>. Requires to use DateTime UTC, for now.</li>
 <li><code>SELECT * FROM entity_name ID &lt;uuid&gt; WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z</code> this will select the all entity map states for the entity id <code>0a1b16ed-886c-4c99-97c9-0b977778ec13</code> in entity tree key <code>my_entity</code> in the time range starting at <code>2014-11-28T09:00:09Z</code> and ending at <code>2014-11-28T21:00:09Z</code>.</li>
-<li><code>SELECT * FROM my_entity WHERE { ?* my_entity:a ?a, ?* my_entity:c ?c, (== ?a 123),(or (&gt;= ?c 4300.0), (&lt; ?c 6.9),),}</code> this will select all enitities ids and entities maps from entity tree key <code>my_entity</code> that satisfy the where clause.
+<li><code>SELECT * FROM my_entity WHERE { ?* my_entity:a ?a, ?* my_entity:c ?c, (== ?a 123),(or (&gt;= ?c 4300.0), (&lt; ?c 6.9),),}</code> this will select all entities ids and entities maps from entity tree key <code>my_entity</code> that satisfy the where clause.
 <ul>
-<li><code>?* my_entity:a ?a</code> and <code>?* my_entity:c ?c</code> define that the entity keys <code>a</code> and <code>c</code> from entity tree key <code>my_entity</code> will receive the attributed value <code>?a</code> and <code>?c</code> repectively.</li>
+<li><code>?* my_entity:a ?a</code> and <code>?* my_entity:c ?c</code> define that the entity keys <code>a</code> and <code>c</code> from entity tree key <code>my_entity</code> will receive the attributed value <code>?a</code> and <code>?c</code> respectively.</li>
 <li><code>(== ?a 123)</code> selects all entities which entity map key <code>a</code> is equal to <code>123</code>.</li>
-<li><code>(or (&gt;= ?c 4300.0), (&lt; ?c 6.9),)</code> selects all entities which entity map key <code>c</code> is greater or equal to <code>4300.0</code> <strong>or</strong> is smaller than <code>6.9</code>.</li>
+<li><code>(or (&gt;= ?c 4300.0), (&lt; ?c 6.9),)</code> selects all entities which entity map key <code>c</code> is greater than or equal to <code>4300.0</code> <strong>or</strong> is smaller than <code>6.9</code>.</li>
 </ul>
 </li>
 </ul>
@@ -344,7 +344,7 @@ Division</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <code>Integer(isize)</code> contains the type isize, just a number without <code>.</code>,</li>
 <li><input disabled="" type="checkbox" checked=""/>
-<code>String(String)</code> contains any value passed wuth <code>&quot;this is a string&quot;</code>,</li>
+<code>String(String)</code> contains any value passed with <code>&quot;this is a string&quot;</code>,</li>
 <li><input disabled="" type="checkbox" checked=""/>
 <code>Uuid(Uuid)</code> contains an <code>Uuid V4</code>,</li>
 <li><input disabled="" type="checkbox" checked=""/>

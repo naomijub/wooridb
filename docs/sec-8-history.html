@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html" class="active"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html" class="active"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li><li class="chapter-item expanded "><a href="sec-11-json.html"><strong aria-hidden="true">11.</strong> Using Json</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -168,8 +168,13 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="entity-history"><a class="header" href="#entity-history">Entity History</a></h1>
-<p>Entity history is one of the main features of WooriDB. It receives an <code>entity_key</code> name and an <code>entity_id</code> which will return the whole history of <code>(DateTime&lt;Utc&gt;, entity_map)</code> for the <code>entity_id</code> in the entity tree for key <code>entity_key</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/entity-history</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/entity-history -d '(entity_key: &quot;entity_tree_key&quot;, entity_id: &quot;&lt;some-Uuid&gt;&quot;,)'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint. </p>
-<p>Example request: </p>
+<p>Entity history is one of the main features of WooriDB. You can run it by using the <code>features</code> flag. To execute WooriDB with <code>history</code> feature enable execute:</p>
+<ul>
+<li><code>make history</code>, or;</li>
+<li><code>cargo run --manifest-path woori-db/Cargo.toml --release --features history</code></li>
+</ul>
+<p>It receives an <code>entity_key</code> name and an <code>entity_id</code> which will return the whole history of <code>(DateTime&lt;Utc&gt;, entity_map)</code> for the <code>entity_id</code> in the entity tree for key <code>entity_key</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/entity-history</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/entity-history -d '(entity_key: &quot;entity_tree_key&quot;, entity_id: &quot;&lt;some-Uuid&gt;&quot;,)'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>
+<p>Example request:</p>
 <pre><code class="language-ron">(entity_key: &quot;entity_tree_key&quot;, entity_id: &quot;dc3069e7-2a22-4fbc-ae05-f78a807239c0&quot;,)
 </code></pre>
 <p>Example response:</p>
@@ -213,11 +218,11 @@
 </ol>
 <h2 id="entity-history-with-time-ranges"><a class="header" href="#entity-history-with-time-ranges">Entity history with time ranges</a></h2>
 <p>There are two extra parameters that can be used with <code>entity-history</code>, they are <code>start_datetime</code> and <code>end_datetime</code>. Both parameters are optional and if they are present they will define the time limits of the query. <code>start_datetime</code> is the beginning of the time range query while <code>end_datetime</code> is the ending of the time range query. If we used <code>start_datetime</code> and <code>end_datetime</code> for the previous example as <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/entity-history -d '(entity_key: &quot;entity_tree_key&quot;, entity_id: &quot;&lt;some-Uuid&gt;&quot;, start_datetime: Some(&quot;2021-03-02T05:00:19.816357937Z&quot;), end_datetime: Some(&quot;2021-03-02T05:00:19.817189988Z&quot;),)'</code> we would have the following result:</p>
-<p>Example request: </p>
+<p>Example request:</p>
 <pre><code class="language-ron">(
-    entity_key: &quot;entity_tree_key&quot;, 
-    entity_id: &quot;dc3069e7-2a22-4fbc-ae05-f78a807239c0&quot;,  
-    start_datetime: Some(&quot;2021-03-02T05:00:19.816357937Z&quot;), 
+    entity_key: &quot;entity_tree_key&quot;,
+    entity_id: &quot;dc3069e7-2a22-4fbc-ae05-f78a807239c0&quot;,
+    start_datetime: Some(&quot;2021-03-02T05:00:19.816357937Z&quot;),
     end_datetime: Some(&quot;2021-03-02T05:00:19.817189988Z&quot;),
 )
 </code></pre>

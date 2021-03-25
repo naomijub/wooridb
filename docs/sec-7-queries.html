@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html" class="active"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="sec-1-introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="sec-2-installation.html"><strong aria-hidden="true">2.</strong> Installation and Important Information</a></li><li class="chapter-item expanded "><a href="sec-3-features.html"><strong aria-hidden="true">3.</strong> Features</a></li><li class="chapter-item expanded "><a href="sec-4-wql.html"><strong aria-hidden="true">4.</strong> WQL</a></li><li class="chapter-item expanded "><a href="sec-5-auth.html"><strong aria-hidden="true">5.</strong> Authorization and Authentication</a></li><li class="chapter-item expanded "><a href="sec-6-tx.html"><strong aria-hidden="true">6.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="sec-7-queries.html" class="active"><strong aria-hidden="true">7.</strong> Queries</a></li><li class="chapter-item expanded "><a href="sec-8-history.html"><strong aria-hidden="true">8.</strong> Entity History</a></li><li class="chapter-item expanded "><a href="sec-9-algebra.html"><strong aria-hidden="true">9.</strong> Relation Algebra</a></li><li class="chapter-item expanded "><a href="sec-10-errors.html"><strong aria-hidden="true">10.</strong> Errors Messages</a></li><li class="chapter-item expanded "><a href="sec-11-json.html"><strong aria-hidden="true">11.</strong> Using Json</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -172,19 +172,19 @@
 <blockquote>
 <p><strong>Reminder</strong>
 A comma is required at the end of every data structure representation.
-Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>. 
+Ex.: <code>{a: 123, b: 456,}</code>, <code>#{a, b, c,}</code>, <code>(a, b, c,)</code>.
 No need for <code>;</code> at the end of each expression.</p>
 </blockquote>
 <h2 id="check"><a class="header" href="#check"><code>CHECK</code></a></h2>
 <p><a href="./sec-4-wql.html#check">CHECK WQL Reference</a></p>
-<p>Checks for encrypted data, in entity map, validity. It requires an entity tree name after <code>FROM</code> and an entity id as Uuid after <code>ID</code>. This transaction only works with keys that are encrypted and it serves to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data. </p>
+<p>Checks for encrypted data, in entity map, validity. It requires an entity tree name after <code>FROM</code> and an entity id as Uuid after <code>ID</code>. This transaction only works with keys that are encrypted and it serves to verify if the passed values are <code>true</code> of <code>false</code> against encrypted data.</p>
 <p>Considering entity tree key <code>my_entity_name</code> with entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code> with entity map <code>{pswd: Hash(&quot;my-password&quot;), name: &quot;Julia&quot;}</code></p>
 <h3 id="example-1"><a class="header" href="#example-1">Example 1:</a></h3>
 <p>Example request: </p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;my-password\&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </code></pre>
-<p>Example  response:</p>
+<p>Example response:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -192,11 +192,11 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="exmample-2"><a class="header" href="#exmample-2">Exmample 2:</a></h3>
-<p>Example request: </p>
+<p>Example request:</p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;my-password\&quot;, ssn: &quot;1234&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </code></pre>
-<p>Example  response:</p>
+<p>Example response:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -207,11 +207,11 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="example-3"><a class="header" href="#example-3">Example 3:</a></h3>
-<p>Example request: </p>
+<p>Example request:</p>
 <pre><code class="language-sql">CHECK {pswd: \&quot;your-password\&quot;,} 
 FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </code></pre>
-<p>Example  response:</p>
+<p>Example response:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -225,8 +225,8 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <p><code>*</code> and <code>#{keys...}</code> can be used in all select modes.</p>
 </blockquote>
 <h3 id="selecting-all-entity-map-keys-from-entity-tree-key"><a class="header" href="#selecting-all-entity-map-keys-from-entity-tree-key">SELECTing all entity map keys FROM entity tree key:</a></h3>
-<p>Same as SQL using the token <code>*</code> will defined that all keys in the entity map will be returned. The query <code>SELECT * FROM entity_name</code> selects  all entity ids and entity maps found inside entity tree key <code>entity_name</code>. It is equivalent to SQL's <code>Select * From table</code>. </p>
-<p>Example request: <code>SELECT * from my_entity_name</code>. </p>
+<p>Same as SQL using the token <code>*</code> will defined that all keys in the entity map will be returned. The query <code>SELECT * FROM entity_name</code> selects all entity ids and entity maps found inside entity tree key <code>entity_name</code>. It is equivalent to SQL's <code>Select * From table</code>.</p>
+<p>Example request: <code>SELECT * from my_entity_name</code>.</p>
 <p>Example response:</p>
 <blockquote>
 <p>This query will return a <code>BTreeMap&lt;Uuid, HashMap&lt;String, Types&gt;&gt;</code></p>
@@ -235,35 +235,35 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>{
-  48c7640e-9287-468a-a07c-2fb00da5eaed: 
-    {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;world&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),}, 
-  57c7640e-9287-448a-d07c-3db01da5earg: 
-    {a: 456, b: 73.3, c: &quot;hello&quot;, d: &quot;brasil&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),}, 
-  54k6640e-5687-445a-d07c-5hg61da5earg: 
+  48c7640e-9287-468a-a07c-2fb00da5eaed:
+    {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;world&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),},
+  57c7640e-9287-448a-d07c-3db01da5earg:
+    {a: 456, b: 73.3, c: &quot;hello&quot;, d: &quot;brasil&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),},
+  54k6640e-5687-445a-d07c-5hg61da5earg:
     {a: 789, b: 93.3, c: &quot;hello&quot;, d: &quot;korea&quot;, tx_time: DateTime(&quot;2014-11-28T12:00:09Z&quot;),},
 }
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="selecting-a-set-of-entity-map-keys-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entity-map-keys-from-entity-tree-key">SELECTing a set of entity map keys FROM entity tree key:</a></h3>
-<p>Differently from SQL, WQL requires the keys to be inside a set like <code>#{a, b, c,}</code>, which will return only the keys <code>a, b, c</code>. It is equivalent to <code>SELECT a, b, c FROM table</code>. </p>
-<p>Example request: <code>SELECT #{a, b, c,} FROM my_entity_name</code>. </p>
+<p>Differently from SQL, WQL requires the keys to be inside a set like <code>#{a, b, c,}</code>, which will return only the keys <code>a, b, c</code>. It is equivalent to <code>SELECT a, b, c FROM table</code>.</p>
+<p>Example request: <code>SELECT #{a, b, c,} FROM my_entity_name</code>.</p>
 <p>Example response:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>{
-    48c7640e-9287-468a-a07c-2fb00da5eaed: 
-        {a: 123, b: 43.3, c: &quot;hello&quot;,}, 
-    57c7640e-9287-448a-d07c-3db01da5earg: 
-        {a: 456, b: 73.3, c: &quot;hello&quot;,}, 
-    54k6640e-5687-445a-d07c-5hg61da5earg: 
+    48c7640e-9287-468a-a07c-2fb00da5eaed:
+        {a: 123, b: 43.3, c: &quot;hello&quot;,},
+    57c7640e-9287-448a-d07c-3db01da5earg:
+        {a: 456, b: 73.3, c: &quot;hello&quot;,},
+    54k6640e-5687-445a-d07c-5hg61da5earg:
         {a: 789, b: 93.3, c: &quot;hello&quot;,},
 }
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="selecting-one-entity-map-from-entity-tree-key"><a class="header" href="#selecting-one-entity-map-from-entity-tree-key">SELECTing one entity map FROM entity tree key:</a></h3>
-<p>Select one entity map (by its ID) from entity tree <code>my_entity</code>. By including the key <code>ID</code> after the <code>FROM entity_name</code> it is possible to select a single entity. The content for <code>ID</code>is the entity id's Uuid. It is equivalent to SQL's <code>Select * From table WHERE id = &lt;uuid&gt;</code>. </p>
-<p>Example request <code>SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code>. </p>
+<p>Select one entity map (by its ID) from entity tree <code>my_entity</code>. By including the key <code>ID</code> after the <code>FROM entity_name</code> it is possible to select a single entity. The content for <code>ID</code> is the entity id's Uuid. It is equivalent to SQL's <code>Select * From table WHERE id = &lt;uuid&gt;</code>.</p>
+<p>Example request <code>SELECT * from my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed</code>.</p>
 <p>Example response:</p>
 <blockquote>
 <p>It will return only the entity map contained inside inside entity id <code>48c7640e-9287-468a-a07c-2fb00da5eaed</code>.
@@ -271,9 +271,9 @@ FROM my_entity_name ID 48c7640e-9287-468a-a07c-2fb00da5eaed
 </blockquote>
 <h3 id="selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key"><a class="header" href="#selecting-a-set-of-entities-ids-and-maps-from-entity-tree-key">SELECTing a set of entities IDs and maps FROM entity tree key:</a></h3>
 <p>Select a few entities maps (by their IDs) from entity tree <code>my_entity</code>. Key <code>IN</code> receives a set of Uuids</p>
-<p>Example request: </p>
+<p>Example request:</p>
 <pre><code class="language-sql">SELECT #{a, b, c,} 
-FROM my_entity_name 
+FROM my_entity_name
 IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5earg}
 </code></pre>
 <p>Example response:</p>
@@ -281,18 +281,18 @@ IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5e
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>{
-    48c7640e-9287-468a-a07c-2fb00da5eaed: 
-        {a: 123, b: 43.3, c: &quot;hello&quot;,}, 
-    57c7640e-9287-448a-d07c-3db01da5earg: 
-        {a: 456, b: 73.3, c: &quot;hello&quot;,}, 
+    48c7640e-9287-468a-a07c-2fb00da5eaed:
+        {a: 123, b: 43.3, c: &quot;hello&quot;,},
+    57c7640e-9287-448a-d07c-3db01da5earg:
+        {a: 456, b: 73.3, c: &quot;hello&quot;,},
 }
 <span class="boring">}
 </span></code></pre></pre>
 <h3 id="selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key"><a class="header" href="#selecting-the-last-entity-map-for-entity-id-at-datetimeutc-from-entity-tree-key">SELECTing the last entity map for entity id at DATETIME<UTC> FROM entity tree key:</a></h3>
-<p>Select an entity on a defined past day using the <code>WHEN AT</code> keys.  Key <code>WHEN AT</code> is the date to search. Time will be discarded. The <code>ID</code> field can be used before <code>WHEN</code> to define a specific entity id, <code>IDS IN</code> is not supported. Date format should be <code>&quot;2014-11-28T21:00:09+09:00&quot;</code> or <code>&quot;2014-11-28T21:00:09Z&quot;</code>. </p>
-<p>Example requests: </p>
+<p>Select an entity on a defined past day using the <code>WHEN AT</code> keys. Key <code>WHEN AT</code> is the date to search. Time will be discarded. The <code>ID</code> field can be used before <code>WHEN</code> to define a specific entity id, <code>IDS IN</code> is not supported. Date format should be <code>&quot;2014-11-28T21:00:09+09:00&quot;</code> or <code>&quot;2014-11-28T21:00:09Z&quot;</code>.</p>
+<p>Example requests:</p>
 <ul>
-<li><code>Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00</code> </li>
+<li><code>Select * FROM my_entity ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 WHEN AT 2014-11-28T21:00:09+09:00</code></li>
 <li>OR <code>Select #{name,id,} FROM my_entity WHEN AT 2014-11-28T21:00:09Z</code>.</li>
 </ul>
 <p>Example response:
@@ -303,18 +303,18 @@ IDS IN #{48c7640e-9287-468a-a07c-2fb00da5eaed, 57c7640e-9287-448a-d07c-3db01da5e
 Support <code>IDS IN</code></li>
 </ul>
 <h3 id="selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc"><a class="header" href="#selecting-all-entities-maps-by-id-from-entity-between-two-datetimeutc">SELECTing all entities maps BY ID FROM ENTITY between two DATETIME<UTC>:</a></h3>
-<p>Select all occurrences of an entity id from entity tree <code>entity_name</code> in a time range. The time range must be on the same day as <code>WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z</code>. </p>
+<p>Select all occurrences of an entity id from entity tree <code>entity_name</code> in a time range. The time range must be on the same day as <code>WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z</code>.</p>
 <ul>
 <li>Key <code>WHEN</code> defines it as a temporal query.</li>
 <li>Key <code>START</code> is the <code>DateTime&lt;Utc&gt;</code> to start the range query.</li>
 <li>Key <code>END</code> is the <code>DateTime&lt;Utc&gt;</code> to end the range query.</li>
 <li>Same day validation occurs. Returning the error message <code>&quot;START date and END date should be the same date.&quot;</code>.</li>
-<li><code>IDS IN</code> will not be supported as the wuery is too extensive.</li>
+<li><code>IDS IN</code> will not be supported as the query is too extensive.</li>
 </ul>
-<p>Example request: </p>
-<pre><code class="language-sql">SELECT #{a, b, c, d} 
-FROM entity_name 
-ID 0a1b16ed-886c-4c99-97c9-0b977778ec13 
+<p>Example request:</p>
+<pre><code class="language-sql">SELECT #{a, b, c, d}
+FROM entity_name
+ID 0a1b16ed-886c-4c99-97c9-0b977778ec13
 WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
 </code></pre>
 <p>Example response:</p>
@@ -322,11 +322,11 @@ WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>{
-    &quot;2014-11-28T09:00:09Z&quot;: 
+    &quot;2014-11-28T09:00:09Z&quot;:
         {a: 34, b: 4.3, c: &quot;hello&quot;, d: &quot;Julia&quot;,},
-    &quot;2014-11-28T13:00:09Z&quot;: 
+    &quot;2014-11-28T13:00:09Z&quot;:
         {a: 23, b: -3.3, c: &quot;hello&quot;, d: &quot;World&quot;,},
-    &quot;2014-11-28T19:00:09Z&quot;: 
+    &quot;2014-11-28T19:00:09Z&quot;:
         {a: 78, b: 67.3, c: &quot;hello&quot;, d: &quot;Julia&quot;,},
     &quot;2014-11-28T21:00:09Z&quot;:
         {a: 123, b: 43.3, c: &quot;hello&quot;, d: &quot;Gasp&quot;,},
@@ -337,15 +337,15 @@ WHEN START 2014-11-28T09:00:09Z END 2014-11-28T21:00:09Z
 <p>This is probably the most different part in relation to SQL as it is inspired by SparQL and Crux/Datomic datalog. Selects entities ids and maps with positive WHERE clauses. Key <code>WHERE</code> receives all clauses inside a <code>{...}</code> block.</p>
 <p>To use <code>select</code> with the <code>where</code> clause you can use the following expression:</p>
 <ul>
-<li><code>SELECT * FROM my_entity WHERE {&lt;clauses&gt;}</code> </li>
+<li><code>SELECT * FROM my_entity WHERE {&lt;clauses&gt;}</code></li>
 </ul>
 <h4 id="example-1-1"><a class="header" href="#example-1-1">Example 1:</a></h4>
 <p>Example Request:</p>
-<pre><code class="language-sql">SELECT * FROM test_entity 
+<pre><code class="language-sql">SELECT * FROM test_entity
 WHERE {
-    ?* test_entity:age ?age, 
-    ?* test_entity:race ?race, 
-    (&gt; ?age 25), 
+    ?* test_entity:age ?age,
+    ?* test_entity:race ?race,
+    (&gt; ?age 25),
     (in ?race &quot;Black&quot; &quot;brown&quot;),
 }
 </code></pre>
@@ -373,9 +373,9 @@ WHERE {
 </span></code></pre></pre>
 <h4 id="example-2"><a class="header" href="#example-2">Example 2:</a></h4>
 <p>Example request:</p>
-<pre><code class="language-sql">SELECT * FROM test_entity 
+<pre><code class="language-sql">SELECT * FROM test_entity
 WHERE {
-    ?* test_entity:age ?age, 
+    ?* test_entity:age ?age,
     (between ?age 18 27),
 }
 </code></pre>
