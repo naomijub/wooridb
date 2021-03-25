@@ -97,6 +97,14 @@ PORT=1438
 - `history_10_registries_for_entity`   time:   [23.732 ms 24.811 ms 25.982 ms]
 - `history_20_registries_for_entity`   time:   [26.011 ms 26.847 ms 27.690 ms]
 
+### WQL 
+> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+
+- `create_entity`           time:   [433.57 ns 435.00 ns 436.38 ns]
+- `inser_entity`            time:   [1.6349 us 1.6406 us 1.6463 us]
+- `select_all`              time:   [429.79 ns 431.05 ns 432.14 ns]
+- `select_args`             time:   [655.40 ns 657.53 ns 659.71 ns]
+
 
 ### artillery.io 
 > Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB

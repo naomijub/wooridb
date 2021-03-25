@@ -9,11 +9,15 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     c.bench_function("inser_entity", |b| {
-        b.iter(|| Wql::from_str("insert {a: 1} into my_entity"))
+        b.iter(|| Wql::from_str("insert {a: 1, b: 2.3, c: 'g', d: \"str\",} into my_entity"))
     });
 
     c.bench_function("select_all", |b| {
         b.iter(|| Wql::from_str("select * from my_entity"))
+    });
+
+    c.bench_function("select_args", |b| {
+        b.iter(|| Wql::from_str("select #{a, b, c,} from my_entity"))
     });
 }
 

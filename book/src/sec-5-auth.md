@@ -12,6 +12,8 @@ ADMIN_PASSWORD=your_password
 * `ADMIN` is the admin's user id.
 * `ADMIN_PASSWORD` is the admin's user password.
 
+One optional environment variable can be used to configure the time to expirate a session token. `SESSION_EXPIRATION_TIME` has a default value of 3600 seconds, or 1 hour.
+
 ## Creating new users
 * `ADMIN` is the only user role capable of creating new users. For now there can only be one `ADMIN`.
 
@@ -69,4 +71,3 @@ The response will be a vector containing all Uuids sent or an error `FailedToDel
 
 ### TODOs:
 * [ ] Adding other admins and removing admins is not yet implemented.
-* [ ] Configure session token expiration time.
