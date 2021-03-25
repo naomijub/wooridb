@@ -1,4 +1,4 @@
-use crate::schemas::pretty_config;
+use crate::core::pretty_config_output;
 use serde::Serialize;
 use std::fmt;
 
@@ -17,7 +17,7 @@ impl Response {
     }
 
     pub fn write(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let output = ron::ser::to_string_pretty(self, pretty_config())
+        let output = ron::ser::to_string_pretty(self, pretty_config_output())
             .unwrap_or_else(|_| "SERVER ERROR".to_owned());
         write!(f, "{}", output)
     }

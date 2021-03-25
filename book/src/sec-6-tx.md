@@ -37,7 +37,7 @@ bench_cost_default ... bench: 195,344,338 ns/iter (+/- 8,329,675)
 ## `INSERT`
 [INSERT WQL Reference](./sec-4-wql.md#insert)
 
-Inserts a **HashMap<String, [Types](./sec-4-wql.md#entity-map-value-types)>**  into the entity tree key previously created (`my_entity_name`). This request returns a `Uuid` containing the entity id. 
+Inserts a **HashMap<String, [Types](./sec-4-wql.md#entity-map-value-types)>** into the entity tree key previously created (`my_entity_name`). This request returns a `Uuid` containing the entity id. 
 
 Example request: 
 ```sql

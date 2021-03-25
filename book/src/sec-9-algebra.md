@@ -14,7 +14,7 @@ This functions are only supported by the following select queries:
 - `SELECT */#{...} FROM  tree_key_name IDS IN #{...}`
 
 ##  `GROUP BY`
-This groups the responses of the select query in the following type `HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>` (for `group by` associated with `order by` the type is `HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>`). So the query `SELECT * FROM key GROUP BY c`for the following 6 entities:
+This groups the responses of the select query in the following type `HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>` (for `group by` associated with `order by` the type is `HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>`). So the query `SELECT * FROM key GROUP BY c` for the following 6 entities:
 
 ```rust
 {a: 123, b: 12.3,}
@@ -61,7 +61,7 @@ Will produce the response:
 ]
 ```
 
-- [ ] [Order By with multiple arguments](https://github.com/naomijub/wooridb/issues/101). The problem here is how to have multiple `.and_then(...)` alter de `partial_cmp`.
+- [ ] [Order By with multiple arguments](https://github.com/naomijub/wooridb/issues/101). The problem here is how to have multiple `.and_then(...)` alter the `partial_cmp`.
 
 ##  `DEDUP`
 

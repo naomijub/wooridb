@@ -10,7 +10,10 @@ use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};
 use wql::Types;
 
-use crate::{actors::wql::Executor, model::error::Error, repository::local::EncryptContext};
+use crate::{
+    actors::wql::Executor, model::error::Error, repository::local::EncryptContext,
+    schemas::query::Response as QueryResponse,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WriteWithEncryption {
@@ -137,11 +140,11 @@ impl VerifyEncryption {
 }
 
 impl Message for VerifyEncryption {
-    type Result = Result<String, Error>;
+    type Result = Result<QueryResponse, Error>;
 }
 
 impl Handler<VerifyEncryption> for Executor {
-    type Result = Result<String, Error>;
+    type Result = Result<QueryResponse, Error>;
 
     fn handle(&mut self, msg: VerifyEncryption, _: &mut Self::Context) -> Self::Result {
         let type_nil = Types::Nil;
@@ -160,10 +163,7 @@ impl Handler<VerifyEncryption> for Executor {
                 (k, result)
             })
             .collect::<HashMap<String, bool>>();
-        let encrypt_log =
-            to_string_pretty(&results, pretty_config()).map_err(Error::Serialization)?;
-
-        Ok(encrypt_log)
+        Ok(results.into())
     }
 }
 

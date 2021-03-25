@@ -30,6 +30,9 @@ pub async fn history_controller(
     local_data: DataLocalContext,
     actor: DataExecutor,
 ) -> Result<String, Error> {
+    #[cfg(feature = "json")]
+    let info: EntityHistoryInfo = serde_json::from_str(&body)?;
+    #[cfg(not(feature = "json"))]
     let info: EntityHistoryInfo = ron::de::from_str(&body)?;
 
     let registry = {
@@ -97,6 +100,10 @@ pub async fn history_controller(
         })
         .collect::<BTreeMap<DateTime<Utc>, HashMap<String, Types>>>();
 
+    #[cfg(feature = "json")]
+    return Ok(serde_json::to_string(&filtered_tree)?);
+
+    #[cfg(not(feature = "json"))]
     Ok(ron::ser::to_string_pretty(
         &filtered_tree,
         pretty_config_output(),
