@@ -20,7 +20,7 @@ pub async fn history_handler(
     let response = history_controller(body, local_data, actor);
 
     match response.await {
-        Err(e) => error_to_http(e),
+        Err(e) => error_to_http(&e),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }

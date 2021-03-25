@@ -80,10 +80,10 @@ pub async fn wql_handler(
     };
 
     match response {
-        Err(e) => error_to_http(e),
+        Err(e) => error_to_http(&e),
         Ok(resp) => match resp.to_string() {
             Ok(body) => HttpResponse::Ok().body(body),
-            Err(e) => error_to_http(e),
+            Err(e) => error_to_http(&e),
         },
     }
 }
@@ -349,7 +349,9 @@ async fn select_all_with_ids(
         .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
     let states = dedup_option_states(states, &functions);
 
-    get_result_after_manipulation_for_options(states, functions, count)
+    Ok(get_result_after_manipulation_for_options(
+        states, functions, count,
+    ))
 }
 
 async fn select_keys_with_id(
@@ -443,7 +445,9 @@ async fn select_keys_with_ids(
 
     let states = dedup_option_states(states, &functions);
 
-    get_result_after_manipulation_for_options(states, functions, count)
+    Ok(get_result_after_manipulation_for_options(
+        states, functions, count,
+    ))
 }
 
 async fn select_all(
@@ -479,7 +483,7 @@ async fn select_all(
     }
     let states = dedup_states(states, &functions);
 
-    get_result_after_manipulation(states, functions, count)
+    Ok(get_result_after_manipulation(states, &functions, count))
 }
 
 async fn select_args(
@@ -516,5 +520,5 @@ async fn select_args(
     }
 
     let states = dedup_states(states, &functions);
-    get_result_after_manipulation(states, functions, count)
+    Ok(get_result_after_manipulation(states, &functions, count))
 }
