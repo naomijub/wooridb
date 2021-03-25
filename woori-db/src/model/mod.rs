@@ -19,6 +19,7 @@ pub type DataUniquenessContext = web::Data<Arc<Mutex<UniquenessContext>>>;
 pub type DataEncryptContext = web::Data<Arc<Mutex<EncryptContext>>>;
 pub type DataAtomicUsize = web::Data<AtomicUsize>;
 pub type DataU32 = web::Data<u32>;
+pub type DataI64 = web::Data<i64>;
 pub type DataExecutor = web::Data<Addr<Executor>>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
