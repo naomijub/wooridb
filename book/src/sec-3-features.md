@@ -8,7 +8,7 @@
 - Unique entity maps keys content with [`UNIQUE`](https://github.com/naomijub/wooridb#create-entity) for an entity tree.
 - Hashed values are filtered out of `SELECT` and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
 - [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
-  - [ ] JSON to be supported via feature.
+  - [x] JSON is supported via feature.
   - [ ] EDN to be supported via feature.
 - Entities are also indexed by `entity_name` (entity tree key) and `Uuid` (entity id). Entity map format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
