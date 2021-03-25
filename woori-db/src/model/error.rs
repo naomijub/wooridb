@@ -11,6 +11,7 @@ use crate::schemas::error::Response;
 pub enum Error {
     Io(io::Error),
     QueryFormat(String),
+    InvalidQuery,
     EntityAlreadyCreated(String),
     EntityNotCreated(String),
     EntityNotCreatedWithUniqueness(String),
@@ -57,6 +58,7 @@ pub fn error_to_http(e: &Error) -> HttpResponse {
         | Error::FailedToParseDate
         | Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
         Error::QueryFormat(_)
+        | Error::InvalidQuery
         | Error::DuplicatedUnique(_, _, _)
         | Error::EntityNotCreated(_)
         | Error::EntityNotCreatedWithUniqueness(_)
@@ -88,6 +90,12 @@ impl std::fmt::Display for Error {
         match self {
             Error::QueryFormat(s) => {
                 Response::new(String::from("QueryFormat"), format!("{:?}", s)).write(f)
+            }
+            Error::InvalidQuery => {
+                Response::new(
+                    String::from("InvalidQuery"), 
+                    "Only single value queries are allowed, so key `ID` is required and keys `WHEN AT` are optional".to_string()
+                ).write(f)
             }
             Error::Io(e) => Response::new(String::from("IO"), format!("{:?}", e)).write(f),
             Error::EntityAlreadyCreated(e) => Response::new(

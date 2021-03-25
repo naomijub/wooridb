@@ -6,6 +6,7 @@ use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
 mod language_parser;
 mod logic;
+mod relation;
 mod select;
 #[cfg(test)]
 mod test;
@@ -13,9 +14,10 @@ mod where_clause;
 
 pub use logic::parse_value as parse_types;
 use logic::{read_map, read_match_args};
+pub use relation::{Relation, RelationType};
 pub use where_clause::{Clause, Function, Value};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Wql {
     CreateEntity(String, Vec<String>, Vec<String>),
     Insert(String, Entity, Option<Uuid>),
@@ -30,11 +32,12 @@ pub enum Wql {
     SelectIds(String, ToSelect, Vec<Uuid>, HashMap<String, Algebra>),
     SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Algebra>),
     CheckValue(String, Uuid, HashMap<String, String>),
+    RelationQuery(Vec<Wql>, Relation, RelationType),
 }
 
 pub use select::{Algebra, Order};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum ToSelect {
     All,
     Keys(Vec<String>),
