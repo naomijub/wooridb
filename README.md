@@ -7,7 +7,7 @@ Some other features are:
 - Hashing keys content with [`ENCRYPT`](https://github.com/naomijub/wooridb#create-entity) keyword.
 - Hashed values are filtered out and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
 - [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
-  - [x] JSON to be supported via feature.
+  - [x] JSON is supported via feature.
   - [ ] EDN to be supported via feature.
 - Entities are indexed by `entity_name` (Entity Tree), `DateTime` (Time Serial) and `Uuid` (Entity ID). Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
@@ -63,7 +63,7 @@ ADMIN_PASSWORD=your-admin-pswd
 ``` 
 
 ## Usage
-* Responses are in [`RON`](https://github.com/ron-rs/ron) format. Support for `JSON` and `EDN` will be done later by using features.
+* Responses are in [`RON`](https://github.com/ron-rs/ron) format. Support for `JSON` is via `--feature json` and `EDN` will be done later by using features.
 * For now only persistent local memory is used. Support for `S3`, `Postgres` and `DynamoDB` will also be done later by using features.
 * **Precise floats** or **numbers larger than f64::MAX/i128::MAX** can be defined with an UPPERCASE `P` at the end. 
   * _Note_: This type cannot be updated with `UPDATE CONTENT`. 
