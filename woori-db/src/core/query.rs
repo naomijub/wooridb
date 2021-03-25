@@ -186,19 +186,17 @@ pub(crate) fn get_result_after_manipulation(
         } else {
             groups.into()
         }
+    } else if should_count {
+        let size = states.keys().len();
+        CountResponse::new(size, states.into()).into()
     } else {
-        if should_count {
-            let size = states.keys().len();
-            CountResponse::new(size, states.into()).into()
-        } else {
-            states.into()
-        }
+        states.into()
     }
 }
 
 pub(crate) fn get_result_after_manipulation_for_options(
     states: BTreeMap<Uuid, Option<HashMap<String, Types>>>,
-    functions: HashMap<String, wql::Algebra>,
+    functions: &HashMap<String, wql::Algebra>,
     should_count: bool,
 ) -> QueryResponse {
     if let (Some(Algebra::OrderBy(k, ord)), None) = (functions.get("ORDER"), functions.get("GROUP"))
@@ -294,13 +292,11 @@ pub(crate) fn get_result_after_manipulation_for_options(
                     .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
                 group_states.into()
             }
+        } else if should_count {
+            let size = groups.keys().len();
+            CountResponse::new(size, groups.into()).into()
         } else {
-            if should_count {
-                let size = groups.keys().len();
-                CountResponse::new(size, groups.into()).into()
-            } else {
-                groups.into()
-            }
+            groups.into()
         }
     } else if should_count {
         let size = states.keys().len();

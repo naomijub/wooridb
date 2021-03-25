@@ -154,7 +154,7 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     if with_symbol.is_empty() {
         Ok(Wql::Insert(entity_name, entity_map, None))
-    } else if !(with_symbol.to_uppercase() == "WITH") {
+    } else if with_symbol.to_uppercase() != "WITH" {
         Err(String::from(
             "Keyword WITH is required for INSERT with Uuid",
         ))

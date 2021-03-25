@@ -37,7 +37,7 @@ pub fn evict_entity_id_content(entity: &EvictEntityId) -> String {
 }
 
 pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
-    let uuid = content.uuid.map_or_else(|| Uuid::new_v4(), |id| id);
+    let uuid = content.uuid.map_or_else(Uuid::new_v4, |id| id);
 
     let date = content.datetime;
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();

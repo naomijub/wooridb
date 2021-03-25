@@ -350,7 +350,7 @@ async fn select_all_with_ids(
     let states = dedup_option_states(states, &functions);
 
     Ok(get_result_after_manipulation_for_options(
-        states, functions, count,
+        states, &functions, count,
     ))
 }
 
@@ -446,7 +446,7 @@ async fn select_keys_with_ids(
     let states = dedup_option_states(states, &functions);
 
     Ok(get_result_after_manipulation_for_options(
-        states, functions, count,
+        states, &functions, count,
     ))
 }
 
