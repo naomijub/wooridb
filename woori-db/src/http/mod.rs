@@ -55,6 +55,12 @@ pub fn routes(config: &mut web::ServiceConfig) {
     let session_context = Arc::new(Mutex::new(SessionContext::new()));
 
     #[cfg(not(debug_assertions))]
+    let exp_time_str =
+        std::env::var("SESSION_EXPIRATION_TIME").unwrap_or_else(|_| "3600".to_owned());
+    #[cfg(not(debug_assertions))]
+    let exp_time = exp_time_str.parse::<i64>().unwrap_or(3600);
+
+    #[cfg(not(debug_assertions))]
     let admin_info = read_admin_info().unwrap();
 
     // Deactivate scheduler for now
@@ -72,6 +78,7 @@ pub fn routes(config: &mut web::ServiceConfig) {
         .service(
             web::scope("/auth")
                 .data(admin_info)
+                .data(exp_time)
                 .route("/createUser", web::post().to(auth::create_user))
                 .route("/deleteUsers", web::post().to(auth::delete_users))
                 .route("/putUserSession", web::put().to(auth::put_user_session)),

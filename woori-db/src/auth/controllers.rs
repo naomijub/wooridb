@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::{
     core::pretty_config_output,
-    model::error::Error,
+    model::{error::Error, DataI64},
     repository::local::{SessionContext, SessionInfo},
 };
 
@@ -110,7 +110,9 @@ pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Res
 pub async fn put_user_session(
     body: String,
     session_context: web::Data<Arc<Mutex<SessionContext>>>,
+    expiration_time: DataI64,
 ) -> impl Responder {
+    let exp_time: i64 = *expiration_time.into_inner();
     #[cfg(feature = "json")]
     let ok_user: Result<super::schemas::User, Error> = match serde_json::from_str(&body) {
         Ok(x) => Ok(x),
@@ -135,7 +137,7 @@ pub async fn put_user_session(
                     if let Ok(mut session) = session_context.lock() {
                         let token = bcrypt::hash(&Uuid::new_v4().to_string(), 4)
                             .unwrap_or_else(|_| Uuid::new_v4().to_string());
-                        let expiration = Utc::now() + chrono::Duration::seconds(3600);
+                        let expiration = Utc::now() + chrono::Duration::seconds(exp_time);
 
                         session.insert(token.clone(), SessionInfo::new(expiration, roles));
 
