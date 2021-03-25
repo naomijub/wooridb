@@ -25,6 +25,9 @@ You can find the latest docker image at **[naomijub/wooridb](https://hub.docker.
 ```
 HASHING_COST=16
 PORT=1438
+SESSION_EXPIRATION_TIME=3600
+MAX_CONNECTIONS=1000
+CLIENT_SHUTDOWN=5000
 AUTH_HASHING_COST=8
 ADMIN=your-admin-id
 ADMIN_PASSWORD=your-admin-pswd
@@ -37,10 +40,14 @@ ADMIN_PASSWORD=your-admin-pswd
 
 ###  Configurations
 
-* To run the project in `debug` mode it is important to export the following environment variables `HASHING_COST, PORT`. Default values are:
+* To run the project in `debug` mode it is important to export the following environment variables `HASHING_COST, PORT, MAX_CONNECTIONS, CLIENT_SHUTDOWN`. Default values are:
 ```
 HASHING_COST=16
 PORT=1438
+MAX_CONNECTIONS=1000
+CLIENT_SHUTDOWN=5000
 ```
 
-* To run the project in `release` mode it is important to export the following environment variables `HASHING_COST, PORT, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD`. There are no default values for `AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD`.
+* `MAX_CONNECTIONS` is the maximum number of connections supported simultaneously.
+* `CLIENT_SHUTDOWN` is the time to drop a client's connection, use 0 to disbale it.
+* To run the project in `release` mode it is important to export the following environment variables `HASHING_COST, PORT,  MAX_CONNECTIONS, CLIENT_SHUTDOWN, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME`. There are no default values for `AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME`.
