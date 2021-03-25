@@ -3,8 +3,8 @@ use std::{collections::HashMap, str::FromStr};
 
 use uuid::Uuid;
 
-const ALGEBRA: [&'static str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT"];
-const OPERATORS: [&'static str; 10] = [
+const ALGEBRA: [&str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT"];
+const OPERATORS: [&str; 10] = [
     "ID", "IDS", "WHERE", "WHEN", "DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT",
 ];
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -121,7 +121,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
                 entity_name,
                 arg,
                 uuids,
-                select_algebra_functions(next_symbol, chars)?,
+                algebra_functions(next_symbol, chars)?,
             ))
         } else {
             Err(String::from(
@@ -137,7 +137,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             entity_name,
             arg,
             None,
-            select_algebra_functions(next_symbol, chars)?,
+            algebra_functions(next_symbol, chars)?,
         ))
     } else if !next_symbol.is_empty() && !OPERATORS.contains(&&next_symbol.to_uppercase()[..]) {
         Err(String::from(
@@ -148,7 +148,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
     }
 }
 
-pub fn select_algebra_functions(
+pub fn algebra_functions(
     next: String,
     chars: &mut std::str::Chars,
 ) -> Result<HashMap<String, Algebra>, String> {
@@ -189,13 +189,13 @@ pub fn select_algebra_functions(
                 "OFFSET" => {
                     let value = next_value
                         .parse::<usize>()
-                        .or_else(|e| Err(format!("Error parsing value: {:?}", e)))?;
+                        .map_err(|e| format!("Error parsing value: {:?}", e))?;
                     functions.insert("OFFSET".to_string(), Algebra::Offset(value))
                 }
                 "LIMIT" => {
                     let value = next_value
                         .parse::<usize>()
-                        .or_else(|e| Err(format!("Error parsing value: {:?}", e)))?;
+                        .map_err(|e| format!("Error parsing value: {:?}", e))?;
                     functions.insert("LIMIT".to_string(), Algebra::Limit(value))
                 }
                 "COUNT" => functions.insert("COUNT".to_string(), Algebra::Count),
