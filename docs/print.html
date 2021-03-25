@@ -214,6 +214,9 @@
 </ul>
 <pre><code>HASHING_COST=16
 PORT=1438
+SESSION_EXPIRATION_TIME=3600
+MAX_CONNECTIONS=1000
+CLIENT_SHUTDOWN=5000
 AUTH_HASHING_COST=8
 ADMIN=your-admin-id
 ADMIN_PASSWORD=your-admin-pswd
@@ -225,13 +228,17 @@ ADMIN_PASSWORD=your-admin-pswd
 </ul>
 <h3 id="configurations"><a class="header" href="#configurations">Configurations</a></h3>
 <ul>
-<li>To run the project in <code>debug</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT</code>. Default values are:</li>
+<li>To run the project in <code>debug</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT, MAX_CONNECTIONS, CLIENT_SHUTDOWN</code>. Default values are:</li>
 </ul>
 <pre><code>HASHING_COST=16
 PORT=1438
+MAX_CONNECTIONS=1000
+CLIENT_SHUTDOWN=5000
 </code></pre>
 <ul>
-<li>To run the project in <code>release</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD</code>. There are no default values for <code>AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD</code>.</li>
+<li><code>MAX_CONNECTIONS</code> is the maximum number of connections supported simultaneously.</li>
+<li><code>CLIENT_SHUTDOWN</code> is the time to drop a client's connection, use 0 to disbale it.</li>
+<li>To run the project in <code>release</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT,  MAX_CONNECTIONS, CLIENT_SHUTDOWN, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME</code>. There are no default values for <code>AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME</code>.</li>
 </ul>
 <h1 id="features"><a class="header" href="#features">Features</a></h1>
 <ul>
@@ -524,6 +531,7 @@ ADMIN_PASSWORD=your_password
 <li><code>ADMIN</code> is the admin's user id.</li>
 <li><code>ADMIN_PASSWORD</code> is the admin's user password.</li>
 </ul>
+<p>One optional environment variable can be used to configure the time to expirate a session token. <code>SESSION_EXPIRATION_TIME</code> has a default value of 3600 seconds, or 1 hour.</p>
 <h2 id="creating-new-users"><a class="header" href="#creating-new-users">Creating new users</a></h2>
 <ul>
 <li><code>ADMIN</code> is the only user role capable of creating new users. For now there can only be one <code>ADMIN</code>.</li>
@@ -577,8 +585,6 @@ Your user needs the correct session token and the correct role for this request.
 <ul>
 <li><input disabled="" type="checkbox"/>
 Adding other admins and removing admins is not yet implemented.</li>
-<li><input disabled="" type="checkbox"/>
-Configure session token expiration time.</li>
 </ul>
 <h1 id="transactions"><a class="header" href="#transactions">Transactions</a></h1>
 <p>Transaction is the name of all operations that change the database state, like <code>CREATE, INSERT, UPDATE, MATCH, DELETE, EVICT</code>. This is done by sending a <code>POST</code> request to endpoint <code>&lt;ip&gt;:1438/wql/tx</code>. An example request would be <code>curl -X POST -H &quot;Content-Type: application/wql&quot; &lt;ip&gt;:1438/wql/tx -d 'CREATE ENTITY my_entity'</code>. In <code>release mode</code> it is necessary to use header <code>Authorization: Bearer &lt;your session token&gt;</code> for this endpoint.</p>

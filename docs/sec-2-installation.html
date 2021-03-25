@@ -190,6 +190,9 @@
 </ul>
 <pre><code>HASHING_COST=16
 PORT=1438
+SESSION_EXPIRATION_TIME=3600
+MAX_CONNECTIONS=1000
+CLIENT_SHUTDOWN=5000
 AUTH_HASHING_COST=8
 ADMIN=your-admin-id
 ADMIN_PASSWORD=your-admin-pswd
@@ -201,13 +204,17 @@ ADMIN_PASSWORD=your-admin-pswd
 </ul>
 <h3 id="configurations"><a class="header" href="#configurations">Configurations</a></h3>
 <ul>
-<li>To run the project in <code>debug</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT</code>. Default values are:</li>
+<li>To run the project in <code>debug</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT, MAX_CONNECTIONS, CLIENT_SHUTDOWN</code>. Default values are:</li>
 </ul>
 <pre><code>HASHING_COST=16
 PORT=1438
+MAX_CONNECTIONS=1000
+CLIENT_SHUTDOWN=5000
 </code></pre>
 <ul>
-<li>To run the project in <code>release</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD</code>. There are no default values for <code>AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD</code>.</li>
+<li><code>MAX_CONNECTIONS</code> is the maximum number of connections supported simultaneously.</li>
+<li><code>CLIENT_SHUTDOWN</code> is the time to drop a client's connection, use 0 to disbale it.</li>
+<li>To run the project in <code>release</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT,  MAX_CONNECTIONS, CLIENT_SHUTDOWN, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME</code>. There are no default values for <code>AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME</code>.</li>
 </ul>
 
                     </main>
