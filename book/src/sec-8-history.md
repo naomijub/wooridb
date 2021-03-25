@@ -1,6 +1,12 @@
 # Entity History
 
-Entity history is one of the main features of WooriDB. It receives an `entity_key` name and an `entity_id` which will return the whole history of `(DateTime<Utc>, entity_map)` for the `entity_id` in the entity tree for key `entity_key`. This is done by sending a `POST` request to endpoint `<ip>:1438/entity-history`. An example request would be `curl -X POST -H "Content-Type: application/wql" <ip>:1438/entity-history -d '(entity_key: "entity_tree_key", entity_id: "<some-Uuid>",)'`. In `release mode` it is necessary to use header `Authorization: Bearer <your session token>` for this endpoint.
+Entity history is one of the main features of WooriDB. You can run it by using the `features` flag. To execute WooriDB with `history` feature enable execute:
+
+- `make history`, or;
+- `cargo run --manifest-path woori-db/Cargo.toml --release --features history`
+
+
+It receives an `entity_key` name and an `entity_id` which will return the whole history of `(DateTime<Utc>, entity_map)` for the `entity_id` in the entity tree for key `entity_key`. This is done by sending a `POST` request to endpoint `<ip>:1438/entity-history`. An example request would be `curl -X POST -H "Content-Type: application/wql" <ip>:1438/entity-history -d '(entity_key: "entity_tree_key", entity_id: "<some-Uuid>",)'`. In `release mode` it is necessary to use header `Authorization: Bearer <your session token>` for this endpoint.
 
 Example request:
 ```ron

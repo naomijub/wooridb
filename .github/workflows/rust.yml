@@ -144,6 +144,19 @@ jobs:
         cargo test --features test_read io::read::test::local_data_test
         cargo test --features test_read io::read::test::offset_test
         cargo test --features test_read io::read::unique_data_test
+  
+  build_serde_tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: DB-json-edn-tests
+      run: |
+        rm -rf data/*.log
+        cargo test --features "history json" -- controllers::json_history_test::test_history_ok
+        rm -rf data/*.log
+        cargo test --release --features "history json" -- --ignored controllers::json_history_test::query_and_tx_with_token
+
 
   build_entity_history_tests:
     runs-on: ubuntu-latest

@@ -15,6 +15,8 @@ pub enum Error {
     EntityNotCreated(String),
     EntityNotCreatedWithUniqueness(String),
     Serialization(ron::Error),
+    #[cfg(feature = "json")]
+    SerdeJson(serde_json::Error),
     UuidNotCreatedForEntity(String, Uuid),
     FailedToParseState,
     FailedToParseRegistry,
@@ -50,6 +52,8 @@ pub fn error_to_http(e: Error) -> HttpResponse {
         Error::EntityNotCreated(_) => HttpResponse::BadRequest().body(e.to_string()),
         Error::EntityNotCreatedWithUniqueness(_) => HttpResponse::BadRequest().body(e.to_string()),
         Error::Serialization(_) => HttpResponse::InternalServerError().body(e.to_string()),
+        #[cfg(feature = "json")]
+        Error::SerdeJson(_) => HttpResponse::InternalServerError().body(e.to_string()),
         Error::UuidNotCreatedForEntity(_, _) => HttpResponse::BadRequest().body(e.to_string()),
         Error::FailedToParseState => HttpResponse::InternalServerError().body(e.to_string()),
         Error::FailedToParseRegistry => HttpResponse::InternalServerError().body(e.to_string()),
@@ -101,6 +105,10 @@ impl std::fmt::Display for Error {
             .write(f),
             Error::Serialization(e) => {
                 Response::new(String::from("Serialization"), format!("{:?}", e)).write(f)
+            }
+            #[cfg(feature = "json")]
+            Error::SerdeJson(e) => {
+                Response::new(String::from("SerdeJson"), format!("{:?}", e)).write(f)
             }
             Error::UuidNotCreatedForEntity(s, id) => Response::new(
                 String::from("UuidNotCreatedForEntity"),
@@ -221,6 +229,13 @@ impl std::fmt::Display for Error {
             )
             .write(f),
         }
+    }
+}
+
+#[cfg(feature = "json")]
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Self {
+        Error::SerdeJson(error)
     }
 }
 
