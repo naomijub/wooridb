@@ -1,13 +1,10 @@
-use std::collections::{BTreeMap, HashMap};
-
 use actix::prelude::*;
-use uuid::Uuid;
-use wql::Types;
 
 use crate::{
     core::pretty_config_inner,
     io::write::{local_data, offset_counter},
-    model::{error::Error, DataRegister},
+    model::error::Error,
+    repository::local::LocalContext,
 };
 
 use super::wql::Executor;
@@ -35,13 +32,11 @@ impl Handler<OffsetCounter> for Executor {
 }
 
 pub struct LocalData {
-    pub data: BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>,
+    pub data: LocalContext,
 }
 
 impl LocalData {
-    pub fn new(
-        data: BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>,
-    ) -> Self {
+    pub fn new(data: LocalContext) -> Self {
         Self { data }
     }
 }

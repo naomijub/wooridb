@@ -116,7 +116,7 @@ pub async fn wql_handler(
     };
 
     match response {
-        Err(e) => error_to_http(e),
+        Err(e) => error_to_http(&e),
         Ok(resp) => HttpResponse::Ok().body(resp),
     }
 }
