@@ -137,7 +137,7 @@ This unites two entities into one entity. There are two strategies for this rela
 
 The entity to be returned will be:
 ```rust
-{"a": 123, "b": 234, "c" true}
+{"a": 123, "b": 234, "c": true, "d": false}
 ```
 
 ### `KEY-VALUE`
@@ -146,7 +146,7 @@ The entity to be returned will be:
 
 The entity to be returned will be:
 ```rust
-{"a": 123, "b": 234, "b:duplicated": 432, "c" true, "d": false}
+{"a": 123, "b": 234, "b:duplicated": 432, "c": true, "d": false}
 ```
 
 
