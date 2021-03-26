@@ -7,17 +7,16 @@ WooriDB has some support to relation algebra functions as well as auxiliary func
 - [`LIMIT`](#limit-and-offset)
 - [`OFFSET`](#limit-and-offset)
 - [`COUNT`](#count)
-
-This functions are only supported by the following select queries:
-- `SELECT */#{...} FROM  tree_key_name`
-- `SELECT */#{...} FROM  tree_key_name WHERE {...}`
-- `SELECT */#{...} FROM  tree_key_name IDS IN #{...}`
-
 - [`UNION`](#union)
 - [`INTERSECT`](#intersect)
 - [`DIFFERENCE`](#difference)
 
-This functions are only supported by the following select queries:
+Functions `GROUP BY`, `ORDER BY`, `DEDUP` `LIMIT`, `OFFSET`, `COUNT`  are only supported by the following select queries:
+- `SELECT */#{...} FROM  tree_key_name`
+- `SELECT */#{...} FROM  tree_key_name WHERE {...}`
+- `SELECT */#{...} FROM  tree_key_name IDS IN #{...}`
+
+Functions `UNION`,`INTERSECT`,`DIFFERENCE` are only supported by the following select queries:
 - `SELECT */#{...} FROM  tree_key_name ID some-uuid`
 - `SELECT */#{...} FROM  tree_key_name ID some-uuid WHEN AT some-date`
 
