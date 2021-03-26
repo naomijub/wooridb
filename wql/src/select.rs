@@ -7,7 +7,7 @@ const ALGEBRA: [&str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT
 const OPERATORS: [&str; 10] = [
     "ID", "IDS", "WHERE", "WHEN", "DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT",
 ];
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Order {
     Asc,
     Desc,
@@ -26,7 +26,7 @@ impl std::str::FromStr for Order {
         }
     }
 }
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Algebra {
     Dedup(String),
     GroupBy(String),

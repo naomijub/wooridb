@@ -11,6 +11,9 @@ pub mod json_history_test;
 pub(crate) mod query;
 #[cfg(test)]
 pub mod query_test;
+pub(crate) mod relation;
+#[cfg(test)]
+pub mod relation_test;
 pub(crate) mod tx;
 #[cfg(test)]
 pub mod tx_test;

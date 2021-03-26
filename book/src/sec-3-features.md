@@ -24,17 +24,14 @@
 - [ ] File compression done with `zstd`.
 - [x] Entity id history
 - [ ] Possible Relation Algebra
-    - [ ] Projection
-    - [ ] Union
-    - [ ] Intersection 
-    - [ ] Difference (SQL's EXCEPT?) `-`
+    - [x] Union by entity_id
+    - [x] Intersection by entity_id
+    - [x] Difference by entity_id
     - [ ] Join
-    - [ ] Rename
-    - [ ] Assign
     - [x] Dedup
     - [x] Sort
     - [x] Aggregate
-    - [ ] Division
+
 
 ## Naming conventions:
 - Entity Tree is similar to SQL table, it is the data structure that contains all ids and entities map relations.
