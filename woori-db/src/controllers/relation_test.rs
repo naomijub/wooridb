@@ -233,7 +233,7 @@ async fn test_diff_key_value() {
     let _ = test::call_service(&mut app, req).await;
 
     let payload = format!(
-        "INTERSECT KEY-VALUE Select * FROM intersect_ok1 ID {} | Select * FROM intersect_ok2 ID {}",
+        "DIFFERENCE KEY-VALUE Select * FROM intersect_ok1 ID {} | Select * FROM intersect_ok2 ID {}",
         uuid1, uuid2
     );
     let req = test::TestRequest::post()

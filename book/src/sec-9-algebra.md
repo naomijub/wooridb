@@ -7,6 +7,9 @@ WooriDB has some support to relation algebra functions as well as auxiliary func
 - [`LIMIT`](#limit-and-offset)
 - [`OFFSET`](#limit-and-offset)
 - [`COUNT`](#count)
+- [`UNION`](#union)
+- [`INTERSECT`](#intersect)
+- [`DIFFERENCE`](#difference)
 
 This functions are only supported by the following select queries:
 - `SELECT */#{...} FROM  tree_key_name`
@@ -111,4 +114,79 @@ This function is appended to the end of a select query and it will return the co
     response: { "map containing the response for the query" },
     count: usize,
 )
+```
+
+##  `UNION`
+
+This unites two entities into one entity. There are two strategies for this relation the first one is `UNION KEY` which will unify 2 entities adding to the first one the missing values from the second, then there is `UNION KEY-VALUE` that will unite the keys and values from the second and if the value is the different for each key a `duplicated` sign will be added. The following examples will help you understand considering the following entities:
+
+```rust
+{
+    "ent1": {<UUID1>: {a: 123, b: 234, c: true,}}
+    "ent2": {<UUID2>: {a: 123, b: 432, d: false,}}
+}
+```
+
+### `KEY`
+
+The entity to be returned will be:
+```rust
+{"a": 123, "b": 234, "c" true}
+```
+
+### `KEY-VALUE`
+
+The entity to be returned will be:
+```rust
+{"a": 123, "b": 234, "b:duplicated": 432, "c" true, "d": false}
+```
+
+
+##  `INTERSECT`
+
+This intersects two entities into one entity. There are two strategies for this relation the first one is `INTERSECT KEY` which will return only the key value pairs from the first entity that have a corresponding key in the second entity, then there is `INTERSECT KEY-VALUE` which will return only the key value pairs from the first entity that have a corresponding key value pair in the second entity. The following examples will help you understand considering the following entities:
+
+```rust
+{
+    "ent1": {<UUID1>: {a: 123, b: 234, c: true,}}
+    "ent2": {<UUID2>: {a: 123, b: 432, d: false,}}
+}
+```
+
+### `KEY`
+
+The entity to be returned will be:
+```rust
+{"a": 123, "b": 234}
+```
+
+### `KEY-VALUE`
+
+The entity to be returned will be:
+```rust
+{"a": 123}
+```
+##  `DIFFERENCE`
+
+This intersects two entities into one entity. There are two strategies for this relation the first one is `DIFFERENCE KEY` which will return only the key value pairs from the first entity that do not have a corresponding key in the second entity, then there is `DIFFERENCE KEY-VALUE` which will return only the key value pairs from the first entity that do not have a corresponding key value pair in the second entity. The following examples will help you understand considering the following entities:
+
+```rust
+{
+    "ent1": {<UUID1>: {a: 123, b: 234, c: true,}}
+    "ent2": {<UUID2>: {a: 123, b: 432, d: false,}}
+}
+```
+
+### `KEY`
+
+The entity to be returned will be:
+```rust
+{"c": true,}
+```
+
+### `KEY-VALUE`
+
+The entity to be returned will be:
+```rust
+{"c": true, "b": 234}
 ```

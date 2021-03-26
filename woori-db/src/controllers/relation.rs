@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use wql::{RelationType, ToSelect, Types, Wql};
+use wql::{RelationType, ToSelect, Wql};
 
 use crate::{
     model::{error::Error, DataExecutor, DataLocalContext},
@@ -70,10 +70,7 @@ pub async fn difference(
             Ok(Response::Difference(state))
         }
         (Response::Id(f), Response::Id(s), RelationType::KeyValue) => {
-            let mut state = f
-                .iter()
-                .map(|(k, v)| (format!("a:{}", k), v.to_owned()))
-                .collect::<HashMap<String, Types>>();
+            let mut state = f.clone();
             for (k, _) in s.clone() {
                 if f.contains_key(&k) && f.get(&k) == s.get(&k) {
                     state.remove(&k);
