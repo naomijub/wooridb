@@ -129,12 +129,16 @@ This unites two entities into one entity. There are two strategies for this rela
 
 ### `KEY`
 
+`UNION KEY Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2`. Note the `|` as query separator.
+
 The entity to be returned will be:
 ```rust
 {"a": 123, "b": 234, "c" true}
 ```
 
 ### `KEY-VALUE`
+
+`UNION KEY-VALUE Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2`. Note the `|` as query separator.
 
 The entity to be returned will be:
 ```rust
@@ -155,6 +159,8 @@ This intersects two entities into one entity. There are two strategies for this 
 
 ### `KEY`
 
+`INTERSECT KEY Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2`. Note the `|` as query separator.
+
 The entity to be returned will be:
 ```rust
 {"a": 123, "b": 234}
@@ -162,10 +168,13 @@ The entity to be returned will be:
 
 ### `KEY-VALUE`
 
+`INTERSECT KEY-VALUE Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2`. Note the `|` as query separator.
+
 The entity to be returned will be:
 ```rust
 {"a": 123}
 ```
+
 ##  `DIFFERENCE`
 
 This intersects two entities into one entity. There are two strategies for this relation the first one is `DIFFERENCE KEY` which will return only the key value pairs from the first entity that do not have a corresponding key in the second entity, then there is `DIFFERENCE KEY-VALUE` which will return only the key value pairs from the first entity that do not have a corresponding key value pair in the second entity. The following examples will help you understand considering the following entities:
@@ -179,12 +188,16 @@ This intersects two entities into one entity. There are two strategies for this 
 
 ### `KEY`
 
+`DIFFERENCE KEY Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2`. Note the `|` as query separator.
+
 The entity to be returned will be:
 ```rust
 {"c": true,}
 ```
 
 ### `KEY-VALUE`
+
+`DIFFERENCE KEY-VALUE Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2`. Note the `|` as query separator.
 
 The entity to be returned will be:
 ```rust
