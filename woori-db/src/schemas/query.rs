@@ -297,9 +297,15 @@ impl Response {
     pub fn to_string(self) -> Result<String, Error> {
         match self {
             Response::Id(state) => Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?),
-            Response::Intersect(state) => Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?),
-            Response::Difference(state) => Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?),
-            Response::Union(state) => Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?),
+            Response::Intersect(state) => {
+                Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
+            }
+            Response::Difference(state) => {
+                Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
+            }
+            Response::Union(state) => {
+                Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
+            }
             Response::CheckValues(state) => {
                 Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
             }

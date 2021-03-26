@@ -25,7 +25,10 @@ use crate::{
     schemas::query::Response as QueryResponse,
 };
 
-use super::{clauses::select_where_controller, relation::{difference, intersect, union}};
+use super::{
+    clauses::select_where_controller,
+    relation::{difference, intersect, union},
+};
 
 pub async fn wql_handler(
     body: String,
@@ -75,9 +78,15 @@ pub async fn wql_handler(
         Ok(Wql::CheckValue(entity, uuid, content)) => {
             check_value_controller(entity, uuid, content, local_data, encryption, actor).await
         }
-        Ok(Wql::RelationQuery(queries, wql::Relation::Intersect, relation_type)) => intersect(queries, relation_type, local_data, actor).await,
-        Ok(Wql::RelationQuery(queries, wql::Relation::Difference, relation_type)) => difference(queries, relation_type, local_data, actor).await,
-        Ok(Wql::RelationQuery(queries, wql::Relation::Union, relation_type)) => union(queries, relation_type, local_data, actor).await,
+        Ok(Wql::RelationQuery(queries, wql::Relation::Intersect, relation_type)) => {
+            intersect(queries, relation_type, local_data, actor).await
+        }
+        Ok(Wql::RelationQuery(queries, wql::Relation::Difference, relation_type)) => {
+            difference(queries, relation_type, local_data, actor).await
+        }
+        Ok(Wql::RelationQuery(queries, wql::Relation::Union, relation_type)) => {
+            union(queries, relation_type, local_data, actor).await
+        }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
     };
