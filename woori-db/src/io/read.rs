@@ -5,11 +5,9 @@ use std::{
 };
 
 use rayon::prelude::*;
-use uuid::Uuid;
-use wql::Types;
 
-use crate::model::error;
 use crate::{actors::encrypts::WriteWithEncryption, model::DataRegister};
+use crate::{model::error, repository::local::LocalContext};
 
 #[cfg(test)]
 pub fn assert_content(pat: &str) {
@@ -130,9 +128,7 @@ pub fn offset() -> Result<usize, error::Error> {
         .map_err(|_| error::Error::FailedToParseState)?)
 }
 
-pub fn local_data(
-) -> Result<BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>, error::Error>
-{
+pub fn local_data() -> Result<LocalContext, error::Error> {
     #[cfg(not(feature = "test_read"))]
     let path = "data/local_data.log";
     #[cfg(feature = "test_read")]
@@ -141,10 +137,7 @@ pub fn local_data(
     let mut s = String::new();
     file.read_to_string(&mut s)?;
 
-    let data: Result<
-        BTreeMap<String, BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>>,
-        error::Error,
-    > = match ron::de::from_str(&s) {
+    let data: Result<LocalContext, error::Error> = match ron::de::from_str(&s) {
         Ok(x) => Ok(x),
         Err(_) => Err(error::Error::FailedToParseState),
     };

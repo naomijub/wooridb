@@ -21,13 +21,13 @@ pub async fn select_where_controller(
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<QueryResponse, Error> {
     let states = select_where(entity, args_to_select, clauses, local_data, &functions);
-    let count = if let Some(Algebra::Count) = functions.get("COUNT") {
-        true
-    } else {
-        false
-    };
+    let count = matches!(functions.get("COUNT"), Some(Algebra::Count));
 
-    get_result_after_manipulation(states.await?, functions, count)
+    Ok(get_result_after_manipulation(
+        states.await?,
+        &functions,
+        count,
+    ))
 }
 
 pub async fn select_where(
@@ -144,7 +144,6 @@ fn or_clauses(
         .par_iter()
         .map(|clause| match clause {
             Clause::ValueAttribution(_, _, _) => true,
-            Clause::Error => false,
             Clause::Or(_, or_inner_clauses) => or_clauses(state, &args_to_key, or_inner_clauses),
             Clause::ContainsKeyValue(_, key, value) => {
                 let key = args_to_key.get(key).unwrap_or(&default);

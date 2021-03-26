@@ -1,5 +1,6 @@
 use crate::{
     logic::{read_args, read_map_as_str},
+    relation::{relation, Relation},
     select::{select_all, select_args},
 };
 
@@ -17,6 +18,9 @@ pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, S
         ('e', "VICT") | ('E', "VICT") => evict(chars),
         ('s', "ELECT") | ('S', "ELECT") => select(chars),
         ('c', "HECK") | ('C', "HECK") => check(chars),
+        ('i', "NTERSECT") | ('I', "NTERSECT") => relation(chars, Relation::Intersect),
+        ('d', "IFFERENCE") | ('D', "IFFERENCE") => relation(chars, Relation::Difference),
+        ('u', "NION") | ('U', "NION") => relation(chars, Relation::Union),
         _ => Err(format!("Symbol `{}{}` not implemented", a, symbol)),
     }
 }

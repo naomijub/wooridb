@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{logic::parse_value, select::select_algebra_functions, ToSelect, Types, Wql};
+use crate::{logic::parse_value, select::algebra_functions, ToSelect, Types, Wql};
 use serde::{Deserialize, Serialize};
 
 pub fn where_selector(
@@ -51,7 +51,7 @@ pub fn where_selector(
         entity_name,
         arg,
         clauses,
-        select_algebra_functions(next_symbol, chars)?,
+        algebra_functions(next_symbol, chars)?,
     ))
 }
 

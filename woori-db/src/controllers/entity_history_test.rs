@@ -185,7 +185,7 @@ impl BodyTest for ResponseBody<Body> {
 pub fn clear() {
     std::process::Command::new("rm")
         .arg("-rf")
-        .arg("*.log")
+        .arg("data/*.log")
         .output()
         .expect("failed to execute process")
         .stdout;

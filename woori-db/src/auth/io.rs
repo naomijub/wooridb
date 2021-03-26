@@ -51,7 +51,7 @@ pub fn to_users_log(user: &User) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn remove_users_from_log(users: &Vec<Uuid>) -> Result<(), Error> {
+pub fn remove_users_from_log(users: &[Uuid]) -> Result<(), Error> {
     let users_info_log = "data/users_info.log";
 
     let file = OpenOptions::new().read(true).open(users_info_log)?;
@@ -61,13 +61,13 @@ pub fn remove_users_from_log(users: &Vec<Uuid>) -> Result<(), Error> {
         .filter(|line| {
             if line.is_ok() {
                 !users
-                    .into_iter()
+                    .iter()
                     .any(|user| line.as_ref().unwrap().contains(&user.to_string()))
             } else {
                 false
             }
         })
-        .filter_map(|line| line.ok())
+        .filter_map(Result::ok)
         .collect::<Vec<String>>()
         .join("\r\n");
 

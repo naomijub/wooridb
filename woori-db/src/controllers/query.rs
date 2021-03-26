@@ -25,7 +25,10 @@ use crate::{
     schemas::query::Response as QueryResponse,
 };
 
-use super::clauses::select_where_controller;
+use super::{
+    clauses::select_where_controller,
+    relation::{difference, intersect, union},
+};
 
 pub async fn wql_handler(
     body: String,
@@ -75,15 +78,24 @@ pub async fn wql_handler(
         Ok(Wql::CheckValue(entity, uuid, content)) => {
             check_value_controller(entity, uuid, content, local_data, encryption, actor).await
         }
+        Ok(Wql::RelationQuery(queries, wql::Relation::Intersect, relation_type)) => {
+            intersect(queries, relation_type, local_data, actor).await
+        }
+        Ok(Wql::RelationQuery(queries, wql::Relation::Difference, relation_type)) => {
+            difference(queries, relation_type, local_data, actor).await
+        }
+        Ok(Wql::RelationQuery(queries, wql::Relation::Union, relation_type)) => {
+            union(queries, relation_type, local_data, actor).await
+        }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
     };
 
     match response {
-        Err(e) => error_to_http(e),
+        Err(e) => error_to_http(&e),
         Ok(resp) => match resp.to_string() {
             Ok(body) => HttpResponse::Ok().body(body),
-            Err(e) => error_to_http(e),
+            Err(e) => error_to_http(&e),
         },
     }
 }
@@ -185,7 +197,7 @@ async fn select_all_when_controller(
     Ok(result.into())
 }
 
-async fn select_all_id_when_controller(
+pub async fn select_all_id_when_controller(
     entity: String,
     date: String,
     uuid: Uuid,
@@ -206,7 +218,7 @@ async fn select_all_id_when_controller(
     Ok(result.into())
 }
 
-async fn select_keys_id_when_controller(
+pub async fn select_keys_id_when_controller(
     entity: String,
     date: String,
     keys: Vec<String>,
@@ -263,7 +275,7 @@ async fn select_keys_when_controller(
     Ok(result.into())
 }
 
-async fn select_all_with_id(
+pub async fn select_all_with_id(
     entity: String,
     uuid: Uuid,
     local_data: DataLocalContext,
@@ -349,10 +361,12 @@ async fn select_all_with_ids(
         .collect::<BTreeMap<Uuid, Option<HashMap<String, Types>>>>();
     let states = dedup_option_states(states, &functions);
 
-    get_result_after_manipulation_for_options(states, functions, count)
+    Ok(get_result_after_manipulation_for_options(
+        states, &functions, count,
+    ))
 }
 
-async fn select_keys_with_id(
+pub async fn select_keys_with_id(
     entity: String,
     uuid: Uuid,
     keys: Vec<String>,
@@ -443,7 +457,9 @@ async fn select_keys_with_ids(
 
     let states = dedup_option_states(states, &functions);
 
-    get_result_after_manipulation_for_options(states, functions, count)
+    Ok(get_result_after_manipulation_for_options(
+        states, &functions, count,
+    ))
 }
 
 async fn select_all(
@@ -479,7 +495,7 @@ async fn select_all(
     }
     let states = dedup_states(states, &functions);
 
-    get_result_after_manipulation(states, functions, count)
+    Ok(get_result_after_manipulation(states, &functions, count))
 }
 
 async fn select_args(
@@ -516,5 +532,5 @@ async fn select_args(
     }
 
     let states = dedup_states(states, &functions);
-    get_result_after_manipulation(states, functions, count)
+    Ok(get_result_after_manipulation(states, &functions, count))
 }

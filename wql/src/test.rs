@@ -938,3 +938,97 @@ mod test_where {
         )
     }
 }
+
+#[cfg(test)]
+mod diff_intersect {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn intersect_key() {
+        let f_uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
+        let s_uuid = Uuid::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
+        let query = "INTERSECT KEY SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 | SelEct * FROM my_entity ID 49dab8cf-2df2-474d-6fd1-c596c0bb8a00";
+        let wql = Wql::from_str(query);
+        assert_eq!(
+            wql.unwrap(),
+            Wql::RelationQuery(
+                vec![
+                    Wql::Select(
+                        "my_entity".to_string(),
+                        ToSelect::All,
+                        f_uuid,
+                        HashMap::new()
+                    ),
+                    Wql::Select(
+                        "my_entity".to_string(),
+                        ToSelect::All,
+                        s_uuid,
+                        HashMap::new()
+                    ),
+                ],
+                Relation::Intersect,
+                RelationType::Key
+            )
+        );
+    }
+
+    #[test]
+    fn diff_key_value() {
+        let f_uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
+        let s_uuid = Uuid::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
+        let query = "DIFFERENCE KEY-VALUE SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 | SelEct * FROM my_entity ID 49dab8cf-2df2-474d-6fd1-c596c0bb8a00 WHEN AT 2020-01-01T00:00:00Z";
+        let wql = Wql::from_str(query);
+        assert_eq!(
+            wql.unwrap(),
+            Wql::RelationQuery(
+                vec![
+                    Wql::Select(
+                        "my_entity".to_string(),
+                        ToSelect::All,
+                        f_uuid,
+                        HashMap::new()
+                    ),
+                    Wql::SelectWhen(
+                        "my_entity".to_string(),
+                        ToSelect::All,
+                        s_uuid,
+                        "2020-01-01T00:00:00Z".to_string()
+                    ),
+                ],
+                Relation::Difference,
+                RelationType::KeyValue
+            )
+        );
+    }
+
+    #[test]
+    fn union_key() {
+        let f_uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
+        let s_uuid = Uuid::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
+        let query = "UNION KEY SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 | SelEct * FROM my_entity ID 49dab8cf-2df2-474d-6fd1-c596c0bb8a00 WHEN AT 2020-01-01T00:00:00Z";
+        let wql = Wql::from_str(query);
+        assert_eq!(
+            wql.unwrap(),
+            Wql::RelationQuery(
+                vec![
+                    Wql::Select(
+                        "my_entity".to_string(),
+                        ToSelect::All,
+                        f_uuid,
+                        HashMap::new()
+                    ),
+                    Wql::SelectWhen(
+                        "my_entity".to_string(),
+                        ToSelect::All,
+                        s_uuid,
+                        "2020-01-01T00:00:00Z".to_string()
+                    ),
+                ],
+                Relation::Union,
+                RelationType::Key
+            )
+        );
+    }
+}

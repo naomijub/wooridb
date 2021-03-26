@@ -11,6 +11,7 @@ use crate::schemas::error::Response;
 pub enum Error {
     Io(io::Error),
     QueryFormat(String),
+    InvalidQuery,
     EntityAlreadyCreated(String),
     EntityNotCreated(String),
     EntityNotCreatedWithUniqueness(String),
@@ -44,40 +45,43 @@ pub enum Error {
     Unknown,
 }
 
-pub fn error_to_http(e: Error) -> HttpResponse {
-    match &e {
-        Error::Io(_) => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::QueryFormat(_) => HttpResponse::BadRequest().body(e.to_string()),
+pub fn error_to_http(e: &Error) -> HttpResponse {
+    match e {
+        Error::Io(_)
+        | Error::Serialization(_)
+        | Error::FailedToParseState
+        | Error::FailedToParseRegistry
+        | Error::UnknownCondition
+        | Error::ActixMailbox(_)
+        | Error::Ron(_)
+        | Error::DateTimeParse(_)
+        | Error::FailedToParseDate
+        | Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::QueryFormat(_)
+        | Error::InvalidQuery
+        | Error::DuplicatedUnique(_, _, _)
+        | Error::EntityNotCreated(_)
+        | Error::EntityNotCreatedWithUniqueness(_)
+        | Error::UuidNotCreatedForEntity(_, _)
+        | Error::InvalidUuid(_)
+        | Error::UpdateContentEncryptKeys(_)
+        | Error::CheckNonEncryptedKeys(_)
+        | Error::FailedToCreateUser
+        | Error::FailedToDeleteUsers
+        | Error::KeyTxTimeNotAllowed => HttpResponse::BadRequest().body(e.to_string()),
         Error::EntityAlreadyCreated(_) => HttpResponse::UnprocessableEntity().body(e.to_string()),
-        Error::EntityNotCreated(_) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::EntityNotCreatedWithUniqueness(_) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::Serialization(_) => HttpResponse::InternalServerError().body(e.to_string()),
         #[cfg(feature = "json")]
         Error::SerdeJson(_) => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::UuidNotCreatedForEntity(_, _) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::FailedToParseState => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::FailedToParseRegistry => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::UnknownCondition => HttpResponse::InternalServerError().body(e.to_string()),
         Error::FailedMatchCondition => HttpResponse::PreconditionFailed().body(e.to_string()),
-        Error::DuplicatedUnique(_, _, _) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::SelectBadRequest => HttpResponse::MethodNotAllowed().body(e.to_string()),
         Error::NonSelectQuery => HttpResponse::MethodNotAllowed().body(e.to_string()),
-        Error::ActixMailbox(_) => HttpResponse::InternalServerError().body(e.to_string()),
         Error::LockData => HttpResponse::ServiceUnavailable().body(e.to_string()),
-        Error::Ron(_) => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::InvalidUuid(_) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::UpdateContentEncryptKeys(_) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::CheckNonEncryptedKeys(_) => HttpResponse::BadRequest().body(e.to_string()),
-        Error::DateTimeParse(_) => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::FailedToParseDate => HttpResponse::InternalServerError().body(e.to_string()),
-        Error::AdminNotConfigured => HttpResponse::Unauthorized().body(e.to_string()),
-        Error::AuthorizationBadRequest => HttpResponse::Unauthorized().body(e.to_string()),
-        Error::AuthenticationBadRequest => HttpResponse::Forbidden().body(e.to_string()),
-        Error::AuthenticationBadRequestBody(_) => HttpResponse::Forbidden().body(e.to_string()),
-        Error::FailedToCreateUser => HttpResponse::BadRequest().body(e.to_string()),
-        Error::FailedToDeleteUsers => HttpResponse::BadRequest().body(e.to_string()),
-        Error::KeyTxTimeNotAllowed => HttpResponse::BadRequest().body(e.to_string()),
-        Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
+        Error::AdminNotConfigured | Error::AuthorizationBadRequest => {
+            HttpResponse::Unauthorized().body(e.to_string())
+        }
+        Error::AuthenticationBadRequest | Error::AuthenticationBadRequestBody(_) => {
+            HttpResponse::Forbidden().body(e.to_string())
+        }
+        Error::SelectBadRequest => HttpResponse::MethodNotAllowed().body(e.to_string()),
     }
 }
 
@@ -86,6 +90,12 @@ impl std::fmt::Display for Error {
         match self {
             Error::QueryFormat(s) => {
                 Response::new(String::from("QueryFormat"), format!("{:?}", s)).write(f)
+            }
+            Error::InvalidQuery => {
+                Response::new(
+                    String::from("InvalidQuery"), 
+                    "Only single value queries are allowed, so key `ID` is required and keys `WHEN AT` are optional".to_string()
+                ).write(f)
             }
             Error::Io(e) => Response::new(String::from("IO"), format!("{:?}", e)).write(f),
             Error::EntityAlreadyCreated(e) => Response::new(
