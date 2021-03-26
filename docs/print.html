@@ -251,8 +251,8 @@ CLIENT_SHUTDOWN=5000
 <li>Hashed values are filtered out of <code>SELECT</code> and can only be checked with  <a href="https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key"><code>CHECK</code></a> keyword.</li>
 <li><a href="https://github.com/ron-rs/ron/blob/master/docs/grammar.md"><code>Ron</code></a> schemas for input and output.
 <ul>
-<li><input disabled="" type="checkbox"/>
-JSON to be supported via feature.</li>
+<li><input disabled="" type="checkbox" checked=""/>
+JSON is supported via feature.</li>
 <li><input disabled="" type="checkbox"/>
 EDN to be supported via feature.</li>
 </ul>
@@ -291,28 +291,20 @@ Entity id history</li>
 <li><input disabled="" type="checkbox"/>
 Possible Relation Algebra
 <ul>
-<li><input disabled="" type="checkbox"/>
-Projection</li>
-<li><input disabled="" type="checkbox"/>
-Union</li>
-<li><input disabled="" type="checkbox"/>
-Intersection </li>
-<li><input disabled="" type="checkbox"/>
-Difference (SQL's EXCEPT?) <code>-</code></li>
+<li><input disabled="" type="checkbox" checked=""/>
+Union by entity_id</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Intersection by entity_id</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Difference by entity_id</li>
 <li><input disabled="" type="checkbox"/>
 Join</li>
-<li><input disabled="" type="checkbox"/>
-Rename</li>
-<li><input disabled="" type="checkbox"/>
-Assign</li>
 <li><input disabled="" type="checkbox" checked=""/>
 Dedup</li>
 <li><input disabled="" type="checkbox" checked=""/>
 Sort</li>
 <li><input disabled="" type="checkbox" checked=""/>
 Aggregate</li>
-<li><input disabled="" type="checkbox"/>
-Division</li>
 </ul>
 </li>
 </ul>
@@ -1097,6 +1089,9 @@ Support temporality for where clause</li>
 <li><a href="sec-9-algebra.html#limit-and-offset"><code>LIMIT</code></a></li>
 <li><a href="sec-9-algebra.html#limit-and-offset"><code>OFFSET</code></a></li>
 <li><a href="sec-9-algebra.html#count"><code>COUNT</code></a></li>
+<li><a href="sec-9-algebra.html#union"><code>UNION</code></a></li>
+<li><a href="sec-9-algebra.html#intersect"><code>INTERSECT</code></a></li>
+<li><a href="sec-9-algebra.html#difference"><code>DIFFERENCE</code></a></li>
 </ul>
 <p>This functions are only supported by the following select queries:</p>
 <ul>
@@ -1211,6 +1206,93 @@ Support temporality for where clause</li>
     response: { &quot;map containing the response for the query&quot; },
     count: usize,
 )
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="union"><a class="header" href="#union"><code>UNION</code></a></h2>
+<p>This unites two entities into one entity. There are two strategies for this relation the first one is <code>UNION KEY</code> which will unify 2 entities adding to the first one the missing values from the second, then there is <code>UNION KEY-VALUE</code> that will unite the keys and values from the second and if the value is the different for each key a <code>duplicated</code> sign will be added. The following examples will help you understand considering the following entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &quot;ent1&quot;: {&lt;UUID1&gt;: {a: 123, b: 234, c: true,}}
+    &quot;ent2&quot;: {&lt;UUID2&gt;: {a: 123, b: 432, d: false,}}
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="key"><a class="header" href="#key"><code>KEY</code></a></h3>
+<p><code>UNION KEY Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2</code>. Note the <code>|</code> as query separator.</p>
+<p>The entity to be returned will be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;a&quot;: 123, &quot;b&quot;: 234, &quot;c&quot; true}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="key-value"><a class="header" href="#key-value"><code>KEY-VALUE</code></a></h3>
+<p><code>UNION KEY-VALUE Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2</code>. Note the <code>|</code> as query separator.</p>
+<p>The entity to be returned will be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;a&quot;: 123, &quot;b&quot;: 234, &quot;b:duplicated&quot;: 432, &quot;c&quot; true, &quot;d&quot;: false}
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="intersect"><a class="header" href="#intersect"><code>INTERSECT</code></a></h2>
+<p>This intersects two entities into one entity. There are two strategies for this relation the first one is <code>INTERSECT KEY</code> which will return only the key value pairs from the first entity that have a corresponding key in the second entity, then there is <code>INTERSECT KEY-VALUE</code> which will return only the key value pairs from the first entity that have a corresponding key value pair in the second entity. The following examples will help you understand considering the following entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &quot;ent1&quot;: {&lt;UUID1&gt;: {a: 123, b: 234, c: true,}}
+    &quot;ent2&quot;: {&lt;UUID2&gt;: {a: 123, b: 432, d: false,}}
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="key-1"><a class="header" href="#key-1"><code>KEY</code></a></h3>
+<p><code>INTERSECT KEY Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2</code>. Note the <code>|</code> as query separator.</p>
+<p>The entity to be returned will be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;a&quot;: 123, &quot;b&quot;: 234}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="key-value-1"><a class="header" href="#key-value-1"><code>KEY-VALUE</code></a></h3>
+<p><code>INTERSECT KEY-VALUE Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2</code>. Note the <code>|</code> as query separator.</p>
+<p>The entity to be returned will be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;a&quot;: 123}
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="difference"><a class="header" href="#difference"><code>DIFFERENCE</code></a></h2>
+<p>This intersects two entities into one entity. There are two strategies for this relation the first one is <code>DIFFERENCE KEY</code> which will return only the key value pairs from the first entity that do not have a corresponding key in the second entity, then there is <code>DIFFERENCE KEY-VALUE</code> which will return only the key value pairs from the first entity that do not have a corresponding key value pair in the second entity. The following examples will help you understand considering the following entities:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &quot;ent1&quot;: {&lt;UUID1&gt;: {a: 123, b: 234, c: true,}}
+    &quot;ent2&quot;: {&lt;UUID2&gt;: {a: 123, b: 432, d: false,}}
+}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="key-2"><a class="header" href="#key-2"><code>KEY</code></a></h3>
+<p><code>DIFFERENCE KEY Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2</code>. Note the <code>|</code> as query separator.</p>
+<p>The entity to be returned will be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;c&quot;: true,}
+<span class="boring">}
+</span></code></pre></pre>
+<h3 id="key-value-2"><a class="header" href="#key-value-2"><code>KEY-VALUE</code></a></h3>
+<p><code>DIFFERENCE KEY-VALUE Select * FROM ent1 ID uuid1 | Select * FROM ent2 ID uuid2</code>. Note the <code>|</code> as query separator.</p>
+<p>The entity to be returned will be:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{&quot;c&quot;: true, &quot;b&quot;: 234}
 <span class="boring">}
 </span></code></pre></pre>
 <h1 id="error-messages"><a class="header" href="#error-messages">Error Messages</a></h1>
