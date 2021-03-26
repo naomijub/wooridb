@@ -1089,15 +1089,32 @@ Support temporality for where clause</li>
 <li><a href="sec-9-algebra.html#limit-and-offset"><code>LIMIT</code></a></li>
 <li><a href="sec-9-algebra.html#limit-and-offset"><code>OFFSET</code></a></li>
 <li><a href="sec-9-algebra.html#count"><code>COUNT</code></a></li>
-<li><a href="sec-9-algebra.html#union"><code>UNION</code></a></li>
-<li><a href="sec-9-algebra.html#intersect"><code>INTERSECT</code></a></li>
-<li><a href="sec-9-algebra.html#difference"><code>DIFFERENCE</code></a></li>
 </ul>
 <p>This functions are only supported by the following select queries:</p>
 <ul>
-<li><code>SELECT */#{...} FROM  tree_key_name</code></li>
-<li><code>SELECT */#{...} FROM  tree_key_name WHERE {...}</code></li>
-<li><code>SELECT */#{...} FROM  tree_key_name IDS IN #{...}</code></li>
+<li>
+<p><code>SELECT */#{...} FROM  tree_key_name</code></p>
+</li>
+<li>
+<p><code>SELECT */#{...} FROM  tree_key_name WHERE {...}</code></p>
+</li>
+<li>
+<p><code>SELECT */#{...} FROM  tree_key_name IDS IN #{...}</code></p>
+</li>
+<li>
+<p><a href="sec-9-algebra.html#union"><code>UNION</code></a></p>
+</li>
+<li>
+<p><a href="sec-9-algebra.html#intersect"><code>INTERSECT</code></a></p>
+</li>
+<li>
+<p><a href="sec-9-algebra.html#difference"><code>DIFFERENCE</code></a></p>
+</li>
+</ul>
+<p>This functions are only supported by the following select queries:</p>
+<ul>
+<li><code>SELECT */#{...} FROM  tree_key_name ID some-uuid</code></li>
+<li><code>SELECT */#{...} FROM  tree_key_name ID some-uuid WHEN AT some-date</code></li>
 </ul>
 <h2 id="group-by"><a class="header" href="#group-by"><code>GROUP BY</code></a></h2>
 <p>This groups the responses of the select query in the following type <code>HashMap&lt;String, BTreeMap&lt;Uuid, HashMap&lt;String, Types&gt;&gt;&gt;</code> (for <code>group by</code> associated with <code>order by</code> the type is <code>HashMap&lt;String, Vec&lt;(Uuid, HashMap&lt;String, Types&gt;)&gt;&gt;</code>). So the query <code>SELECT * FROM key GROUP BY c</code> for the following 6 entities:</p>
