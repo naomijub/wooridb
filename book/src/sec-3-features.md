@@ -19,9 +19,9 @@
 - Configuration is done via environment variables.
   - [ ] CORS
 - Authentication and Authorization via session token
-  - [ ] Creating and removing ADMINs.
+- Users created and deleted by ADMIN user.
 - [Conditional Update](https://github.com/naomijub/wooridb#match-update-entity)
-- [ ] File compression done with `zstd`.
+- File compression done with `zstd`.
 - [x] Entity id history
 - [ ] Possible Relation Algebra
     - [x] Union by entity_id
