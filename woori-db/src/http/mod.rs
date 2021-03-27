@@ -8,7 +8,7 @@ use crate::auth::{
 use actix_web_httpauth::middleware::HttpAuthentication;
 
 use crate::{
-    actors::wql::Executor,
+    actors::{scheduler::Scheduler, wql::Executor},
     controllers::entity_history,
     io::read::{encryption, local_data, offset, unique_data},
     repository::local::{LocalContext, SessionContext, UniquenessContext},
@@ -63,8 +63,8 @@ pub fn routes(config: &mut web::ServiceConfig) {
     #[cfg(not(debug_assertions))]
     let admin_info = read_admin_info().unwrap();
 
-    // Deactivate scheduler for now
-    // Scheduler.start();
+    Scheduler.start();
+
     #[cfg(not(debug_assertions))]
     let wql_auth = HttpAuthentication::bearer(wql_validator);
     #[cfg(not(debug_assertions))]

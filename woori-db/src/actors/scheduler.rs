@@ -3,7 +3,7 @@ use chrono::{Local, TimeZone, Utc};
 use cron::Schedule;
 use std::{
     fs::OpenOptions,
-    io::{BufReader, Write},
+    io::{BufReader, BufWriter},
     path::PathBuf,
     process::Command,
     str::FromStr,
@@ -32,32 +32,35 @@ impl Scheduler {
     fn schedule_task(&self, ctx: &mut Context<Self>) {
         use glob::glob;
         log::debug!("schedule_task event - {:?}", Local::now());
-        let date_to_clear = Utc::now() + chrono::Duration::days(10);
-        let files: Vec<PathBuf> = glob("*")
+        let date_to_clear = Utc::now() - chrono::Duration::days(10);
+        let files: Vec<PathBuf> = glob("*data/*.log")
             .unwrap()
             .map(std::result::Result::unwrap)
             .collect();
 
         files.iter().for_each(|f| {
             if let Some(file_name) = f.to_str() {
-                let date = file_name.replace(".log", "");
+                let date = file_name.replace(".log", "").replace("data/", "");
                 let file_date =
                     Utc.datetime_from_str(&format!("{} 00:00:00", date), "%Y_%m_%d %H:%M:%S");
 
                 if file_date.is_ok() && file_date.unwrap() < date_to_clear {
+                    use std::io;
                     let file_zip = file_name.replace(".log", ".zst");
-                    println!("{:?}", file_name);
-                    println!("{:?}", file_zip);
                     let file = OpenOptions::new().read(true).open(file_name).unwrap();
-                    let reader = BufReader::new(file);
-                    let encoded = zstd::stream::encode_all(reader, 22).unwrap();
-                    let mut write = OpenOptions::new()
+                    let mut reader = BufReader::new(file);
+                    let write = OpenOptions::new()
                         .create(true)
                         .write(true)
                         .append(false)
                         .open(&file_zip)
                         .unwrap();
-                    write.write_all(encoded.as_slice()).unwrap();
+                    let writer = BufWriter::new(write);
+
+                    let mut encoder = zstd::stream::Encoder::new(writer, 22).unwrap();
+                    io::copy(&mut reader, &mut encoder).unwrap();
+                    encoder.finish().unwrap();
+
                     Command::new("rm")
                         .arg("-rf")
                         .arg(&file_name)
