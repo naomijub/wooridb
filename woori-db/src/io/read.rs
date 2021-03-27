@@ -1,7 +1,7 @@
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fs::OpenOptions,
-    io::{Error, Read, Seek, SeekFrom},
+    io::{BufReader, Error, Read, Seek, SeekFrom},
 };
 
 use rayon::prelude::*;
@@ -96,21 +96,42 @@ pub fn assert_encrypt(pat: &str) {
 }
 
 pub fn read_log(registry: DataRegister) -> Result<String, Error> {
-    let file_name = registry.file_name;
-    let mut file = OpenOptions::new().read(true).open(file_name)?;
-    file.seek(SeekFrom::Start(registry.offset as u64))?;
     let mut res = String::with_capacity(registry.bytes_length);
-    file.take(registry.bytes_length as u64)
-        .read_to_string(&mut res)?;
+    let file_name = registry.file_name;
+
+    if let Ok(mut file) = OpenOptions::new().read(true).open(&file_name) {
+        file.seek(SeekFrom::Start(registry.offset as u64))?;
+        file.take(registry.bytes_length as u64)
+            .read_to_string(&mut res)?;
+    } else {
+        let zst_date = file_name.replace(".log", ".zst");
+        let file = OpenOptions::new().read(true).open(zst_date)?;
+        let reader = BufReader::new(file);
+        let utf8 = zstd::stream::decode_all(reader)?;
+        res = std::str::from_utf8(&utf8)
+            .unwrap_or("")
+            .chars()
+            .skip(registry.offset as usize)
+            .take(registry.bytes_length as usize)
+            .collect::<String>();
+    };
 
     Ok(res)
 }
 
 pub fn read_date_log(date_log: String) -> Result<String, Error> {
-    let mut file = OpenOptions::new().read(true).open(date_log)?;
-    file.seek(SeekFrom::Start(0))?;
     let mut res = String::new();
-    file.read_to_string(&mut res)?;
+
+    if let Ok(mut file) = OpenOptions::new().read(true).open(&date_log) {
+        file.seek(SeekFrom::Start(0))?;
+        file.read_to_string(&mut res)?;
+    } else {
+        let zst_date = date_log.replace(".log", ".zst");
+        let file = OpenOptions::new().read(true).open(zst_date)?;
+        let reader = BufReader::new(file);
+        let utf8 = zstd::stream::decode_all(reader)?;
+        res = std::str::from_utf8(&utf8).unwrap_or("").to_owned();
+    };
 
     Ok(res)
 }

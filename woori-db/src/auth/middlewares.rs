@@ -49,7 +49,6 @@ pub async fn history_validator(
     req: ServiceRequest,
     credentials: BearerAuth,
 ) -> Result<ServiceRequest, Error> {
-    println!("{:?}", req.path());
     if req.path().starts_with("/entity-history") {
         let allow = req
             .app_data::<web::Data<Arc<Mutex<SessionContext>>>>()
