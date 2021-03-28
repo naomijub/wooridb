@@ -33,7 +33,7 @@ test:
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_update_set_post_ok
 	rm -rf data/*.log
-	cargo test -- --ignored controllers::tx_test::test_delete_withput_update
+	cargo test -- --ignored controllers::tx_test::test_delete_without_update
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_delete_post_ok
 	rm -rf data/*.log
