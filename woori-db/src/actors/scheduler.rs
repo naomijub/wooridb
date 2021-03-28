@@ -77,7 +77,7 @@ impl Scheduler {
 }
 
 pub fn duration_until_next() -> Duration {
-    let cron_expression = "0 0 0 */1 * *"; // or "@daily"; every day at midnight
+    let cron_expression = "@daily"; // or "0 0 0 */1 * *"; every day at midnight
     let cron_schedule = Schedule::from_str(cron_expression).unwrap();
     let now = Local::now();
     let next = cron_schedule.upcoming(Local).next().unwrap();
