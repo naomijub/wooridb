@@ -1,4 +1,4 @@
-use crate::{http::routes, schemas::tx::InsertEntityResponse};
+use crate::{http::routes, schemas::tx::TxResponse};
 use actix_http::body::ResponseBody;
 use actix_web::{body::Body, test, App};
 use chrono::Utc;
@@ -23,8 +23,8 @@ async fn test_history_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let response: TxResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid.unwrap();
 
     let payload = format!("UPDATE test_history SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
@@ -100,8 +100,8 @@ async fn test_start_end_time_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
-    let response: InsertEntityResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let response: TxResponse = ron::de::from_str(&body).unwrap();
+    let uuid = response.uuid.unwrap();
     thread::sleep(one_sec);
 
     let payload = format!("UPDATE test_history SET {{a: 12, c: Nil,}} INTO {}", uuid);

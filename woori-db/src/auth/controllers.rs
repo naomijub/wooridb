@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 use crate::{
     core::pretty_config_output,
-    model::{error::Error, DataI64},
+    model::{
+        error::{error_to_http, Error},
+        DataI64,
+    },
     repository::local::{SessionContext, SessionInfo},
 };
 
@@ -19,6 +22,31 @@ use super::{
 };
 
 pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Responder {
+    match create_user_controller(body, admin).await {
+        Err(e) => error_to_http(&e),
+        Ok(body) => {
+            #[cfg(feature = "json")]
+            match serde_json::to_string(&body) {
+                Ok(ron) => HttpResponse::Created().body(ron),
+                Err(_) => {
+                    HttpResponse::ServiceUnavailable().body(Error::FailedToCreateUser.to_string())
+                }
+            }
+            #[cfg(not(feature = "json"))]
+            match ron::ser::to_string_pretty(&body, pretty_config_output()) {
+                Ok(ron) => HttpResponse::Created().body(ron),
+                Err(_) => {
+                    HttpResponse::ServiceUnavailable().body(Error::FailedToCreateUser.to_string())
+                }
+            }
+        }
+    }
+}
+
+pub async fn create_user_controller(
+    body: String,
+    admin: web::Data<AdminInfo>,
+) -> Result<UserId, Error> {
     #[cfg(feature = "json")]
     let credentials: Result<CreateUserWithAdmin, Error> = match serde_json::from_str(&body) {
         Ok(x) => Ok(x),
@@ -36,38 +64,51 @@ pub async fn create_user(body: String, admin: web::Data<AdminInfo>) -> impl Resp
             if let Ok(new_user_hash) = hash(&cred.user_info.user_password, admin.cost()) {
                 let user = User::new(new_user_id, new_user_hash, cred.user_info.role);
                 if io::to_users_log(&user).is_ok() {
-                    let user_response = UserId {
+                    Ok(UserId {
                         user_id: new_user_id,
-                    };
-                    #[cfg(feature = "json")]
-                    match serde_json::to_string(&user_response) {
-                        Ok(ron) => HttpResponse::Created().body(ron),
-                        Err(_) => HttpResponse::ServiceUnavailable()
-                            .body(Error::FailedToCreateUser.to_string()),
-                    }
-                    #[cfg(not(feature = "json"))]
-                    match ron::ser::to_string_pretty(&user_response, pretty_config_output()) {
-                        Ok(ron) => HttpResponse::Created().body(ron),
-                        Err(_) => HttpResponse::ServiceUnavailable()
-                            .body(Error::FailedToCreateUser.to_string()),
-                    }
+                    })
                 } else {
-                    HttpResponse::ServiceUnavailable().body(Error::FailedToCreateUser.to_string())
+                    Err(Error::FailedToCreateUser)
                 }
             } else {
-                HttpResponse::ServiceUnavailable().body(Error::FailedToCreateUser.to_string())
+                Err(Error::FailedToCreateUser)
             }
         } else {
-            HttpResponse::BadRequest().body(Error::AuthenticationBadRequest.to_string())
+            Err(Error::AuthenticationBadRequest)
         }
     } else {
-        HttpResponse::BadRequest().body(
-            Error::AuthenticationBadRequestBody(credentials.err().unwrap().to_string()).to_string(),
-        )
+        Err(Error::AuthenticationBadRequestBody(
+            credentials.err().unwrap().to_string(),
+        ))
     }
 }
 
 pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Responder {
+    match delete_users_controller(body, admin).await {
+        Err(e) => error_to_http(&e),
+        Ok(body) => {
+            #[cfg(feature = "json")]
+            match serde_json::to_string(&body) {
+                Ok(ron) => HttpResponse::Created().body(ron),
+                Err(_) => {
+                    HttpResponse::ServiceUnavailable().body(Error::FailedToDeleteUsers.to_string())
+                }
+            }
+            #[cfg(not(feature = "json"))]
+            match ron::ser::to_string_pretty(&body, pretty_config_output()) {
+                Ok(ron) => HttpResponse::Created().body(ron),
+                Err(_) => {
+                    HttpResponse::ServiceUnavailable().body(Error::FailedToDeleteUsers.to_string())
+                }
+            }
+        }
+    }
+}
+
+pub async fn delete_users_controller(
+    body: String,
+    admin: web::Data<AdminInfo>,
+) -> Result<Vec<Uuid>, Error> {
     #[cfg(feature = "json")]
     let credentials: Result<DeleteUsersWithAdmin, Error> = match serde_json::from_str(&body) {
         Ok(x) => Ok(x),
@@ -82,36 +123,35 @@ pub async fn delete_users(body: String, admin: web::Data<AdminInfo>) -> impl Res
     if let Ok(cred) = credentials {
         if admin.is_valid_hash(&cred.admin_password, &cred.admin_id) {
             if io::remove_users_from_log(&cred.users_ids).is_ok() {
-                #[cfg(feature = "json")]
-                match serde_json::to_string(&cred.users_ids) {
-                    Ok(ron) => HttpResponse::Created().body(ron),
-                    Err(_) => HttpResponse::ServiceUnavailable()
-                        .body(Error::FailedToCreateUser.to_string()),
-                }
-                #[cfg(not(feature = "json"))]
-                match ron::ser::to_string_pretty(&cred.users_ids, pretty_config_output()) {
-                    Ok(ron) => HttpResponse::Created().body(ron),
-                    Err(_) => HttpResponse::ServiceUnavailable()
-                        .body(Error::FailedToCreateUser.to_string()),
-                }
+                Ok(cred.users_ids)
             } else {
-                HttpResponse::ServiceUnavailable().body(Error::FailedToDeleteUsers.to_string())
+                Err(Error::FailedToDeleteUsers)
             }
         } else {
-            HttpResponse::BadRequest().body(Error::AuthenticationBadRequest.to_string())
+            Err(Error::AuthenticationBadRequest)
         }
     } else {
-        HttpResponse::BadRequest().body(
-            Error::AuthenticationBadRequestBody(credentials.err().unwrap().to_string()).to_string(),
-        )
+        Err(Error::AuthenticationBadRequestBody(
+            credentials.err().unwrap().to_string(),
+        ))
     }
 }
-
 pub async fn put_user_session(
     body: String,
     session_context: web::Data<Arc<Mutex<SessionContext>>>,
     expiration_time: DataI64,
 ) -> impl Responder {
+    match put_user_session_controller(body, session_context, expiration_time).await {
+        Err(e) => error_to_http(&e),
+        Ok(token) => HttpResponse::Created().body(token),
+    }
+}
+
+pub async fn put_user_session_controller(
+    body: String,
+    session_context: web::Data<Arc<Mutex<SessionContext>>>,
+    expiration_time: DataI64,
+) -> Result<String, Error> {
     let exp_time: i64 = *expiration_time.into_inner();
     #[cfg(feature = "json")]
     let ok_user: Result<super::schemas::User, Error> = match serde_json::from_str(&body) {
@@ -138,17 +178,17 @@ pub async fn put_user_session(
 
                         session.insert(token.clone(), SessionInfo::new(expiration, roles));
 
-                        return HttpResponse::Created().body(token);
+                        return Ok(token);
                     }
                 }
             };
         }
 
-        HttpResponse::BadRequest().body(Error::Unknown.to_string())
+        Err(Error::Unknown)
     } else {
-        HttpResponse::BadRequest().body(
-            Error::AuthenticationBadRequestBody(ok_user.err().unwrap().to_string()).to_string(),
-        )
+        Err(Error::AuthenticationBadRequestBody(
+            ok_user.err().unwrap().to_string(),
+        ))
     }
 }
 
@@ -287,9 +327,8 @@ mod test {
             .to_request();
 
         let mut resp = test::call_service(&mut app, req).await;
-        let body = resp.take_body().as_str().to_string();
-
         assert!(resp.status().is_client_error());
+        let body = resp.take_body().as_str().to_string();
         assert_eq!(
             body,
             "(\n error_type: \"Unknown\",\n error_message: \"Request credentials failed\",\n)"

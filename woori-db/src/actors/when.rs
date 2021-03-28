@@ -1,11 +1,10 @@
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
-use rayon::prelude::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use uuid::Uuid;
 use wql::Types;
 
-use crate::{io::read::read_date_log, model::error::Error};
+use crate::{core::query::filter_keys_and_hash, io::read::read_date_log, model::error::Error};
 
 use super::wql::Executor;
 pub struct ReadEntityRange {
@@ -70,7 +69,7 @@ impl Handler<ReadEntityRange> for Executor {
                     };
                     match resp {
                         Ok(map) => {
-                            let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
+                            let map = filter_keys_and_hash(map, None);
                             hm.insert(date, map);
                         }
                         Err(e) => return Err(e),
@@ -97,7 +96,7 @@ impl Handler<ReadEntityRange> for Executor {
                     };
                     match resp {
                         Ok(map) => {
-                            let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
+                            let map = filter_keys_and_hash(map, None);
                             hm.insert(date, map);
                         }
                         Err(e) => return Err(e),
@@ -114,13 +113,15 @@ impl Handler<ReadEntityRange> for Executor {
 pub struct ReadEntitiesAt {
     entity_name: String,
     date_log: String,
+    keys: Option<HashSet<String>>,
 }
 
 impl ReadEntitiesAt {
-    pub fn new(entity_name: &str, date_log: String) -> Self {
+    pub fn new(entity_name: &str, date_log: String, keys: Option<HashSet<String>>) -> Self {
         Self {
             entity_name: entity_name.to_owned(),
             date_log,
+            keys,
         }
     }
 }
@@ -151,7 +152,7 @@ impl Handler<ReadEntitiesAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        let map = filter_keys_and_hash(map, msg.keys.clone());
                         hm.insert(fractions[2].to_owned(), map);
                     }
                     Err(e) => return Err(e),
@@ -170,7 +171,7 @@ impl Handler<ReadEntitiesAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
+                        let map = filter_keys_and_hash(map, msg.keys.clone());
                         hm.insert(fractions[2].to_owned(), map);
                     }
                     Err(e) => return Err(e),
@@ -229,7 +230,6 @@ impl Handler<ReadEntityIdAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm = map;
                     }
                     Err(e) => return Err(e),
@@ -249,7 +249,6 @@ impl Handler<ReadEntityIdAt> for Executor {
                 };
                 match resp {
                     Ok(map) => {
-                        let map = map.into_par_iter().filter(|(_, v)| !v.is_hash()).collect();
                         hm = map;
                     }
                     Err(e) => return Err(e),

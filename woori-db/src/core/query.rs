@@ -7,7 +7,36 @@ use rayon::prelude::*;
 use uuid::Uuid;
 use wql::{Algebra, Types};
 
-use crate::schemas::query::{CountResponse, Response as QueryResponse};
+use crate::{
+    model::DataRegister,
+    schemas::query::{CountResponse, Response as QueryResponse},
+};
+
+pub(crate) fn filter_keys_and_hash(
+    state: HashMap<String, Types>,
+    keys: Option<HashSet<String>>,
+) -> HashMap<String, Types> {
+    let filtered = state.into_par_iter().filter(|(_, v)| !v.is_hash());
+    if let Some(keys) = keys {
+        filtered.filter(|(k, _)| keys.contains(k)).collect()
+    } else {
+        filtered.collect()
+    }
+}
+
+pub fn registries_to_states(
+    registries: BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
+    keys: Option<HashSet<String>>,
+    offset: usize,
+    limit: usize,
+) -> BTreeMap<Uuid, HashMap<String, Types>> {
+    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+    for (uuid, (_, state)) in registries.into_iter().skip(offset).take(limit) {
+        let filtered = filter_keys_and_hash(state, keys.clone());
+        states.insert(uuid, filtered);
+    }
+    states
+}
 
 pub(crate) fn get_limit_offset_count(
     functions: &HashMap<String, wql::Algebra>,

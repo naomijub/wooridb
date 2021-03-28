@@ -15,11 +15,11 @@ lint: fmt clippy
 test:
 	rm -rf data/*.log
 	cargo test -- --nocapture
-	cargo test --release -- --ignored auth::controllers::test::bad_request_if_user_password_is_wrong
 	cargo test --release -- --ignored auth::controllers::test::create_new_user_ok
 	cargo test --release -- --ignored auth::controllers::test::create_new_user_wrong_admin
 	cargo test --release -- --ignored auth::controllers::test::get_token_test
 	cargo test --release -- --ignored auth::controllers::test::delete_user_ok
+	cargo test --release -- --ignored auth::controllers::test::bad_request_if_user_password_is_wrong
 	cargo test --features test_read io::read::test::encryption_test
 	cargo test --features test_read io::read::test::local_data_test
 	cargo test --features test_read io::read::test::offset_test
@@ -33,7 +33,7 @@ test:
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_update_set_post_ok
 	rm -rf data/*.log
-	cargo test -- --ignored controllers::tx_test::test_delete_withput_update
+	cargo test -- --ignored controllers::tx_test::test_delete_without_update
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::tx_test::test_delete_post_ok
 	rm -rf data/*.log

@@ -20,8 +20,11 @@ CREATE ENTITY my_entity_name
 Example response:
 ```rust
 (
- entity: "my_entity_name",
- message: "Entity `my_entity_name` created",
+    tx_type: Create,
+    entity: "my_entity_name",
+    uuid: None,
+    state: "",
+    message: "Entity `my_entity_name` created",
 )
 ```
 
@@ -48,9 +51,11 @@ INTO my_entity_name
 Example response:
 ```rust
 (
- entity: "my_entity_name",
- uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- message: "Entity my_entity_name inserted with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3",
+    tx_type: Insert,
+    entity: "my_entity_name",
+    uuid: Some("00d025c9-eda8-4190-a33a-29998bd77bd3"),
+    state: "",
+    message: "Entity my_entity_name inserted with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3",
 )
 ```
 
@@ -86,10 +91,11 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 Example response:
 ```rust
 (
- entity: "my_entity_name",
- uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- state: "{\"b\": Integer(32),\"a\": Integer(-4), \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
- message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
+    tx_type: UpdateSet,
+    entity: "my_entity_name",
+    uuid: Some("00d025c9-eda8-4190-a33a-29998bd77bd3"),
+    state: "{\"b\": Integer(32),\"a\": Integer(-4), \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
+    message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
 )
 ```
 
@@ -107,10 +113,11 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 Example response:
 ```rust
 (
- entity: "my_entity_name",
- uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- state: "{\"b\": Integer(39),\"a\": Integer(-38), \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
- message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
+    tx_type: UpdateContent,
+    entity: "my_entity_name",
+    uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
+    state: "{\"b\": Integer(39),\"a\": Integer(-38), \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
+    message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
 )
 ```
 
@@ -130,10 +137,11 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 Example response:
 ```rust
 (
- entity: "my_entity_name",
- uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
- state: "{\"b\": Integer(39),\"a\": Integer(123),\"g\": Nil, \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
- message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
+    tx_type: UpdateSet,
+    entity: "my_entity_name",
+    uuid: "00d025c9-eda8-4190-a33a-29998bd77bd3",
+    state: "{\"b\": Integer(39),\"a\": Integer(123),\"g\": Nil, \"tx_time\": DateTime(\"2014-11-28T12:00:09Z\"),}",
+    message: "Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated",
 )
 ```
 
@@ -153,9 +161,11 @@ DELETE 00d025c9-eda8-4190-a33a-29998bd77bd3 FROM my_entity_name
 Example response:
 ```rust
 (
- entity: "my_entity",
- uuid: Some("00d025c9-eda8-4190-a33a-29998bd77bd3"),
- message: "Entity my_entity with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 deleted",
+    tx_type: Delete,
+    entity: "my_entity",
+    uuid: Some("00d025c9-eda8-4190-a33a-29998bd77bd3"),
+    state: "",
+    message: "Entity my_entity with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 deleted",
 )
 ```
 
@@ -176,9 +186,11 @@ EVICT 00d025c9-eda8-4190-a33a-29998bd77bd3 from my_entity_name
 Example response:
 ```rust
 (
- entity: "my_entity",
- uuid: Some("00d025c9-eda8-4190-a33a-29998bd77bd3"),
- message: "Entity my_entity with id 6ac9d1bb-2b0c-4631-bc05-682ab4ae8306 evicted",
+    tx_type: EvictEntity,
+    entity: "my_entity",
+    uuid: Some("00d025c9-eda8-4190-a33a-29998bd77bd3"),
+    state: "",
+    message: "Entity my_entity with id 6ac9d1bb-2b0c-4631-bc05-682ab4ae8306 evicted",
 )
 ```
 
@@ -195,9 +207,11 @@ EVICT my_entity
 Example response:
 ```rust
 (
- entity: "my_entity",
- uuid: None,
- message: "Entity my_entity evicted",
+    tx_type: EvictEntityTree,
+    entity: "my_entity",
+    uuid: None,
+    state: "",
+    message: "Entity my_entity evicted",
 )
 ```
 

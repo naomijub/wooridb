@@ -55,8 +55,7 @@ pub fn error_to_http(e: &Error) -> HttpResponse {
         | Error::ActixMailbox(_)
         | Error::Ron(_)
         | Error::DateTimeParse(_)
-        | Error::FailedToParseDate
-        | Error::Unknown => HttpResponse::InternalServerError().body(e.to_string()),
+        | Error::FailedToParseDate => HttpResponse::InternalServerError().body(e.to_string()),
         Error::QueryFormat(_)
         | Error::InvalidQuery
         | Error::DuplicatedUnique(_, _, _)
@@ -75,7 +74,7 @@ pub fn error_to_http(e: &Error) -> HttpResponse {
         Error::FailedMatchCondition => HttpResponse::PreconditionFailed().body(e.to_string()),
         Error::NonSelectQuery => HttpResponse::MethodNotAllowed().body(e.to_string()),
         Error::LockData => HttpResponse::ServiceUnavailable().body(e.to_string()),
-        Error::AdminNotConfigured | Error::AuthorizationBadRequest => {
+        Error::AdminNotConfigured | Error::AuthorizationBadRequest | Error::Unknown => {
             HttpResponse::Unauthorized().body(e.to_string())
         }
         Error::AuthenticationBadRequest | Error::AuthenticationBadRequestBody(_) => {
