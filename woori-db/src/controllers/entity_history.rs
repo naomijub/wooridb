@@ -17,11 +17,23 @@ pub async fn history_handler(
     local_data: DataLocalContext,
     actor: DataExecutor,
 ) -> impl Responder {
-    let response = history_controller(body, local_data, actor);
+    let response = history_controller(body, local_data, actor).await;
 
-    match response.await {
+    match response {
         Err(e) => error_to_http(&e),
-        Ok(resp) => HttpResponse::Ok().body(resp),
+        Ok(resp) => {
+            #[cfg(feature = "json")]
+            let response = serde_json::to_string(&resp).map_err(|e| Error::SerdeJson(e));
+
+            #[cfg(not(feature = "json"))]
+            let response = ron::ser::to_string_pretty(&resp, pretty_config_output())
+                .map_err(|e| Error::Ron(e));
+
+            match response {
+                Err(e) => error_to_http(&e),
+                Ok(resp) => HttpResponse::Ok().body(resp),
+            }
+        }
     }
 }
 
@@ -29,7 +41,7 @@ pub async fn history_controller(
     body: String,
     local_data: DataLocalContext,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<BTreeMap<chrono::DateTime<Utc>, HashMap<std::string::String, Types>>, Error> {
     #[cfg(feature = "json")]
     let info: EntityHistoryInfo = serde_json::from_str(&body)?;
     #[cfg(not(feature = "json"))]
@@ -100,12 +112,5 @@ pub async fn history_controller(
         })
         .collect::<BTreeMap<DateTime<Utc>, HashMap<String, Types>>>();
 
-    #[cfg(feature = "json")]
-    return Ok(serde_json::to_string(&filtered_tree)?);
-
-    #[cfg(not(feature = "json"))]
-    Ok(ron::ser::to_string_pretty(
-        &filtered_tree,
-        pretty_config_output(),
-    )?)
+    Ok(filtered_tree)
 }
