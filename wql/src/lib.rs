@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, hash::Hash};
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
+mod join;
 mod language_parser;
 mod logic;
 mod relation;
@@ -33,6 +34,7 @@ pub enum Wql {
     SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Algebra>),
     CheckValue(String, Uuid, HashMap<String, String>),
     RelationQuery(Vec<Wql>, Relation, RelationType),
+    Join((String, String), (String, String), Vec<Wql>),
 }
 
 pub use select::{Algebra, Order};
@@ -148,7 +150,12 @@ impl PartialOrd for Types {
             (Types::Float(a), Types::Float(b)) => {
                 let (mant_a, exp_a, sig_a) = integer_decode(a.to_owned());
                 let (mant_b, exp_b, sig_b) = integer_decode(b.to_owned());
-                Some(sig_a.cmp(&sig_b).then(mant_a.cmp(&mant_b)).then(exp_a.cmp(&exp_b)))
+                Some(
+                    sig_a
+                        .cmp(&sig_b)
+                        .then(mant_a.cmp(&mant_b))
+                        .then(exp_a.cmp(&exp_b)),
+                )
             }
             (Types::Integer(a), Types::Float(b)) => Some(if &(*a as f64) > b {
                 Ordering::Greater
@@ -176,28 +183,25 @@ impl PartialOrd for Types {
 impl Hash for Types {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
-            Types::Char(t) => {t.hash(state)}
-            Types::Integer(t) => {t.hash(state)}
-            Types::String(t) => {t.hash(state)}
-            Types::Uuid(t) => {t.hash(state)}
+            Types::Char(t) => t.hash(state),
+            Types::Integer(t) => t.hash(state),
+            Types::String(t) => t.hash(state),
+            Types::Uuid(t) => t.hash(state),
             Types::Float(t) => {
                 let int_t = integer_decode(t.to_owned());
                 int_t.hash(state)
             }
-            Types::Boolean(t) => {t.hash(state)}
-            Types::Vector(t) => {t.hash(state)}
-            Types::Map(t) => {
-                t.into_iter()
-                    .fold((), |acc, (k, v)| {
-                        k.hash(state);
-                        v.hash(state);
-                        acc
-                    })
-            }
-            Types::Hash(t) => {t.hash(state)}
-            Types::Precise(t) => {t.hash(state)}
-            Types::DateTime(t) => {t.hash(state)}
-            Types::Nil => {"".hash(state)}
+            Types::Boolean(t) => t.hash(state),
+            Types::Vector(t) => t.hash(state),
+            Types::Map(t) => t.into_iter().fold((), |acc, (k, v)| {
+                k.hash(state);
+                v.hash(state);
+                acc
+            }),
+            Types::Hash(t) => t.hash(state),
+            Types::Precise(t) => t.hash(state),
+            Types::DateTime(t) => t.hash(state),
+            Types::Nil => "".hash(state),
         }
     }
 }

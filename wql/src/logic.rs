@@ -396,7 +396,7 @@ pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, Strin
 use std::mem;
 
 // UNSAFE
-pub (crate) fn integer_decode(val: f64) -> (u64, i16, i8) {
+pub(crate) fn integer_decode(val: f64) -> (u64, i16, i8) {
     let bits: u64 = unsafe { mem::transmute(val) };
     let sign: i8 = if bits >> 63 == 0 { 1 } else { -1 };
     let mut exponent: i16 = ((bits >> 52) & 0x7ff) as i16;
