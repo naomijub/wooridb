@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use language_parser::read_symbol;
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
+use std::{cmp::Ordering, hash::Hash};
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
 mod language_parser;
@@ -13,7 +13,7 @@ mod test;
 mod where_clause;
 
 pub use logic::parse_value as parse_types;
-use logic::{read_map, read_match_args};
+use logic::{integer_decode, read_map, read_match_args};
 pub use relation::{Relation, RelationType};
 pub use where_clause::{Clause, Function, Value};
 
@@ -120,8 +120,7 @@ impl Types {
             Types::String(s) => s.to_string(),
             Types::DateTime(date) => date.to_string(),
             Types::Uuid(id) => format!("{}", id),
-            // TODO: Replace by ordered-float
-            Types::Float(f) => format!("{}", f),
+            Types::Float(f) => format!("{:?}", integer_decode(f.to_owned())),
             Types::Boolean(b) => format!("{}", b),
             Types::Vector(vec) => format!("{:?}", vec),
             Types::Map(map) => format!("{:?}", map),
@@ -141,15 +140,16 @@ impl Types {
 }
 
 impl Eq for Types {}
+// UNSAFE
 impl PartialOrd for Types {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Types::Integer(a), Types::Integer(b)) => Some(a.cmp(b)),
-            (Types::Float(a), Types::Float(b)) => Some(if a > b {
-                Ordering::Greater
-            } else {
-                Ordering::Less
-            }),
+            (Types::Float(a), Types::Float(b)) => {
+                let (mant_a, exp_a, sig_a) = integer_decode(a.to_owned());
+                let (mant_b, exp_b, sig_b) = integer_decode(b.to_owned());
+                Some(sig_a.cmp(&sig_b).then(mant_a.cmp(&mant_b)).then(exp_a.cmp(&exp_b)))
+            }
             (Types::Integer(a), Types::Float(b)) => Some(if &(*a as f64) > b {
                 Ordering::Greater
             } else {
@@ -168,6 +168,36 @@ impl PartialOrd for Types {
             (Types::Boolean(a), Types::Boolean(b)) => Some(a.cmp(b)),
             (Types::Vector(a), Types::Vector(b)) => Some(a.len().cmp(&b.len())),
             _ => None,
+        }
+    }
+}
+
+// UNSAFE
+impl Hash for Types {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            Types::Char(t) => {t.hash(state)}
+            Types::Integer(t) => {t.hash(state)}
+            Types::String(t) => {t.hash(state)}
+            Types::Uuid(t) => {t.hash(state)}
+            Types::Float(t) => {
+                let int_t = integer_decode(t.to_owned());
+                int_t.hash(state)
+            }
+            Types::Boolean(t) => {t.hash(state)}
+            Types::Vector(t) => {t.hash(state)}
+            Types::Map(t) => {
+                t.into_iter()
+                    .fold((), |acc, (k, v)| {
+                        k.hash(state);
+                        v.hash(state);
+                        acc
+                    })
+            }
+            Types::Hash(t) => {t.hash(state)}
+            Types::Precise(t) => {t.hash(state)}
+            Types::DateTime(t) => {t.hash(state)}
+            Types::Nil => {"".hash(state)}
         }
     }
 }
