@@ -298,6 +298,7 @@ impl Response {
     pub fn parse(
         self,
         key: String,
+        ent_b: &str,
         vec: &mut Vec<HashMap<String, Types>>,
         b_hash: HashMap<Types, Vec<HashMap<String, Types>>>,
     ) -> bool {
@@ -323,8 +324,14 @@ impl Response {
                     if let Some(v) = entities {
                         for ent in v {
                             let mut s = s.clone();
-                            s.extend(ent.clone());
-                            vec.push(ent.to_owned());
+                            for entry in ent
+                                .into_iter()
+                                .filter(|(k, _)| *k != &key && *k != "tx_time")
+                            {
+                                let entry_name = format!("{}:{}", entry.0, ent_b);
+                                s.insert(entry_name, entry.1.to_owned());
+                            }
+                            vec.push(s.to_owned());
                         }
                     }
                 });
@@ -336,7 +343,10 @@ impl Response {
                     if let Some(v) = entities {
                         for ent in v {
                             let mut s = s.clone();
-                            s.extend(ent.clone());
+                            for entry in ent {
+                                let entry_name = format!("{}:{}", entry.0, ent_b);
+                                s.insert(entry_name, entry.1.to_owned());
+                            }
                             vec.push(ent.to_owned());
                         }
                     }
@@ -350,7 +360,10 @@ impl Response {
                         if let Some(v) = entities {
                             for ent in v {
                                 let mut s = s.clone();
-                                s.extend(ent.clone());
+                                for entry in ent {
+                                    let entry_name = format!("{}:{}", entry.0, ent_b);
+                                    s.insert(entry_name, entry.1.to_owned());
+                                }
                                 vec.push(ent.to_owned());
                             }
                         }
@@ -365,7 +378,10 @@ impl Response {
                         if let Some(v) = entities {
                             for ent in v {
                                 let mut s = s.clone();
-                                s.extend(ent.clone());
+                                for entry in ent {
+                                    let entry_name = format!("{}:{}", entry.0, ent_b);
+                                    s.insert(entry_name, entry.1.to_owned());
+                                }
                                 vec.push(ent.to_owned());
                             }
                         }

@@ -8,17 +8,19 @@ pub fn join(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     let mut ent = String::new();
     let mut key = String::new();
+    let mut is_entity = true;
     loop {
         match chars.next() {
             Some(' ') | Some('(') => (),
             Some(c) if c.is_alphanumeric() || c == '_' => {
-                if ent.is_empty() {
+                if is_entity {
                     ent.push(c);
                 } else {
                     key.push(c);
                 }
             }
             Some(':') => {
+                is_entity = false;
                 if entity_a.0.is_empty() {
                     entity_a.0 = ent;
                     ent = String::new();
@@ -28,6 +30,7 @@ pub fn join(chars: &mut std::str::Chars) -> Result<Wql, String> {
                 }
             }
             Some(',') => {
+                is_entity = true;
                 if entity_a.1.is_empty() {
                     entity_a.1 = key;
                     key = String::new();
@@ -36,7 +39,10 @@ pub fn join(chars: &mut std::str::Chars) -> Result<Wql, String> {
                     key = String::new();
                 }
             }
-            Some(')') => break,
+            Some(')') => {
+                entity_b.1 = key;
+                break;
+            }
             _ => return Err(String::from("Invalid char for Join")),
         }
     }
@@ -70,4 +76,31 @@ pub fn join(chars: &mut std::str::Chars) -> Result<Wql, String> {
     // WITH clause
 
     Ok(Wql::Join(entity_a, entity_b, queries_wql))
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::{ToSelect, Wql};
+    use std::collections::HashMap;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_join() {
+        let wql = Wql::from_str(
+            "JOIN (entity_A:c, entity_B:c) Select * FROM entity_A | Select * FROM entity_B",
+        );
+
+        assert_eq!(
+            wql.unwrap(),
+            Wql::Join(
+                ("entity_A".to_string(), "c".to_string()),
+                ("entity_B".to_string(), "c".to_string()),
+                vec![
+                    Wql::Select("entity_A".to_string(), ToSelect::All, None, HashMap::new()),
+                    Wql::Select("entity_B".to_string(), ToSelect::All, None, HashMap::new())
+                ]
+            )
+        )
+    }
 }
