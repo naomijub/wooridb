@@ -631,7 +631,7 @@ mod evict {
 #[cfg(test)]
 mod test_data_sructures {
     use super::*;
-    use edn_rs::hmap;
+
     #[test]
     fn insert_vec() {
         let wql = Wql::from_str(
@@ -656,8 +656,13 @@ mod test_data_sructures {
         } INTO my_entity",
         );
 
-        let hm = hmap! {"time".to_string() => Types::DateTime("2014-11-28T12:00:09Z".parse::<DateTime<Utc>>().unwrap())};
-
+        let hm: HashMap<String, Types> = vec![(
+            "time".to_string(),
+            Types::DateTime("2014-11-28T12:00:09Z".parse::<DateTime<Utc>>().unwrap()),
+        )]
+        .iter()
+        .cloned()
+        .collect();
         assert_eq!(wql.unwrap(), Wql::Insert("my_entity".to_string(), hm, None));
     }
 
@@ -815,7 +820,6 @@ mod check {
 #[cfg(test)]
 mod test_where {
     use super::*;
-    use edn_rs::hmap;
 
     #[test]
     fn where_ok() {
@@ -913,6 +917,13 @@ mod test_where {
             ?* my_entity:id 349875325,
         } GROUP BY amazing_key";
         let wql = Wql::from_str(query);
+        let hm: HashMap<String, Algebra> = vec![(
+            "GROUP".to_string(),
+            Algebra::GroupBy(String::from("amazing_key")),
+        )]
+        .iter()
+        .cloned()
+        .collect();
 
         assert_eq!(
             wql.unwrap(),
@@ -931,9 +942,7 @@ mod test_where {
                         Types::Integer(349875325)
                     ),
                 ],
-                hmap! {
-                    "GROUP".to_string() => Algebra::GroupBy(String::from("amazing_key"))
-                }
+                hm
             )
         )
     }

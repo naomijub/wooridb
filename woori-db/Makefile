@@ -105,6 +105,8 @@ test:
 	rm -rf data/*.log
 	cargo test -- --ignored controllers::algebra_test::test_select_all_count_ok
 	rm -rf data/*.log
+	cargo test  -- --ignored controllers::relation_test::test_join --exact --nocapture
+	rm -rf data/*.log
 	cargo test --features "history json" -- controllers::json_history_test::test_history_ok
 	rm -rf data/*.log
 	cargo test --release --features "history json" -- --ignored controllers::json_history_test::query_and_tx_with_token

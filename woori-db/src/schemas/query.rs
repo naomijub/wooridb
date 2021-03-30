@@ -219,6 +219,7 @@ pub enum Response {
     TimeRange(BTreeMap<DateTime<Utc>, HashMap<String, Types>>),
     WithCount(CountResponse),
     DateSelect(HashMap<String, HashMap<String, Types>>),
+    Join(Vec<HashMap<String, Types>>),
 }
 
 impl From<CountResponse> for Response {
@@ -294,6 +295,161 @@ impl From<HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>> for R
 }
 
 impl Response {
+    pub fn parse(
+        self,
+        key: String,
+        ent_b: &str,
+        vec: &mut Vec<HashMap<String, Types>>,
+        b_hash: HashMap<Types, Vec<HashMap<String, Types>>>,
+    ) -> bool {
+        match self {
+            Response::OptionGroupBy(_)
+            | Response::CheckValues(_)
+            | Response::TimeRange(_)
+            | Response::WithCount(_)
+            | Response::Id(_)
+            | Response::Intersect(_)
+            | Response::Difference(_)
+            | Response::Union(_)
+            | Response::GroupBy(_)
+            | Response::OrderedGroupBy(_)
+            | Response::Join(_)
+            | Response::DateSelect(_) => {
+                return false;
+            }
+            Response::All(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    let type_key = s.get(&key).unwrap_or(&Types::Nil);
+                    let entities = b_hash.get(type_key);
+                    if let Some(v) = entities {
+                        for ent in v {
+                            let mut s = s.clone();
+                            for entry in ent
+                                .into_iter()
+                                .filter(|(k, _)| *k != &key && *k != "tx_time")
+                            {
+                                let entry_name = format!("{}:{}", entry.0, ent_b);
+                                s.insert(entry_name, entry.1.to_owned());
+                            }
+                            vec.push(s.to_owned());
+                        }
+                    }
+                });
+            }
+            Response::Order(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    let type_key = s.get(&key).unwrap_or(&Types::Nil);
+                    let entities = b_hash.get(type_key);
+                    if let Some(v) = entities {
+                        for ent in v {
+                            let mut s = s.clone();
+                            for entry in ent {
+                                let entry_name = format!("{}:{}", entry.0, ent_b);
+                                s.insert(entry_name, entry.1.to_owned());
+                            }
+                            vec.push(ent.to_owned());
+                        }
+                    }
+                });
+            }
+            Response::OptionOrder(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    if let Some(s) = s {
+                        let type_key = s.get(&key).unwrap_or(&Types::Nil);
+                        let entities = b_hash.get(type_key);
+                        if let Some(v) = entities {
+                            for ent in v {
+                                let mut s = s.clone();
+                                for entry in ent {
+                                    let entry_name = format!("{}:{}", entry.0, ent_b);
+                                    s.insert(entry_name, entry.1.to_owned());
+                                }
+                                vec.push(ent.to_owned());
+                            }
+                        }
+                    }
+                });
+            }
+            Response::OptionSelect(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    if let Some(s) = s {
+                        let type_key = s.get(&key).unwrap_or(&Types::Nil);
+                        let entities = b_hash.get(type_key);
+                        if let Some(v) = entities {
+                            for ent in v {
+                                let mut s = s.clone();
+                                for entry in ent {
+                                    let entry_name = format!("{}:{}", entry.0, ent_b);
+                                    s.insert(entry_name, entry.1.to_owned());
+                                }
+                                vec.push(ent.to_owned());
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        true
+    }
+
+    pub fn hash(self, key: String) -> Option<HashMap<Types, Vec<HashMap<String, Types>>>> {
+        let mut hm = HashMap::new();
+        match self {
+            Response::All(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    let entry = hm
+                        .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                        .or_insert(Vec::new());
+                    (*entry).push(s);
+                });
+            }
+            Response::Order(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    let entry = hm
+                        .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                        .or_insert(Vec::new());
+                    (*entry).push(s);
+                });
+            }
+            Response::OptionOrder(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    if let Some(s) = s {
+                        let entry = hm
+                            .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                            .or_insert(Vec::new());
+                        (*entry).push(s);
+                    }
+                });
+            }
+            Response::OptionSelect(state) => {
+                state.into_iter().for_each(|(_, s)| {
+                    if let Some(s) = s {
+                        let entry = hm
+                            .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                            .or_insert(Vec::new());
+                        (*entry).push(s);
+                    }
+                });
+            }
+            Response::OptionGroupBy(_)
+            | Response::CheckValues(_)
+            | Response::Join(_)
+            | Response::TimeRange(_)
+            | Response::WithCount(_)
+            | Response::Id(_)
+            | Response::Intersect(_)
+            | Response::Difference(_)
+            | Response::Union(_)
+            | Response::GroupBy(_)
+            | Response::OrderedGroupBy(_)
+            | Response::DateSelect(_) => {
+                return None;
+            }
+        }
+
+        Some(hm)
+    }
+
     pub fn to_string(self) -> Result<String, Error> {
         match self {
             Response::Id(state) => Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?),
@@ -333,6 +489,9 @@ impl Response {
                 Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
             }
             Response::DateSelect(state) => {
+                Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
+            }
+            Response::Join(state) => {
                 Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?)
             }
         }

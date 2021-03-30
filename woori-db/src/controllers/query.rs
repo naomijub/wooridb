@@ -28,7 +28,7 @@ use crate::{
 
 use super::{
     clauses::select_where_controller,
-    relation::{difference, intersect, union},
+    relation::{difference, intersect, join, union},
 };
 
 pub async fn wql_handler(
@@ -87,6 +87,9 @@ pub async fn wql_handler(
         }
         Ok(Wql::RelationQuery(queries, wql::Relation::Union, relation_type)) => {
             union(queries, relation_type, local_data, actor).await
+        }
+        Ok(Wql::Join(entity_a, entity_b, queries)) => {
+            join(entity_a, entity_b, queries, local_data).await
         }
         Ok(_) => Err(Error::NonSelectQuery),
         Err(e) => Err(Error::QueryFormat(e)),
@@ -297,7 +300,7 @@ pub async fn select_all_with_id(
     Ok(filterd_state.into())
 }
 
-async fn select_all_with_ids(
+pub async fn select_all_with_ids(
     entity: String,
     uuids: Vec<Uuid>,
     local_data: DataLocalContext,
@@ -379,7 +382,7 @@ pub async fn select_keys_with_id(
     Ok(filtered.into())
 }
 
-async fn select_keys_with_ids(
+pub async fn select_keys_with_ids(
     entity: String,
     keys: Vec<String>,
     uuids: Vec<Uuid>,
@@ -432,7 +435,7 @@ async fn select_keys_with_ids(
     ))
 }
 
-async fn select_all(
+pub async fn select_all(
     entity: String,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
@@ -460,7 +463,7 @@ async fn select_all(
     Ok(get_result_after_manipulation(states, &functions, count))
 }
 
-async fn select_args(
+pub async fn select_args(
     entity: String,
     keys: Vec<String>,
     local_data: DataLocalContext,
