@@ -142,21 +142,18 @@ impl Types {
 }
 
 impl Eq for Types {}
-// UNSAFE
 impl PartialOrd for Types {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Types::Integer(a), Types::Integer(b)) => Some(a.cmp(b)),
-            (Types::Float(a), Types::Float(b)) => {
-                let (mant_a, exp_a, sig_a) = integer_decode(a.to_owned());
-                let (mant_b, exp_b, sig_b) = integer_decode(b.to_owned());
-                Some(
-                    sig_a
-                        .cmp(&sig_b)
-                        .then(mant_a.cmp(&mant_b))
-                        .then(exp_a.cmp(&exp_b)),
-                )
-            }
+            
+            (Types::Float(a), Types::Float(b)) => Some(
+                if a > b {
+                    Ordering::Greater
+                } else {
+                    Ordering::Less
+                }
+            ),
             (Types::Integer(a), Types::Float(b)) => Some(if &(*a as f64) > b {
                 Ordering::Greater
             } else {
@@ -180,6 +177,7 @@ impl PartialOrd for Types {
 }
 
 // UNSAFE
+#[deny(clippy::derive_hash_xor_eq)]
 impl Hash for Types {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
