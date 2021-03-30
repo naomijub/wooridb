@@ -146,14 +146,12 @@ impl PartialOrd for Types {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Types::Integer(a), Types::Integer(b)) => Some(a.cmp(b)),
-            
-            (Types::Float(a), Types::Float(b)) => Some(
-                if a > b {
-                    Ordering::Greater
-                } else {
-                    Ordering::Less
-                }
-            ),
+
+            (Types::Float(a), Types::Float(b)) => Some(if a > b {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
             (Types::Integer(a), Types::Float(b)) => Some(if &(*a as f64) > b {
                 Ordering::Greater
             } else {
