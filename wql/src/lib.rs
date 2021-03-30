@@ -80,6 +80,7 @@ pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql,
     )
 }
 
+#[allow(clippy::derive_hash_xor_eq)] // for now
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Types {
     Char(char),
@@ -175,7 +176,7 @@ impl PartialOrd for Types {
 }
 
 // UNSAFE
-#[deny(clippy::derive_hash_xor_eq)]
+#[allow(clippy::derive_hash_xor_eq)] // for now
 impl Hash for Types {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {

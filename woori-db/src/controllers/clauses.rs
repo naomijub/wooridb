@@ -90,8 +90,9 @@ async fn filter_where_clauses(
                                 wql::Function::G => v > value,
                                 wql::Function::LEq => v <= value,
                                 wql::Function::L => {
-                                    println!("{:?} < {:?} = {}",v, value, v < value);
-                                    v < value},
+                                    println!("{:?} < {:?} = {}", v, value, v < value);
+                                    v < value
+                                }
                                 wql::Function::Like => {
                                     if let (Types::String(content), Types::String(regex)) =
                                         (v, value)
