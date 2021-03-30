@@ -47,7 +47,6 @@ serde_json = { version = "1.0", optional = true }
 bytes = "1.0.1"
 criterion = "0.3"
 rand = "0.7"
-edn-rs = "0.16"
 
 # [[bench]]
 # name = "tx"
