@@ -419,7 +419,7 @@ async fn test_join2() {
     }
 
     let payload =
-        format!("JOIN (entity_AA:c, entity_BB:o) Select * FROM entity_AA | Select #{{g, f, o, b,}} FROM entity_BB ");
+        format!("JOIN (entity_AA:c, entity_BB:o) Select * FROM entity_AA order by c :asc | Select #{{g, f, o, b,}} FROM entity_BB ");
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)

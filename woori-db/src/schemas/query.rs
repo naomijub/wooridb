@@ -358,7 +358,7 @@ impl Response {
                                 };
                                 s.insert(entry_name, entry.1.to_owned());
                             }
-                            vec.push(ent.to_owned());
+                            vec.push(s.to_owned());
                         }
                     }
                 });
@@ -382,7 +382,7 @@ impl Response {
                                     };
                                     s.insert(entry_name, entry.1.to_owned());
                                 }
-                                vec.push(ent.to_owned());
+                                vec.push(s.to_owned());
                             }
                         }
                     }
@@ -407,7 +407,7 @@ impl Response {
                                     };
                                     s.insert(entry_name, entry.1.to_owned());
                                 }
-                                vec.push(ent.to_owned());
+                                vec.push(s.to_owned());
                             }
                         }
                     }
