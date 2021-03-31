@@ -409,6 +409,34 @@ async fn test_join() {
     assert!(!body.contains("\"tx_time:entity_B\""));
 }
 
+#[ignore]
+#[actix_rt::test]
+async fn test_join2() {
+    let mut app = test::init_service(App::new().configure(routes)).await;
+
+    for req in inserts2() {
+        let _ = test::call_service(&mut app, req).await;
+    }
+
+    let payload =
+        format!("JOIN (entity_AA:c, entity_BB:o) Select * FROM entity_AA | Select #{{g, f, o, b,}} FROM entity_BB ");
+    let req = test::TestRequest::post()
+        .header("Content-Type", "application/wql")
+        .set_payload(payload)
+        .uri("/wql/query")
+        .to_request();
+
+    let mut resp = test::call_service(&mut app, req).await;
+
+    assert!(resp.status().is_success());
+    let body = resp.take_body().as_str().to_string();
+
+    assert!(body.contains("b:entity_BB"));
+    assert!(!body.contains("g:entity_BB"));
+    assert!(body.contains("\"g\": Integer(475)"));
+    assert_eq!(body.matches("Char(\'d\')").count(), 4);
+}
+
 fn inserts() -> Vec<Request> {
     vec![
         test::TestRequest::post()
@@ -468,6 +496,104 @@ fn inserts() -> Vec<Request> {
             .to_request(),
     ]
 }
+
+fn inserts2() -> Vec<Request> {
+    vec![
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!("CREATE ENTITY {}", "entity_AA"))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!("CREATE ENTITY {}", "entity_BB"))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!("INSERT {{a: 123, b: 12.3,}} INTO {}", "entity_AA"))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{a: 235, b: 17.3, c: 'c',}} INTO {}",
+                "entity_AA"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{a: 476, b: 312.3, c: 'd',}} INTO {}",
+                "entity_AA"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!("INSERT {{a: 857, c: 'd',}} INTO {}", "entity_AA"))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{a: 66, b: 66.3, c: 'r',}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{g: 25, f: 12.3, a: 'c',}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{g: 475, b: 12.3, f: 'h', o: 'd',}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{g: 756, b: 142.3, f: 'h', o: 'c',}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{g: 76, b: 12.3, f: 't', o: 'd',}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{t: 295, b: 12.3, o: 'r',}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+        test::TestRequest::post()
+            .header("Content-Type", "application/wql")
+            .set_payload(format!(
+                "INSERT {{t: 295, f: 12.3, o: Nil,}} INTO {}",
+                "entity_BB"
+            ))
+            .uri("/wql/tx")
+            .to_request(),
+    ]
+}
+
 trait BodyTest {
     fn as_str(&self) -> &str;
 }

@@ -134,6 +134,8 @@ jobs:
         cargo test -- --ignored controllers::algebra_test::test_select_all_dedup_nil_ok
         rm -rf data/*.log
         cargo test  -- --ignored controllers::relation_test::test_join --exact --nocapture
+        rm -rf data/*.log
+        cargo test  -- --ignored controllers::relation_test::test_join2 --exact --nocapture
 
   build_feature_tests:
     runs-on: ubuntu-latest

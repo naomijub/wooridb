@@ -298,7 +298,7 @@ impl Response {
     pub fn parse(
         self,
         key: String,
-        ent_b: &str,
+        ent_b: &(String, String),
         vec: &mut Vec<HashMap<String, Types>>,
         b_hash: HashMap<Types, Vec<HashMap<String, Types>>>,
     ) -> bool {
@@ -326,9 +326,13 @@ impl Response {
                             let mut s = s.clone();
                             for entry in ent
                                 .into_iter()
-                                .filter(|(k, _)| *k != &key && *k != "tx_time")
+                                .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
                             {
-                                let entry_name = format!("{}:{}", entry.0, ent_b);
+                                let entry_name = if s.contains_key(entry.0) {
+                                    format!("{}:{}", entry.0, ent_b.0)
+                                } else {
+                                    entry.0.to_owned()
+                                };
                                 s.insert(entry_name, entry.1.to_owned());
                             }
                             vec.push(s.to_owned());
@@ -343,8 +347,15 @@ impl Response {
                     if let Some(v) = entities {
                         for ent in v {
                             let mut s = s.clone();
-                            for entry in ent {
-                                let entry_name = format!("{}:{}", entry.0, ent_b);
+                            for entry in ent
+                                .into_iter()
+                                .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
+                            {
+                                let entry_name = if s.contains_key(entry.0) {
+                                    format!("{}:{}", entry.0, ent_b.0)
+                                } else {
+                                    entry.0.to_owned()
+                                };
                                 s.insert(entry_name, entry.1.to_owned());
                             }
                             vec.push(ent.to_owned());
@@ -360,8 +371,15 @@ impl Response {
                         if let Some(v) = entities {
                             for ent in v {
                                 let mut s = s.clone();
-                                for entry in ent {
-                                    let entry_name = format!("{}:{}", entry.0, ent_b);
+                                for entry in ent
+                                    .into_iter()
+                                    .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
+                                {
+                                    let entry_name = if s.contains_key(entry.0) {
+                                        format!("{}:{}", entry.0, ent_b.0)
+                                    } else {
+                                        entry.0.to_owned()
+                                    };
                                     s.insert(entry_name, entry.1.to_owned());
                                 }
                                 vec.push(ent.to_owned());
@@ -378,8 +396,15 @@ impl Response {
                         if let Some(v) = entities {
                             for ent in v {
                                 let mut s = s.clone();
-                                for entry in ent {
-                                    let entry_name = format!("{}:{}", entry.0, ent_b);
+                                for entry in ent
+                                    .into_iter()
+                                    .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
+                                {
+                                    let entry_name = if s.contains_key(entry.0) {
+                                        entry.0.to_owned()
+                                    } else {
+                                        format!("{}:{}", entry.0, ent_b.0)
+                                    };
                                     s.insert(entry_name, entry.1.to_owned());
                                 }
                                 vec.push(ent.to_owned());
@@ -392,13 +417,13 @@ impl Response {
         true
     }
 
-    pub fn hash(self, key: String) -> Option<HashMap<Types, Vec<HashMap<String, Types>>>> {
+    pub fn hash(self, key: &str) -> Option<HashMap<Types, Vec<HashMap<String, Types>>>> {
         let mut hm = HashMap::new();
         match self {
             Response::All(state) => {
                 state.into_iter().for_each(|(_, s)| {
                     let entry = hm
-                        .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                        .entry(s.get(key).unwrap_or(&Types::Nil).to_owned())
                         .or_insert(Vec::new());
                     (*entry).push(s);
                 });
@@ -406,7 +431,7 @@ impl Response {
             Response::Order(state) => {
                 state.into_iter().for_each(|(_, s)| {
                     let entry = hm
-                        .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                        .entry(s.get(key).unwrap_or(&Types::Nil).to_owned())
                         .or_insert(Vec::new());
                     (*entry).push(s);
                 });
@@ -415,7 +440,7 @@ impl Response {
                 state.into_iter().for_each(|(_, s)| {
                     if let Some(s) = s {
                         let entry = hm
-                            .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                            .entry(s.get(key).unwrap_or(&Types::Nil).to_owned())
                             .or_insert(Vec::new());
                         (*entry).push(s);
                     }
@@ -425,7 +450,7 @@ impl Response {
                 state.into_iter().for_each(|(_, s)| {
                     if let Some(s) = s {
                         let entry = hm
-                            .entry(s.get(&key).unwrap_or(&Types::Nil).to_owned())
+                            .entry(s.get(key).unwrap_or(&Types::Nil).to_owned())
                             .or_insert(Vec::new());
                         (*entry).push(s);
                     }

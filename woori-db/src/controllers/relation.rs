@@ -135,9 +135,9 @@ pub async fn join(
     let b = get_join_query_value(queries[1].clone(), local_data).await?;
 
     let b_hash = b
-        .hash(entity_b.1)
+        .hash(&entity_b.1)
         .ok_or_else(|| Error::QueryFormat("Join query not supported".to_string()))?;
-    let ok = a.parse(entity_a.1, &entity_b.0, &mut result, b_hash);
+    let ok = a.parse(entity_a.1, &entity_b, &mut result, b_hash);
 
     if ok {
         Ok(Response::Join(result))
