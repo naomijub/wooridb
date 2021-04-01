@@ -2,6 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
+use uuid::Uuid;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let entity = get_rand_value();
@@ -173,8 +174,8 @@ fn curl_insert_with_id(entity: &str) -> uuid::Uuid {
         .expect("failed to execute process")
         .stdout;
     let entity = String::from_utf8(val).unwrap();
-    let inserted: InsertEntityResponse = ron::de::from_str(&entity).unwrap();
-    inserted.uuid
+    let inserted: TxResponse = ron::de::from_str(&entity).unwrap();
+    inserted.uuid.unwrap()
 }
 
 fn get_rand_value() -> String {
@@ -188,8 +189,21 @@ fn get_rand_value() -> String {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InsertEntityResponse {
+pub enum TxType {
+    Create,
+    Insert,
+    UpdateSet,
+    UpdateContent,
+    Delete,
+    EvictEntity,
+    EvictEntityTree,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TxResponse {
+    tx_type: TxType,
     entity: String,
-    pub(crate) uuid: uuid::Uuid,
+    pub uuid: Option<Uuid>,
+    state: String,
     message: String,
 }
