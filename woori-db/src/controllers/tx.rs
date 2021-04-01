@@ -420,8 +420,7 @@ pub async fn update_set_controller(
         previous_entry.clone()
     };
 
-    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
-    let mut previous_state = actor.send(State(previous_state_str)).await??;
+    let mut previous_state = previous_entry.1.clone();
     let encrypted_content_clone = encrypted_content.clone();
     encrypted_content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
@@ -438,7 +437,7 @@ pub async fn update_set_controller(
             &content_log,
             args.id,
             datetime,
-            &to_string_pretty(&previous_entry.clone(), pretty_config_inner())
+            &to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
         ))
         .await??;
@@ -542,8 +541,7 @@ pub async fn update_content_controller(
         previous_entry.clone()
     };
 
-    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
-    let mut previous_state = actor.send(State(previous_state_str)).await??;
+    let mut previous_state = previous_entry.1.clone();
 
     content
         .into_iter()
@@ -724,13 +722,13 @@ pub async fn match_update_set_controller(
         let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
         previous_entry.clone()
     };
-    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
-    let mut previous_state = actor.send(State(previous_state_str)).await??;
+
+    let mut previous_state = previous_entry.1.clone();
 
     actor
         .send(MatchUpdate {
             conditions: args.conditions,
-            previous_state: previous_state.clone(),
+            previous_state: previous_entry.1.clone(),
         })
         .await??;
 
