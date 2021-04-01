@@ -66,8 +66,8 @@ fn curl_insert_with_id(entity: &str) -> uuid::Uuid {
         .expect("failed to execute process")
         .stdout;
     let entity = String::from_utf8(val).unwrap();
-    let inserted: InsertEntityResponse = ron::de::from_str(&entity).unwrap();
-    inserted.uuid
+    let inserted: TxResponse = ron::de::from_str(&entity).unwrap();
+    inserted.uuid.unwrap()
 }
 
 fn curl_update_set(entity: &str, id: uuid::Uuid) {
@@ -101,12 +101,24 @@ fn get_rand_value() -> String {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InsertEntityResponse {
-    entity: String,
-    pub(crate) uuid: uuid::Uuid,
-    message: String,
+pub enum TxType {
+    Create,
+    Insert,
+    UpdateSet,
+    UpdateContent,
+    Delete,
+    EvictEntity,
+    EvictEntityTree,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TxResponse {
+    tx_type: TxType,
+    entity: String,
+    pub uuid: Option<Uuid>,
+    state: String,
+    message: String,
+}
 fn curl_history(entity: &str, id: Uuid) {
     let action = format!("(entity_key: \"{}\", entity_id: \"{}\",)", entity, id);
     let val = Command::new("curl")

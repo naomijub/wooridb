@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
 use language_parser::read_symbol;
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
+use std::{cmp::Ordering, hash::Hash};
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
+mod join;
 mod language_parser;
 mod logic;
 mod relation;
@@ -13,7 +14,7 @@ mod test;
 mod where_clause;
 
 pub use logic::parse_value as parse_types;
-use logic::{read_map, read_match_args};
+use logic::{integer_decode, read_map, read_match_args};
 pub use relation::{Relation, RelationType};
 pub use where_clause::{Clause, Function, Value};
 
@@ -33,6 +34,7 @@ pub enum Wql {
     SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Algebra>),
     CheckValue(String, Uuid, HashMap<String, String>),
     RelationQuery(Vec<Wql>, Relation, RelationType),
+    Join((String, String), (String, String), Vec<Wql>),
 }
 
 pub use select::{Algebra, Order};
@@ -78,6 +80,7 @@ pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql,
     )
 }
 
+#[allow(clippy::derive_hash_xor_eq)] // for now
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Types {
     Char(char),
@@ -120,8 +123,7 @@ impl Types {
             Types::String(s) => s.to_string(),
             Types::DateTime(date) => date.to_string(),
             Types::Uuid(id) => format!("{}", id),
-            // TODO: Replace by ordered-float
-            Types::Float(f) => format!("{}", f),
+            Types::Float(f) => format!("{:?}", integer_decode(f.to_owned())),
             Types::Boolean(b) => format!("{}", b),
             Types::Vector(vec) => format!("{:?}", vec),
             Types::Map(map) => format!("{:?}", map),
@@ -145,6 +147,7 @@ impl PartialOrd for Types {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Types::Integer(a), Types::Integer(b)) => Some(a.cmp(b)),
+
             (Types::Float(a), Types::Float(b)) => Some(if a > b {
                 Ordering::Greater
             } else {
@@ -168,6 +171,34 @@ impl PartialOrd for Types {
             (Types::Boolean(a), Types::Boolean(b)) => Some(a.cmp(b)),
             (Types::Vector(a), Types::Vector(b)) => Some(a.len().cmp(&b.len())),
             _ => None,
+        }
+    }
+}
+
+// UNSAFE
+#[allow(clippy::derive_hash_xor_eq)] // for now
+impl Hash for Types {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            Types::Char(t) => t.hash(state),
+            Types::Integer(t) => t.hash(state),
+            Types::String(t) => t.hash(state),
+            Types::Uuid(t) => t.hash(state),
+            Types::Float(t) => {
+                let int_t = integer_decode(t.to_owned());
+                int_t.hash(state)
+            }
+            Types::Boolean(t) => t.hash(state),
+            Types::Vector(t) => t.hash(state),
+            Types::Map(t) => t.into_iter().fold((), |acc, (k, v)| {
+                k.hash(state);
+                v.hash(state);
+                acc
+            }),
+            Types::Hash(t) => t.hash(state),
+            Types::Precise(t) => t.hash(state),
+            Types::DateTime(t) => t.hash(state),
+            Types::Nil => "".hash(state),
         }
     }
 }

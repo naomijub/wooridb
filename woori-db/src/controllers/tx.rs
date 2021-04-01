@@ -1,4 +1,5 @@
 use crate::core::tx_time;
+use crate::schemas::tx::{TxResponse, TxType};
 use crate::{
     actors::{
         encrypts::{CreateWithEncryption, EncryptContent, WriteWithEncryption},
@@ -117,7 +118,7 @@ pub async fn wql_handler(
 
     match response {
         Err(e) => error_to_http(&e),
-        Ok(resp) => HttpResponse::Ok().body(resp),
+        Ok(resp) => HttpResponse::Ok().body(resp.write()),
     }
 }
 
@@ -126,7 +127,7 @@ pub async fn create_controller(
     local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     let local_data = {
         let mut local_data = if let Ok(guard) = local_data.lock() {
             guard
@@ -153,7 +154,7 @@ pub async fn create_controller(
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
 
-    Ok(CreateEntityResponse::new(entity, message).write())
+    Ok(CreateEntityResponse::new(entity, message).into())
 }
 
 pub async fn evict_controller(
@@ -162,7 +163,7 @@ pub async fn evict_controller(
     local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     if uuid.is_none() {
         let message = format!("Entity {} evicted", &entity);
         let (offset, is_empty) = actor.send(EvictEntity::new(&entity)).await??;
@@ -186,7 +187,7 @@ pub async fn evict_controller(
         };
 
         actor.send(LocalData::new(local_data)).await??;
-        Ok(DeleteOrEvictEntityResponse::new(entity, None, message).write())
+        Ok(DeleteOrEvictEntityResponse::new(entity, None, message, TxType::EvictEntityTree).into())
     } else {
         let id = uuid.unwrap();
         let (offset, is_empty) = actor.send(EvictEntityId::new(&entity, id)).await??;
@@ -214,7 +215,7 @@ pub async fn evict_controller(
         actor.send(LocalData::new(local_data)).await??;
 
         let message = format!("Entity {} with id {} evicted", &entity, &id);
-        Ok(DeleteOrEvictEntityResponse::new(entity, uuid, message).write())
+        Ok(DeleteOrEvictEntityResponse::new(entity, uuid, message, TxType::EvictEntity).into())
     }
 }
 
@@ -280,7 +281,7 @@ pub async fn insert_controller(
     encryption: DataEncryptContext,
     hashing_cost: DataU32,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     let datetime = tx_time(&args.content)?;
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
@@ -359,7 +360,7 @@ pub async fn insert_controller(
         "Entity {} inserted with Uuid {}",
         &args.entity, &content_value.1
     );
-    Ok(InsertEntityResponse::new(args.entity, content_value.1, message).write())
+    Ok(InsertEntityResponse::new(args.entity, content_value.1, message).into())
 }
 
 pub async fn update_set_controller(
@@ -370,7 +371,7 @@ pub async fn update_set_controller(
     encryption: DataEncryptContext,
     hashing_cost: DataU32,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     let datetime = tx_time(&args.content)?;
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     let encrypted_content = actor
@@ -473,7 +474,10 @@ pub async fn update_set_controller(
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
-    Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
+    Ok(
+        UpdateEntityResponse::new(args.entity, args.id, state_log, message, TxType::UpdateSet)
+            .into(),
+    )
 }
 
 pub async fn update_content_controller(
@@ -483,7 +487,7 @@ pub async fn update_content_controller(
     uniqueness: DataUniquenessContext,
     encryption: DataEncryptContext,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     let datetime = tx_time(&args.content)?;
     let mut offset = bytes_counter.load(Ordering::SeqCst);
     if let Ok(guard) = encryption.lock() {
@@ -589,7 +593,14 @@ pub async fn update_content_controller(
         .await??;
 
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
-    Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
+    Ok(UpdateEntityResponse::new(
+        args.entity,
+        args.id,
+        state_log,
+        message,
+        TxType::UpdateContent,
+    )
+    .into())
 }
 
 pub async fn delete_controller(
@@ -598,7 +609,7 @@ pub async fn delete_controller(
     local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     let uuid = Uuid::from_str(&id)?;
     let message = format!("Entity {} with Uuid {} deleted", &entity, id);
     let mut offset = bytes_counter.load(Ordering::SeqCst);
@@ -683,7 +694,7 @@ pub async fn delete_controller(
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
 
-    Ok(DeleteOrEvictEntityResponse::new(entity, Some(uuid), message).write())
+    Ok(DeleteOrEvictEntityResponse::new(entity, Some(uuid), message, TxType::Delete).into())
 }
 
 pub async fn match_update_set_controller(
@@ -694,7 +705,7 @@ pub async fn match_update_set_controller(
     encryption: DataEncryptContext,
     hashing_cost: DataU32,
     actor: DataExecutor,
-) -> Result<String, Error> {
+) -> Result<TxResponse, Error> {
     let datetime = tx_time(&args.content)?;
     let previous_entry = {
         let local_data = if let Ok(guard) = local_data.lock() {
@@ -798,5 +809,8 @@ pub async fn match_update_set_controller(
         .await??;
 
     let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
-    Ok(UpdateEntityResponse::new(args.entity, args.id, state_log, message).write())
+    Ok(
+        UpdateEntityResponse::new(args.entity, args.id, state_log, message, TxType::UpdateSet)
+            .into(),
+    )
 }

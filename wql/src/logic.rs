@@ -392,3 +392,8 @@ pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, Strin
         }
     }
 }
+
+// UNSAFE
+pub(crate) fn integer_decode(val: f64) -> u64 {
+    val.to_bits()
+}

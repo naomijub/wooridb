@@ -261,6 +261,7 @@ async fn clause_ge_le() {
 
     let mut resp = test::call_service(&mut app, req).await;
     let body = resp.take_body().as_str().to_string();
+    println!("{}", body);
     let result: BTreeMap<Uuid, HashMap<String, Types>> = ron::de::from_str(&body).unwrap();
     assert!(result.iter().count() == 2);
     if let Some((_, map)) = result.iter().last() {

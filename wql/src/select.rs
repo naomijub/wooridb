@@ -527,76 +527,72 @@ mod test {
 mod functions_test {
     use super::*;
     use crate::{ToSelect, Wql};
-    use edn_rs::hmap;
+
     use std::str::FromStr;
 
     #[test]
     fn select_all_limit_offset() {
         let wql = Wql::from_str("SelEct * FROM my_entity LIMIT 3 OFFSET 5");
+        let hm: HashMap<String, Algebra> = vec![
+            ("LIMIT".to_string(), Algebra::Limit(3)),
+            ("OFFSET".to_string(), Algebra::Offset(5)),
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select(
-                "my_entity".to_string(),
-                ToSelect::All,
-                None,
-                hmap! {
-                    "LIMIT".to_string() => Algebra::Limit(3),
-                    "OFFSET".to_string() => Algebra::Offset(5)
-                }
-            )
+            Wql::Select("my_entity".to_string(), ToSelect::All, None, hm)
         );
     }
 
     #[test]
     fn select_all_order_by() {
         let wql = Wql::from_str("SelEct * FROM my_entity ORDER BY key_1 :asc");
+        let hm: HashMap<String, Algebra> = vec![(
+            "ORDER".to_string(),
+            Algebra::OrderBy("key_1".to_string(), Order::Asc),
+        )]
+        .iter()
+        .cloned()
+        .collect();
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select(
-                "my_entity".to_string(),
-                ToSelect::All,
-                None,
-                hmap! {
-                    "ORDER".to_string() => Algebra::OrderBy("key_1".to_string(), Order::Asc)
-                }
-            )
+            Wql::Select("my_entity".to_string(), ToSelect::All, None, hm)
         );
     }
 
     #[test]
     fn select_all_group_by() {
         let wql = Wql::from_str("SelEct * FROM my_entity GROUP BY key_1");
+        let hm: HashMap<String, Algebra> =
+            vec![("GROUP".to_string(), Algebra::GroupBy("key_1".to_string()))]
+                .iter()
+                .cloned()
+                .collect();
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select(
-                "my_entity".to_string(),
-                ToSelect::All,
-                None,
-                hmap! {
-                    "GROUP".to_string() => Algebra::GroupBy("key_1".to_string())
-                }
-            )
+            Wql::Select("my_entity".to_string(), ToSelect::All, None, hm)
         );
     }
 
     #[test]
     fn select_all_dedup() {
         let wql = Wql::from_str("SelEct * FROM my_entity DEDUP key_1 COUNT");
+        let hm: HashMap<String, Algebra> = vec![
+            ("DEDUP".to_string(), Algebra::Dedup("key_1".to_string())),
+            ("COUNT".to_string(), Algebra::Count),
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         assert_eq!(
             wql.unwrap(),
-            Wql::Select(
-                "my_entity".to_string(),
-                ToSelect::All,
-                None,
-                hmap! {
-                    "DEDUP".to_string() => Algebra::Dedup("key_1".to_string()),
-                    "COUNT".to_string() => Algebra::Count
-                }
-            )
+            Wql::Select("my_entity".to_string(), ToSelect::All, None, hm)
         );
     }
 
@@ -605,6 +601,16 @@ mod functions_test {
         let wql = Wql::from_str("SelEct * FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,} ORDER BY my_key :desc DEDUP ley");
         let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
         let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+        let hm: HashMap<String, Algebra> = vec![
+            (
+                "ORDER".to_string(),
+                Algebra::OrderBy("my_key".to_string(), Order::Desc),
+            ),
+            ("DEDUP".to_string(), Algebra::Dedup("ley".to_string())),
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         assert_eq!(
             wql.unwrap(),
@@ -612,10 +618,7 @@ mod functions_test {
                 "my_entity".to_string(),
                 ToSelect::All,
                 vec![uuid1, uuid2],
-                hmap! {
-                    "ORDER".to_string() => Algebra::OrderBy("my_key".to_string(), Order::Desc),
-                    "DEDUP".to_string() => Algebra::Dedup("ley".to_string())
-                }
+                hm
             )
         );
     }

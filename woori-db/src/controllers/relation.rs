@@ -7,12 +7,17 @@ use crate::{
     schemas::query::Response,
 };
 
-use super::query::{
-    select_all_id_when_controller, select_all_with_id, select_keys_id_when_controller,
-    select_keys_with_id,
+use super::{
+    clauses::select_where_controller,
+    query::{
+        select_all, select_all_id_when_controller, select_all_with_id, select_all_with_ids,
+        select_args, select_keys_id_when_controller, select_keys_with_id, select_keys_with_ids,
+    },
 };
 
 const ERROR: &str = "Only single value queries are allowed, so key `ID` is required and keys `WHEN AT` are optional";
+const ERROR_JOIN: &str =
+    "Only multiple values queries are allowed, so key `ID` and `WHEN AT` are not allowed";
 
 pub async fn intersect(
     queries: Vec<Wql>,
@@ -119,6 +124,28 @@ pub async fn union(
     }
 }
 
+pub async fn join(
+    entity_a: (String, String),
+    entity_b: (String, String),
+    queries: Vec<Wql>,
+    local_data: DataLocalContext,
+) -> Result<Response, Error> {
+    let mut result = Vec::new();
+    let a = get_join_query_value(queries[0].clone(), local_data.clone()).await?;
+    let b = get_join_query_value(queries[1].clone(), local_data).await?;
+
+    let b_hash = b
+        .hash(&entity_b.1)
+        .ok_or_else(|| Error::QueryFormat("Join query not supported".to_string()))?;
+    let ok = a.parse(entity_a.1, &entity_b, &mut result, b_hash);
+
+    if ok {
+        Ok(Response::Join(result))
+    } else {
+        Err(Error::QueryFormat("Join query not supported".to_string()))
+    }
+}
+
 async fn get_query_value(
     query: Wql,
     local_data: DataLocalContext,
@@ -138,5 +165,27 @@ async fn get_query_value(
             select_keys_id_when_controller(entity, date, keys, uuid, actor).await
         }
         _ => Err(Error::QueryFormat(String::from(ERROR))),
+    }
+}
+
+async fn get_join_query_value(query: Wql, local_data: DataLocalContext) -> Result<Response, Error> {
+    match query {
+        Wql::Select(entity, ToSelect::All, None, functions) => {
+            select_all(entity, local_data, functions).await
+        }
+        Wql::Select(entity, ToSelect::Keys(keys), None, functions) => {
+            select_args(entity, keys, local_data, functions).await
+        }
+        Wql::SelectIds(entity, ToSelect::All, uuids, functions) => {
+            select_all_with_ids(entity, uuids, local_data, functions).await
+        }
+        Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions) => {
+            select_keys_with_ids(entity, keys, uuids, local_data, functions).await
+        }
+        Wql::SelectWhere(entity_name, args_to_select, clauses, functions) => {
+            select_where_controller(entity_name, args_to_select, clauses, local_data, functions)
+                .await
+        }
+        _ => Err(Error::QueryFormat(String::from(ERROR_JOIN))),
     }
 }

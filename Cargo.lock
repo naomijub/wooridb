@@ -785,12 +785,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
-name = "edn-rs"
-version = "0.16.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f430d8076e72196f2288ae9de435a374af92e540b1bf08a4d746e0aee9ac1e50"
-
-[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1725,7 +1719,6 @@ dependencies = [
  "chrono",
  "criterion",
  "cron",
- "edn-rs",
  "env_logger",
  "futures",
  "glob",
@@ -2410,7 +2403,7 @@ dependencies = [
 
 [[package]]
 name = "wql"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "bcrypt",
  "chrono",
