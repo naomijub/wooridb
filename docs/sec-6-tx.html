@@ -186,8 +186,11 @@ No need for <code>;</code> at the end of each expression.</p>
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity_name&quot;,
- message: &quot;Entity `my_entity_name` created&quot;,
+    tx_type: Create,
+    entity: &quot;my_entity_name&quot;,
+    uuid: None,
+    state: &quot;&quot;,
+    message: &quot;Entity `my_entity_name` created&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -212,9 +215,11 @@ INTO my_entity_name
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity_name&quot;,
- uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- message: &quot;Entity my_entity_name inserted with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+    tx_type: Insert,
+    entity: &quot;my_entity_name&quot;,
+    uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
+    state: &quot;&quot;,
+    message: &quot;Entity my_entity_name inserted with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -249,10 +254,11 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity_name&quot;,
- uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- state: &quot;{\&quot;b\&quot;: Integer(32),\&quot;a\&quot;: Integer(-4), \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
- message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
+    tx_type: UpdateSet,
+    entity: &quot;my_entity_name&quot;,
+    uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
+    state: &quot;{\&quot;b\&quot;: Integer(32),\&quot;a\&quot;: Integer(-4), \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
+    message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -269,10 +275,11 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity_name&quot;,
- uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(-38), \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
- message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
+    tx_type: UpdateContent,
+    entity: &quot;my_entity_name&quot;,
+    uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+    state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(-38), \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
+    message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -290,10 +297,11 @@ INTO 00d025c9-eda8-4190-a33a-29998bd77bd3
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity_name&quot;,
- uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
- state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(123),\&quot;g\&quot;: Nil, \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
- message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
+    tx_type: UpdateSet,
+    entity: &quot;my_entity_name&quot;,
+    uuid: &quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;,
+    state: &quot;{\&quot;b\&quot;: Integer(39),\&quot;a\&quot;: Integer(123),\&quot;g\&quot;: Nil, \&quot;tx_time\&quot;: DateTime(\&quot;2014-11-28T12:00:09Z\&quot;),}&quot;,
+    message: &quot;Entity my_entity_name with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 updated&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -310,9 +318,11 @@ However, if you have only an <code>INSERT</code> event then your state will beco
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity&quot;,
- uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
- message: &quot;Entity my_entity with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 deleted&quot;,
+    tx_type: Delete,
+    entity: &quot;my_entity&quot;,
+    uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
+    state: &quot;&quot;,
+    message: &quot;Entity my_entity with Uuid 00d025c9-eda8-4190-a33a-29998bd77bd3 deleted&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -333,9 +343,11 @@ Delete entity with ID at transaction-time</li>
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity&quot;,
- uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
- message: &quot;Entity my_entity with id 6ac9d1bb-2b0c-4631-bc05-682ab4ae8306 evicted&quot;,
+    tx_type: EvictEntity,
+    entity: &quot;my_entity&quot;,
+    uuid: Some(&quot;00d025c9-eda8-4190-a33a-29998bd77bd3&quot;),
+    state: &quot;&quot;,
+    message: &quot;Entity my_entity with id 6ac9d1bb-2b0c-4631-bc05-682ab4ae8306 evicted&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>
@@ -352,9 +364,11 @@ Delete entity with ID at transaction-time</li>
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>(
- entity: &quot;my_entity&quot;,
- uuid: None,
- message: &quot;Entity my_entity evicted&quot;,
+    tx_type: EvictEntityTree,
+    entity: &quot;my_entity&quot;,
+    uuid: None,
+    state: &quot;&quot;,
+    message: &quot;Entity my_entity evicted&quot;,
 )
 <span class="boring">}
 </span></code></pre></pre>

@@ -179,6 +179,7 @@
 <li><a href="#union"><code>UNION</code></a></li>
 <li><a href="#intersect"><code>INTERSECT</code></a></li>
 <li><a href="#difference"><code>DIFFERENCE</code></a></li>
+<li><a href="#join"><code>JOIN</code></a></li>
 </ul>
 <p>Functions <code>GROUP BY</code>, <code>ORDER BY</code>, <code>DEDUP</code> <code>LIMIT</code>, <code>OFFSET</code>, <code>COUNT</code>  are only supported by the following select queries:</p>
 <ul>
@@ -385,6 +386,201 @@
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>{&quot;c&quot;: true, &quot;b&quot;: 234}
+<span class="boring">}
+</span></code></pre></pre>
+<h2 id="join"><a class="header" href="#join"><code>JOIN</code></a></h2>
+<p>Join operation is similar to <code>UNION</code>. However, it does this by comparing keys equallity in two different entities, so if we select all elements in <code>entity_a</code> and all elements in <code>entity_b</code> and we join them in key <code>a</code> for <code>entity_a</code> and key <code>b</code> for <code>entity_b</code> whenever <code>entity_a:a == entity_b:b</code> a new entity will be created and appended to the resulting vector. Also all duplciated keys from <code>entity_b</code> will be appended by <code>:entity_b</code>, so a duplicated key <code>dup_key</code> will be <code>dup_key:entity_b</code>.</p>
+<p>For the query <code>JOIN (entity_AA:c, entity_BB:o) Select * FROM entity_AA order by c :asc | Select #{{g, f, o, b,}} FROM entity_BB</code> we are checking equallity on <code>entity_AA:c == entity_BB:o</code> and the two queries two to be joined are <code>Select * FROM entity_AA order by c :asc</code> and <code>Select #{{g, f, o, b,}} FROM entity_BB</code> joined by a <code>|</code>.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>{
+    &quot;entity_AA&quot;: {
+        &lt;UUID1&gt;: {a: 123, b: 12.3,},
+        &lt;UUID3&gt;: {a: 235, b: 17.3, c: 'c',},
+        &lt;UUID5&gt;: {a: 476, b: 312.3, c: 'd',},
+        &lt;UUID7&gt;: {a: 857, c: 'd',},}
+    &quot;entity_BB&quot;: { 
+        &lt;UUID2&gt;: {a: 66, b: 66.3, c: 'r',},       
+        &lt;UUID4&gt;: {g: 25, f: 12.3, a: 'c',},        
+        &lt;UUID6&gt;: {g: 475, b: 12.3, f: 'h', o: 'd',},        
+        &lt;UUID8&gt;: {g: 756, b: 142.3, f: 'h', o: 'c',},      
+        &lt;UUI10&gt;: {g: 76, b: 12.3, f: 't', o: 'd',},     
+        &lt;UUID12&gt;: {t: 295, b: 12.3, o: 'r',},    
+        &lt;UUID14&gt;: {t: 295, f: 12.3, o: Nil,},
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The response for this join will be:</p>
+<blockquote>
+<p><strong>Notes</strong></p>
+<!--  -->
+<ul>
+<li><code>tx_time</code> is the <code>tx_time</code> of <code>entity_AA</code>.</li>
+<li>entities that don't have the field to be matched will be matched with other entities that don't have the field or it is <code>nil</code>.</li>
+</ul>
+</blockquote>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>[
+    {
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.029549132Z,
+        ),
+        &quot;a&quot;: Integer(
+            123,
+        ),
+        &quot;b&quot;: Float(
+            12.3,
+        ),
+        &quot;g&quot;: Integer(
+            25,
+        ),
+        &quot;f&quot;: Float(
+            12.3,
+        ),
+    },
+    {
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.029549132Z,
+        ),
+        &quot;a&quot;: Integer(
+            123,
+        ),
+        &quot;b&quot;: Float(
+            12.3,
+        ),
+        &quot;b:entity_BB&quot;: Float(
+            66.3,
+        ),
+    },
+    {
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.029549132Z,
+        ),
+        &quot;a&quot;: Integer(
+            123,
+        ),
+        &quot;b&quot;: Float(
+            12.3,
+        ),
+        &quot;f&quot;: Float(
+            12.3,
+        ),
+    },
+    {
+        &quot;g&quot;: Integer(
+            756,
+        ),
+        &quot;f&quot;: Char(
+            'h',
+        ),
+        &quot;b&quot;: Float(
+            17.3,
+        ),
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.030481424Z,
+        ),
+        &quot;a&quot;: Integer(
+            235,
+        ),
+        &quot;b:entity_BB&quot;: Float(
+            142.3,
+        ),
+        &quot;c&quot;: Char(
+            'c',
+        ),
+    },
+    {
+        &quot;b:entity_BB&quot;: Float(
+            12.3,
+        ),
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.031485453Z,
+        ),
+        &quot;f&quot;: Char(
+            't',
+        ),
+        &quot;g&quot;: Integer(
+            76,
+        ),
+        &quot;a&quot;: Integer(
+            476,
+        ),
+        &quot;b&quot;: Float(
+            312.3,
+        ),
+        &quot;c&quot;: Char(
+            'd',
+        ),
+    },
+    {
+        &quot;f&quot;: Char(
+            'h',
+        ),
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.031485453Z,
+        ),
+        &quot;b:entity_BB&quot;: Float(
+            12.3,
+        ),
+        &quot;g&quot;: Integer(
+            475,
+        ),
+        &quot;a&quot;: Integer(
+            476,
+        ),
+        &quot;b&quot;: Float(
+            312.3,
+        ),
+        &quot;c&quot;: Char(
+            'd',
+        ),
+    },
+    {
+        &quot;b&quot;: Float(
+            12.3,
+        ),
+        &quot;c&quot;: Char(
+            'd',
+        ),
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.032730665Z,
+        ),
+        &quot;g&quot;: Integer(
+            76,
+        ),
+        &quot;a&quot;: Integer(
+            857,
+        ),
+        &quot;f&quot;: Char(
+            't',
+        ),
+    },
+    {
+        &quot;b&quot;: Float(
+            12.3,
+        ),
+        &quot;c&quot;: Char(
+            'd',
+        ),
+        &quot;tx_time&quot;: DateTime(
+            2021-04-01T18:04:30.032730665Z,
+        ),
+        &quot;g&quot;: Integer(
+            475,
+        ),
+        &quot;a&quot;: Integer(
+            857,
+        ),
+        &quot;f&quot;: Char(
+            'h',
+        ),
+    },
+]
+
 <span class="boring">}
 </span></code></pre></pre>
 
