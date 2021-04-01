@@ -100,7 +100,6 @@ fn get_rand_value() -> String {
     rstr
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TxType {
     Create,
