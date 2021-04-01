@@ -67,7 +67,7 @@ fn curl_insert_with_id(entity: &str) -> uuid::Uuid {
         .stdout;
     let entity = String::from_utf8(val).unwrap();
     let inserted: TxResponse = ron::de::from_str(&entity).unwrap();
-    inserted.uuid
+    inserted.uuid.unwrap()
 }
 
 fn curl_update_set(entity: &str, id: uuid::Uuid) {
@@ -99,6 +99,7 @@ fn get_rand_value() -> String {
 
     rstr
 }
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TxType {
