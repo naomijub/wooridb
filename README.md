@@ -79,23 +79,20 @@ PORT=1438
 - [ ] [issues](https://github.com/naomijub/wooridb/issues?q=is%3Aissue+is%3Aopen+label%3AMilestone)
 
 ## Current Benchmarks
->  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
-
-- `create_entity`           time:   [15.269 ms 15.332 ms 15.396 ms]
-- `insert_entity`           time:   [27.438 ms 28.177 ms 28.958 ms]
-- `update_set_entity`       time:   [22.969 ms 23.382 ms 23.839 ms]
-- `update_content_entity`   time:   [23.181 ms 23.578 ms 24.037 ms]
-- `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
-- `evict_entity_id`         time:   [41.387 ms 42.029 ms 42.731 ms] - Filtered 400s
-- `evict_entity`            time:   [31.582 ms 31.805 ms 32.039 ms] - Filtered 400s
-- `select_all` 20 entities  time:   [23.692 ms 24.183 ms 24.690 ms]
-- `select_all` 10 entities  time:   [22.018 ms 22.301 ms 22.586 ms]
-- `select_all` 1 entity     time:   [19.963 ms 20.679 ms 21.412 ms]
-
 > Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
 
-- `history_10_registries_for_entity`   time:   [23.732 ms 24.811 ms 25.982 ms]
-- `history_20_registries_for_entity`   time:   [26.011 ms 26.847 ms 27.690 ms]
+- `create_entity`                      time:   [15.269 ms 15.332 ms 15.396 ms]
+- `insert_entity`                      time:   [23.078 ms 24.010 ms 24.986 ms]
+- `update_set_entity`                  time:   [22.969 ms 23.382 ms 23.839 ms]
+- `update_content_entity`              time:   [23.181 ms 23.578 ms 24.037 ms]
+- `delete_entity`                      time:   [15.650 ms 16.321 ms 17.052 ms] - Filtered 400s
+- `evict_entity_id`                    time:   [28.173 ms 29.199 ms 30.178 ms] - Filtered 400s
+- `evict_entity`                       time:   [23.487 ms 24.617 ms 25.806 ms] - Filtered 400s
+- `select_all` 20 entities             time:   [18.287 ms 18.831 ms 19.390 ms]
+- `select_all` 10 entities             time:   [16.657 ms 17.155 ms 17.684 ms]
+- `select_all` 1 entity                time:   [15.738 ms 16.460 ms 17.209 ms]
+- `history_10_registries_for_entity`   time:   [18.601 ms 19.131 ms 19.697 ms]
+- `history_20_registries_for_entity`   time:   [18.601 ms 19.131 ms 19.697 ms]
 
 ### WQL 
 > Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
