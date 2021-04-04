@@ -79,23 +79,23 @@ PORT=1438
 - [ ] [issues](https://github.com/naomijub/wooridb/issues?q=is%3Aissue+is%3Aopen+label%3AMilestone)
 
 ## Current Benchmarks
-> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+> 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
-- `create_entity`                      time:   [15.269 ms 15.332 ms 15.396 ms]
-- `insert_entity`                      time:   [23.078 ms 24.010 ms 24.986 ms]
-- `update_set_entity`                  time:   [22.969 ms 23.382 ms 23.839 ms]
-- `update_content_entity`              time:   [23.181 ms 23.578 ms 24.037 ms]
-- `delete_entity`                      time:   [15.650 ms 16.321 ms 17.052 ms] - Filtered 400s
-- `evict_entity_id`                    time:   [28.173 ms 29.199 ms 30.178 ms] - Filtered 400s
-- `evict_entity`                       time:   [23.487 ms 24.617 ms 25.806 ms] - Filtered 400s
-- `select_all` 20 entities             time:   [18.287 ms 18.831 ms 19.390 ms]
-- `select_all` 10 entities             time:   [16.657 ms 17.155 ms 17.684 ms]
-- `select_all` 1 entity                time:   [15.738 ms 16.460 ms 17.209 ms]
-- `history_10_registries_for_entity`   time:   [18.601 ms 19.131 ms 19.697 ms]
-- `history_20_registries_for_entity`   time:   [18.601 ms 19.131 ms 19.697 ms]
+- `create_entity`                      time:   [4.7008 ms 4.7367 ms 4.7725 ms]
+- `insert_entity`                      time:   [9.5938 ms 9.8263 ms 10.057 ms]
+- `update_set_entity`                  time:   [11.899 ms 11.984 ms 12.083 ms]
+- `update_content_entity`              time:   [12.048 ms 12.328 ms 12.719 ms]
+- `delete_entity`                      time:   [5.3966 ms 5.4423 ms 5.4908 ms] - Filtered 400s
+- `evict_entity_id`                    time:   [15.534 ms 15.623 ms 15.721 ms] - Filtered 400s
+- `evict_entity`                       time:   [12.318 ms 12.416 ms 12.540 ms] - Filtered 400s
+- `select_all` 20 entities             time:   [5.8810 ms 5.9318 ms 5.9889 ms]
+- `select_all` 10 entities             time:   [5.4012 ms 5.4432 ms 5.4860 ms]
+- `select_all` 1 entity                time:   [4.8442 ms 4.8786 ms 4.9140 ms]
+- `history_10_registries_for_entity`   time:   [5.7265 ms 5.7868 ms 5.8673 ms]
+- `history_20_registries_for_entity`   time:   [6.1166 ms 6.1943 ms 6.2987 ms]
 
 ### WQL 
-> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+> 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
 - `create_entity`           time:   [433.57 ns 435.00 ns 436.38 ns]
 - `inser_entity`            time:   [1.6349 us 1.6406 us 1.6463 us]
@@ -104,7 +104,7 @@ PORT=1438
 
 
 ### artillery.io 
-> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+> 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
 [**Insert**](./insert-report.json)
 
