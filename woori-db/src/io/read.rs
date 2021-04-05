@@ -280,9 +280,10 @@ mod test {
         let unique_data = unique_data();
 
         assert!(unique_data.is_ok());
-        assert_eq!(
-                format!("{:?}", unique_data), 
-                "Ok({\"uniq2_ent2\": {\"id\": {\"Integer(4234)\", \"Integer(734)\"}, \"rg\": {\"Precise(\\\"42356546\\\")\", \"Precise(\\\"123456789\\\")\"}}, \"uniq_ent\": {\"cpf\": {\"Precise(\\\"42356546\\\")\", \"Precise(\\\"423560546\\\")\"}, \"snn\": {}}})"
-            );
+        let body = format!("{:?}", unique_data);
+        assert!(body.contains("\"uniq2_ent2\": {\"id\":"));
+        assert!(body.contains("\"rg\": {\"Precise"));
+        assert!(body.contains("\"uniq_ent\": {\"cpf\": {\"Precise"));
+        assert!(body.contains("\"snn\": {}}}"));
     }
 }

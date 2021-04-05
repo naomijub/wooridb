@@ -23,7 +23,7 @@ test:
 	cargo test --features test_read io::read::test::encryption_test
 	cargo test --features test_read io::read::test::local_data_test
 	cargo test --features test_read io::read::test::offset_test
-	cargo test --features test_read io::read::unique_data_test
+	cargo test --features test_read io::read::test::unique_data_test
 	rm -rf data/*.log
 	cargo test --features history -- controllers::entity_history_test::test_history_ok
 	rm -rf data/*.log

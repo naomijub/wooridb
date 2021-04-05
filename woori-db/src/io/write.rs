@@ -13,6 +13,7 @@ pub fn write_to_log(log: &str) -> Result<(usize, bool), Error> {
         .create(true)
         .open(date_log)?;
     let written_bytes = file.write(log.as_bytes())?;
+    file.flush()?;
 
     Ok((written_bytes, is_empty))
 }
@@ -23,6 +24,7 @@ pub fn write_to_uniques(log: &str) -> Result<(), Error> {
         .open("data/uniques.log")?;
 
     let _ = file.write(log.as_bytes())?;
+    file.flush()?;
 
     Ok(())
 }
@@ -36,6 +38,7 @@ pub fn local_data(log: &str) -> Result<(), Error> {
 
     let _ = file.seek(SeekFrom::Start(0));
     file.write_all(log.as_bytes())?;
+    file.flush()?;
 
     Ok(())
 }
@@ -49,6 +52,7 @@ pub fn unique_data(log: &str) -> Result<(), Error> {
 
     let _ = file.seek(SeekFrom::Start(0));
     file.write_all(log.as_bytes())?;
+    file.flush()?;
 
     Ok(())
 }
@@ -62,6 +66,7 @@ pub fn offset_counter(log: usize) -> Result<(), Error> {
 
     let _ = file.seek(SeekFrom::Start(0));
     file.write_all(log.to_string().as_bytes())?;
+    file.flush()?;
 
     Ok(())
 }
@@ -73,6 +78,7 @@ pub fn write_to_encrypts(log: &str) -> Result<(), Error> {
         .open("data/encrypt.log")?;
 
     let _ = file.write(log.as_bytes())?;
+    file.flush()?;
 
     Ok(())
 }
