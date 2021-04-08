@@ -102,6 +102,9 @@ PORT=1438
 - `select_all`              time:   [429.79 ns 431.05 ns 432.14 ns]
 - `select_args`             time:   [655.40 ns 657.53 ns 659.71 ns]
 
+### File approximated size
+
+For ~10000 entries in a day, the file size will be 2.5 GB for registries (and for cached values - this may become an issue soon). After compression it can be reduced to 10% of this.
 
 ### artillery.io 
 > 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
