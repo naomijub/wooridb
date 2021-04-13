@@ -3,9 +3,10 @@ use crate::{
     logic::{read_args, read_map_as_str},
     relation::{relation, Relation},
     select::{select_all, select_args},
+    ID,
 };
 
-use super::{read_map, read_match_args, FromStr, MatchCondition, Uuid, Wql};
+use super::{read_map, read_match_args, FromStr, MatchCondition, Wql};
 
 pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
     let symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
@@ -166,19 +167,19 @@ fn insert(chars: &mut std::str::Chars) -> Result<Wql, String> {
         ))
     } else {
         let entity_id = chars
-            .take_while(|c| c.is_alphanumeric() || c == &'-')
+            .take_while(|c| c.is_alphanumeric() || c == &'-' || c == &'_')
             .collect::<String>()
             .trim()
             .to_string();
 
         if entity_id.is_empty() {
-            return Err(String::from("Entity UUID is required for INSERT WITH id"));
+            return Err(String::from("Entity ID is required for INSERT WITH id"));
         }
 
         Ok(Wql::Insert(
             entity_name,
             entity_map,
-            Uuid::parse_str(&entity_id).ok(),
+            ID::from_str(&entity_id).ok(),
         ))
     }
 }
@@ -213,11 +214,11 @@ fn check(chars: &mut std::str::Chars) -> Result<Wql, String> {
         return Err(String::from("Keyword FROM is required for CHECK"));
     }
     let entity_id = chars
-        .take_while(|c| c.is_alphanumeric() || c == &'-')
+        .take_while(|c| c.is_alphanumeric() || c == &'-' || c == &'_')
         .collect::<String>()
         .trim()
         .to_owned();
-    let id = Uuid::from_str(&entity_id).map_err(|e| format!("{:?}", e))?;
+    let id = ID::from_str(&entity_id).map_err(|e| format!("{:?}", e))?;
 
     Ok(Wql::CheckValue(entity_name, id, entity_map))
 }
@@ -256,13 +257,13 @@ fn update(chars: &mut std::str::Chars) -> Result<Wql, String> {
     };
 
     let uuid_str = chars
-        .take_while(|c| c.is_alphanumeric() || c == &'-')
+        .take_while(|c| c.is_alphanumeric() || c == &'-' || c == &'_')
         .collect::<String>()
         .trim()
         .to_string();
 
-    let uuid = Uuid::from_str(&uuid_str)
-        .map_err(|e| format!("Couldn't create uuid from {}. Error: {:?}", uuid_str, e))?;
+    let uuid = ID::from_str(&uuid_str)
+        .map_err(|e| format!("Couldn't create ID from {}. Error: {:?}", uuid_str, e))?;
 
     match &entity_symbol.to_uppercase()[..] {
         "SET" => Ok(Wql::UpdateSet(entity_name, entity_map, uuid)),
@@ -333,13 +334,17 @@ fn match_update(chars: &mut std::str::Chars) -> Result<Wql, String> {
     };
 
     let uuid_str = chars
-        .take_while(|c| c.is_alphanumeric() || c == &'-')
+        .take_while(|c| c.is_alphanumeric() || c == &'-' || c == &'_')
         .collect::<String>()
         .trim()
         .to_string();
 
-    let uuid = Uuid::from_str(&uuid_str)
-        .map_err(|e| format!("Couldn't create uuid from {}, Error: {:?}", uuid_str, e))?;
+    if uuid_str.is_empty() {
+        return Err(String::from("Entity ID cannot be empty"));
+    }
+
+    let uuid = ID::from_str(&uuid_str)
+        .map_err(|e| format!("Couldn't create ID from {}, Error: {:?}", uuid_str, e))?;
 
     match &entity_symbol.to_uppercase()[..] {
         "SET" => Ok(Wql::MatchUpdate(entity_name, entity_map, uuid, match_args?)),
@@ -354,22 +359,22 @@ fn evict(chars: &mut std::str::Chars) -> Result<Wql, String> {
         .trim()
         .to_string();
 
-    let uuid = Uuid::from_str(&info);
-    if uuid.is_err() {
-        if info.chars().any(|c| c == '-') {
-            return Err("Entity name cannot contain `-`".to_string());
+    let from_symbol = chars
+        .skip_while(|c| c.is_whitespace())
+        .take_while(|c| !c.is_whitespace())
+        .collect::<String>()
+        .trim()
+        .to_string();
+
+    if from_symbol.is_empty() {
+        if info.contains('-') {
+            return Err(String::from("Entity key name cannot contain `-`"));
         }
         Ok(Wql::Evict(info, None))
     } else {
-        let from_symbol = chars
-            .skip_while(|c| c.is_whitespace())
-            .take_while(|c| !c.is_whitespace())
-            .collect::<String>()
-            .trim()
-            .to_string();
-
+        let uuid = ID::from_str(&info);
         if from_symbol.to_uppercase() != "FROM" {
-            return Err(String::from("Keyword FROM is required to EVICT an UUID"));
+            return Err(String::from("Keyword FROM is required to EVICT an ID"));
         }
         let name = chars
             .take_while(|c| c.is_alphanumeric() || c == &'_')

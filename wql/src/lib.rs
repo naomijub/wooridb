@@ -21,18 +21,18 @@ pub use where_clause::{Clause, Function, Value};
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Wql {
     CreateEntity(String, Vec<String>, Vec<String>),
-    Insert(String, Entity, Option<Uuid>),
-    UpdateContent(String, Entity, Uuid),
-    UpdateSet(String, Entity, Uuid),
+    Insert(String, Entity, Option<ID>),
+    UpdateContent(String, Entity, ID),
+    UpdateSet(String, Entity, ID),
     Delete(String, String),
-    MatchUpdate(String, Entity, Uuid, MatchCondition),
-    Evict(String, Option<Uuid>),
-    Select(String, ToSelect, Option<Uuid>, HashMap<String, Algebra>),
-    SelectWhen(String, ToSelect, Option<Uuid>, String),
-    SelectWhenRange(String, Uuid, String, String),
-    SelectIds(String, ToSelect, Vec<Uuid>, HashMap<String, Algebra>),
+    MatchUpdate(String, Entity, ID, MatchCondition),
+    Evict(String, Option<ID>),
+    Select(String, ToSelect, Option<ID>, HashMap<String, Algebra>),
+    SelectWhen(String, ToSelect, Option<ID>, String),
+    SelectWhenRange(String, ID, String, String),
+    SelectIds(String, ToSelect, Vec<ID>, HashMap<String, Algebra>),
     SelectWhere(String, ToSelect, Vec<Clause>, HashMap<String, Algebra>),
-    CheckValue(String, Uuid, HashMap<String, String>),
+    CheckValue(String, ID, HashMap<String, String>),
     RelationQuery(Vec<Wql>, Relation, RelationType),
     Join((String, String), (String, String), Vec<Wql>),
 }
@@ -199,6 +199,44 @@ impl Hash for Types {
             Types::Precise(t) => t.hash(state),
             Types::DateTime(t) => t.hash(state),
             Types::Nil => "".hash(state),
+        }
+    }
+}
+
+#[derive(PartialEq, PartialOrd, Eq, Ord, Deserialize, Serialize, Clone, Debug)]
+pub enum ID {
+    Uuid(Uuid),
+    Number(usize),
+    String(String),
+}
+
+impl ID {
+    pub fn new() -> ID {
+        let uuid = Uuid::new_v4();
+        ID::Uuid(uuid)
+    }
+
+    pub fn new_with_usize(number: usize) -> ID {
+        ID::Number(number)
+    }
+
+    pub fn new_with_str(s: &str) -> ID {
+        ID::String(s.to_owned())
+    }
+}
+
+impl FromStr for ID {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if Uuid::parse_str(s).is_ok() {
+            Ok(ID::Uuid(Uuid::parse_str(s).unwrap()))
+        } else if s.parse::<usize>().is_ok() {
+            Ok(ID::Number(s.parse::<usize>().unwrap()))
+        } else if s.is_empty() {
+            Err(String::from("Entity cannot be empty in EVICT"))
+        } else {
+            Ok(ID::String(s.to_owned()))
         }
     }
 }

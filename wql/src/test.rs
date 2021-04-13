@@ -1,7 +1,5 @@
 use super::*;
 use std::collections::HashMap;
-use uuid::Uuid;
-
 #[cfg(test)]
 mod test_create {
     use std::str::FromStr;
@@ -288,7 +286,7 @@ mod test_update {
             Wql::UpdateSet(
                 "this_entity".to_string(),
                 hashmap(),
-                Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap()
+                ID::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap()
             )
         );
     }
@@ -309,7 +307,7 @@ mod test_update {
             Wql::UpdateContent(
                 "this_entity".to_string(),
                 hashmap(),
-                Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap()
+                ID::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap()
             )
         );
     }
@@ -375,7 +373,7 @@ mod test_update {
     }
 
     #[test]
-    fn update_entity_missing_uuid() {
+    fn update_entity_str_id() {
         let wql = Wql::from_str(
             "UPDATE this_entity 
         SET {
@@ -385,10 +383,19 @@ mod test_update {
         into Some-crazy-id",
         );
 
-        assert!(wql
-            .err()
-            .unwrap()
-            .starts_with("Couldn\'t create uuid from Some-crazy-id"));
+        let hm = vec![("a", Types::Integer(123)), ("g", Types::Nil)]
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect();
+
+        assert_eq!(
+            wql,
+            Ok(Wql::UpdateSet(
+                "this_entity".to_string(),
+                hm,
+                ID::String(String::from("Some-crazy-id"))
+            ))
+        )
     }
 }
 
@@ -429,7 +436,7 @@ mod test_match {
             Wql::MatchUpdate(
                 "this_entity".to_string(),
                 hashmap(),
-                Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap(),
+                ID::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap(),
                 MatchCondition::All(vec![
                     MatchCondition::Eq("a".to_string(), Types::Integer(1)),
                     MatchCondition::GEq("b".to_string(), Types::Integer(3)),
@@ -557,10 +564,10 @@ mod test_match {
         INTO",
         );
 
-        assert!(wql
-            .err()
-            .unwrap()
-            .starts_with("Couldn\'t create uuid from "));
+        assert_eq!(
+            wql.err().unwrap(),
+            String::from("Entity ID cannot be empty")
+        )
     }
 
     fn hashmap() -> Entity {
@@ -590,7 +597,7 @@ mod evict {
 
         assert_eq!(
             wql.err(),
-            Some(String::from("Entity name cannot contain `-`"))
+            Some(String::from("Entity key name cannot contain `-`"))
         );
     }
 
@@ -602,7 +609,7 @@ mod evict {
             wql.unwrap(),
             Wql::Evict(
                 String::from("my_entity"),
-                Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").ok()
+                ID::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").ok()
             )
         );
     }
@@ -613,7 +620,7 @@ mod evict {
 
         assert_eq!(
             wql.err(),
-            Some(String::from("Keyword FROM is required to EVICT an UUID"))
+            Some(String::from("Keyword FROM is required to EVICT an ID"))
         );
     }
 
@@ -731,7 +738,7 @@ mod test_data_sructures {
 
     #[test]
     fn insert_vec_with_map_and_id() {
-        let uuid = Uuid::parse_str("13ca62fc-241b-4af6-87c3-0ae4015f9967").ok();
+        let uuid = ID::from_str("13ca62fc-241b-4af6-87c3-0ae4015f9967").ok();
         let wql = Wql::from_str(
             "INSERT {
             a: 123,
@@ -801,7 +808,7 @@ mod check {
         } FROM my_entity ID d6ca73c0-41ff-4975-8a60-fc4a061ce536",
         );
 
-        let uuid = Uuid::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap();
+        let uuid = ID::from_str("d6ca73c0-41ff-4975-8a60-fc4a061ce536").unwrap();
 
         assert_eq!(
             wql.unwrap(),
@@ -956,8 +963,8 @@ mod diff_intersect {
 
     #[test]
     fn intersect_key() {
-        let f_uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
-        let s_uuid = Uuid::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
+        let f_uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
+        let s_uuid = ID::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
         let query = "INTERSECT KEY SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 | SelEct * FROM my_entity ID 49dab8cf-2df2-474d-6fd1-c596c0bb8a00";
         let wql = Wql::from_str(query);
         assert_eq!(
@@ -985,8 +992,8 @@ mod diff_intersect {
 
     #[test]
     fn diff_key_value() {
-        let f_uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
-        let s_uuid = Uuid::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
+        let f_uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
+        let s_uuid = ID::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
         let query = "DIFFERENCE KEY-VALUE SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 | SelEct * FROM my_entity ID 49dab8cf-2df2-474d-6fd1-c596c0bb8a00 WHEN AT 2020-01-01T00:00:00Z";
         let wql = Wql::from_str(query);
         assert_eq!(
@@ -1014,8 +1021,8 @@ mod diff_intersect {
 
     #[test]
     fn union_key() {
-        let f_uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
-        let s_uuid = Uuid::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
+        let f_uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").ok();
+        let s_uuid = ID::from_str("49dab8cf-2df2-474d-6fd1-c596c0bb8a00").ok();
         let query = "UNION KEY SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 | SelEct * FROM my_entity ID 49dab8cf-2df2-474d-6fd1-c596c0bb8a00 WHEN AT 2020-01-01T00:00:00Z";
         let wql = Wql::from_str(query);
         assert_eq!(

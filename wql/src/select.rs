@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, str::FromStr};
 
-use uuid::Uuid;
-
 const ALGEBRA: [&str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT"];
 const OPERATORS: [&str; 10] = [
     "ID", "IDS", "WHERE", "WHEN", "DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT",
@@ -36,7 +34,7 @@ pub enum Algebra {
     Count,
 }
 
-use crate::where_clause::where_selector;
+use crate::{where_clause::where_selector, ID};
 
 use super::{
     logic::{read_select_args, read_uuids},
@@ -83,13 +81,14 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
     if next_symbol == "ID" {
         let id = chars
             .skip_while(|c| c.is_whitespace())
-            .take_while(|c| c.is_alphanumeric() || c == &'-')
+            .take_while(|c| c.is_alphanumeric() || c == &'-' || c == &'_')
             .collect::<String>();
 
-        let uuid = uuid::Uuid::from_str(&id);
-        if uuid.is_err() {
-            return Err(String::from("Field ID must be a UUID v4"));
+        let uuid = ID::from_str(&id);
+        if uuid.is_err() || id.is_empty() {
+            return Err(String::from("Field ID must be not empty"));
         }
+
         let next_symbol = chars
             .skip_while(|c| c.is_whitespace())
             .take_while(|c| !c.is_whitespace())
@@ -108,7 +107,7 @@ fn select_body(arg: ToSelect, chars: &mut std::str::Chars) -> Result<Wql, String
             .to_uppercase();
 
         if in_symbol == "IN" {
-            let uuids: Vec<Uuid> = read_uuids(chars)?;
+            let uuids: Vec<ID> = read_uuids(chars)?;
             let next_symbol = chars
                 .skip_while(|c| c.is_whitespace())
                 .take_while(|c| !c.is_whitespace())
@@ -226,7 +225,7 @@ pub fn algebra_functions(
 fn when_selector(
     entity_name: String,
     arg: ToSelect,
-    uuid: Option<Uuid>,
+    uuid: Option<ID>,
     chars: &mut std::str::Chars,
 ) -> Result<Wql, String> {
     let next_symbol = chars
@@ -235,7 +234,8 @@ fn when_selector(
         .collect::<String>()
         .to_uppercase();
 
-    if let (&ToSelect::All, Some(uuid), "START") = (&arg, uuid, next_symbol.to_uppercase().as_str())
+    if let (&ToSelect::All, Some(uuid), "START") =
+        (&arg, uuid.clone(), next_symbol.to_uppercase().as_str())
     {
         return when_time_range(entity_name, uuid, chars);
     }
@@ -253,7 +253,7 @@ fn when_selector(
 
 fn when_time_range(
     entity_name: String,
-    uuid: Uuid,
+    uuid: ID,
     chars: &mut std::str::Chars,
 ) -> Result<Wql, String> {
     let start_date = chars
@@ -293,9 +293,7 @@ fn when_time_range(
 
 #[cfg(test)]
 mod test {
-    use uuid::Uuid;
-
-    use crate::{ToSelect, Wql};
+    use crate::{ToSelect, Wql, ID};
     use std::{collections::HashMap, str::FromStr};
 
     #[test]
@@ -365,7 +363,7 @@ mod test {
     #[test]
     fn select_all_id() {
         let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1");
-        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1");
+        let uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1");
 
         assert_eq!(
             wql.unwrap(),
@@ -382,7 +380,7 @@ mod test {
     fn select_all_id_missing() {
         let wql = Wql::from_str("SelEct * FROM my_entity ID ");
 
-        assert_eq!(wql.err(), Some(String::from("Field ID must be a UUID v4")));
+        assert_eq!(wql.err(), Some(String::from("Field ID must be not empty")));
     }
 
     #[test]
@@ -407,8 +405,8 @@ mod test {
     #[test]
     fn select_all_ids() {
         let wql = Wql::from_str("SelEct * FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,}");
-        let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
-        let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+        let uuid1 = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid2 = ID::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
 
         assert_eq!(
             wql.unwrap(),
@@ -424,8 +422,8 @@ mod test {
     #[test]
     fn select_keys_ids() {
         let wql = Wql::from_str("SelEct #{a, b, c,} FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,}");
-        let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
-        let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+        let uuid1 = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid2 = ID::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
 
         assert_eq!(
             wql.unwrap(),
@@ -453,7 +451,7 @@ mod test {
     #[test]
     fn when_at() {
         let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN AT 2020-01-01T00:00:00Z");
-        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
         assert_eq!(
             wql.unwrap(),
             Wql::SelectWhen(
@@ -468,7 +466,7 @@ mod test {
     #[test]
     fn when_at_args() {
         let wql = Wql::from_str("SelEct #{a,b,c,} FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN AT 2020-01-01T00:00:00Z");
-        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
         assert_eq!(
             wql.unwrap(),
             Wql::SelectWhen(
@@ -498,7 +496,7 @@ mod test {
     #[test]
     fn when_range_all() {
         let wql = Wql::from_str("SelEct * FROM my_entity ID 2df2b8cf-49da-474d-8a00-c596c0bb6fd1 WHEN START 2020-01-01T00:00:00Z END 2020-01-01T03:00:00Z");
-        let uuid = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
         assert_eq!(
             wql.unwrap(),
             Wql::SelectWhenRange(
@@ -526,7 +524,7 @@ mod test {
 #[cfg(test)]
 mod functions_test {
     use super::*;
-    use crate::{ToSelect, Wql};
+    use crate::{ToSelect, Wql, ID};
 
     use std::str::FromStr;
 
@@ -599,8 +597,8 @@ mod functions_test {
     #[test]
     fn select_all_ids_order() {
         let wql = Wql::from_str("SelEct * FROM my_entity IDS IN #{2df2b8cf-49da-474d-8a00-c596c0bb6fd1, 53315090-e14d-4738-a4d2-f1ec2a93664c,} ORDER BY my_key :desc DEDUP ley");
-        let uuid1 = Uuid::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
-        let uuid2 = Uuid::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
+        let uuid1 = ID::from_str("2df2b8cf-49da-474d-8a00-c596c0bb6fd1").unwrap();
+        let uuid2 = ID::from_str("53315090-e14d-4738-a4d2-f1ec2a93664c").unwrap();
         let hm: HashMap<String, Algebra> = vec![
             (
                 "ORDER".to_string(),

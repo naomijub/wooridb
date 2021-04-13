@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
-use uuid::Uuid;
+
+use crate::ID;
 
 use super::{FromStr, HashMap, MatchCondition, Types};
 
@@ -369,7 +370,7 @@ pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
     }
 }
 
-pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, String> {
+pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<ID>, String> {
     let mut uuids = Vec::new();
     let mut uuid = String::new();
     loop {
@@ -378,15 +379,17 @@ pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, Strin
             Some(l) if l.is_alphanumeric() => uuid.push(l),
             Some(dash) if dash == '-' => uuid.push(dash),
             Some(',') => {
-                uuids.push(Uuid::from_str(&uuid).map_err(|e| {
-                    format!("Couldn't creat an Uuid from {:?}. Error {:?}", uuid, e)
-                })?);
+                uuids.push(
+                    ID::from_str(&uuid).map_err(|e| {
+                        format!("Couldn't creat an ID from {:?}. Error {:?}", uuid, e)
+                    })?,
+                );
                 uuid = String::new();
             }
             Some('}') => return Ok(uuids),
             _ => {
                 return Err(String::from(
-                    "Uuids in `IDS IN` are reuired to be inside a `#{` and `}`",
+                    "ID in `IDS IN` are required to be inside a `#{` and `}`",
                 ))
             }
         }
