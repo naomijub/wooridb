@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use language_parser::read_symbol;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{cmp::Ordering, hash::Hash};
 use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
@@ -203,11 +203,76 @@ impl Hash for Types {
     }
 }
 
-#[derive(PartialEq, PartialOrd, Eq, Ord, Deserialize, Serialize, Clone, Debug)]
+#[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Debug)]
 pub enum ID {
     Uuid(Uuid),
     Number(usize),
     String(String),
+}
+
+impl Serialize for ID {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            ID::Uuid(id) => {
+                if serializer.is_human_readable() {
+                    serializer.serialize_str(&id.to_hyphenated().encode_lower(&mut [0; 36]))
+                } else {
+                    serializer.serialize_bytes(id.as_bytes())
+                }
+            }
+            ID::Number(num) => serializer.serialize_u64(*num as u64),
+            ID::String(s) => serializer.serialize_str(s),
+        }
+    }
+}
+
+use std::fmt;
+
+use serde::de::{self, Visitor};
+
+struct IDVisitor;
+
+impl<'de> Visitor<'de> for IDVisitor {
+    type Value = ID;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("an id must be usize, uuid or String")
+    }
+
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        if Uuid::parse_str(&v).is_ok() {
+            Ok(ID::Uuid(Uuid::parse_str(&v).unwrap()))
+        } else {
+            Ok(ID::String(v))
+        }
+    }
+
+    fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        use std::u64;
+        if value >= u64::from(u64::MIN) && value <= u64::from(u64::MAX) {
+            Ok(ID::Number(value as usize))
+        } else {
+            Err(E::custom(format!("u64 out of range: {}", value)))
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for ID {
+    fn deserialize<D>(deserializer: D) -> Result<ID, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_any(IDVisitor)
+    }
 }
 
 impl ID {
