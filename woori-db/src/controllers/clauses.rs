@@ -229,11 +229,12 @@ fn or_clauses(
 }
 
 async fn generate_state(
-    registries: &BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
+    registries: &BTreeMap<Uuid, (DataRegister, Vec<u8>)>,
     args_to_select: ToSelect,
 ) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
     let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
     for (uuid, (_, state)) in registries {
+        let state: HashMap<String, Types> = bincode::deserialize(&state).unwrap();
         let state = state
             .into_par_iter()
             .filter(|(_, v)| !v.is_hash())
