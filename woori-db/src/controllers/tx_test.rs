@@ -886,6 +886,7 @@ async fn test_evict_entity_id_post_ok() {
 
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
+    println!("{:?}", body);
     let response: TxResponse = ron::de::from_str(&body).unwrap();
     let uuid = response.uuid.unwrap().to_string();
     assert!(resp_insert.status().is_success());
@@ -915,7 +916,7 @@ async fn test_evict_entity_id_post_ok() {
 
     assert_eq!(
         body,
-        format!("(\n error_type: \"UuidNotCreatedForEntity\",\n error_message: \"Uuid {} not created for entity test_evict_id\",\n)", uuid)
+        format!("(\n error_type: \"IdNotCreatedForEntity\",\n error_message: \"Uuid Uuid({}) not created for entity test_evict_id\",\n)", uuid)
     );
     clear();
 }
