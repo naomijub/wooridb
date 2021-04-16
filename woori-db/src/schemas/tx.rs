@@ -1,7 +1,7 @@
 #[cfg(not(feature = "json"))]
 use crate::core::pretty_config_output;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use wql::ID;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TxType {
@@ -18,7 +18,7 @@ pub enum TxType {
 pub struct TxResponse {
     tx_type: TxType,
     entity: String,
-    pub(crate) uuid: Option<Uuid>,
+    pub(crate) uuid: Option<ID>,
     state: String,
     message: String,
 }
@@ -60,7 +60,7 @@ impl From<CreateEntityResponse> for TxResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InsertEntityResponse {
     entity: String,
-    pub(crate) uuid: Uuid,
+    pub(crate) uuid: ID,
     message: String,
 }
 
@@ -77,7 +77,7 @@ impl From<InsertEntityResponse> for TxResponse {
 }
 
 impl InsertEntityResponse {
-    pub fn new(entity: String, uuid: Uuid, message: String) -> Self {
+    pub fn new(entity: String, uuid: ID, message: String) -> Self {
         Self {
             entity,
             uuid,
@@ -89,7 +89,7 @@ impl InsertEntityResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeleteOrEvictEntityResponse {
     entity: String,
-    uuid: Option<Uuid>,
+    uuid: Option<ID>,
     message: String,
     tx_type: TxType,
 }
@@ -107,7 +107,7 @@ impl From<DeleteOrEvictEntityResponse> for TxResponse {
 }
 
 impl DeleteOrEvictEntityResponse {
-    pub fn new(entity: String, uuid: Option<Uuid>, message: String, tx_type: TxType) -> Self {
+    pub fn new(entity: String, uuid: Option<ID>, message: String, tx_type: TxType) -> Self {
         Self {
             entity,
             uuid,
@@ -120,7 +120,7 @@ impl DeleteOrEvictEntityResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateEntityResponse {
     entity: String,
-    uuid: Uuid,
+    uuid: ID,
     state: String,
     message: String,
     tx_type: TxType,
@@ -139,13 +139,7 @@ impl From<UpdateEntityResponse> for TxResponse {
 }
 
 impl UpdateEntityResponse {
-    pub fn new(
-        entity: String,
-        uuid: Uuid,
-        state: String,
-        message: String,
-        tx_type: TxType,
-    ) -> Self {
+    pub fn new(entity: String, uuid: ID, state: String, message: String, tx_type: TxType) -> Self {
         Self {
             entity,
             uuid,

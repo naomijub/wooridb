@@ -3,8 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use crate::{core::pretty_config_output, model::error::Error};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-use wql::Types;
+use wql::{Types, ID};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CountResponse {
@@ -19,37 +18,37 @@ pub struct CountId {
 }
 #[derive(Serialize)]
 pub struct CountAll {
-    response: BTreeMap<Uuid, HashMap<String, Types>>,
+    response: BTreeMap<ID, HashMap<String, Types>>,
     count: usize,
 }
 #[derive(Serialize)]
 pub struct CountOrder {
-    response: Vec<(Uuid, HashMap<String, Types>)>,
+    response: Vec<(ID, HashMap<String, Types>)>,
     count: usize,
 }
 #[derive(Serialize)]
 pub struct CountGroupBy {
-    response: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>,
+    response: HashMap<String, BTreeMap<ID, HashMap<String, Types>>>,
     count: usize,
 }
 #[derive(Serialize)]
 pub struct CountOrderedGroupBy {
-    response: HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>,
+    response: HashMap<String, Vec<(ID, HashMap<String, Types>)>>,
     count: usize,
 }
 #[derive(Serialize)]
 pub struct CountOptionOrder {
-    response: Vec<(Uuid, Option<HashMap<String, Types>>)>,
+    response: Vec<(ID, Option<HashMap<String, Types>>)>,
     count: usize,
 }
 #[derive(Serialize)]
 pub struct CountOptionGroupBy {
-    response: HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>,
+    response: HashMap<String, BTreeMap<ID, Option<HashMap<String, Types>>>>,
     count: usize,
 }
 #[derive(Serialize)]
 pub struct CountOptionSelect {
-    response: BTreeMap<Uuid, Option<HashMap<String, Types>>>,
+    response: BTreeMap<ID, Option<HashMap<String, Types>>>,
     count: usize,
 }
 #[derive(Serialize)]
@@ -208,13 +207,13 @@ pub enum Response {
     Intersect(HashMap<String, Types>),
     Difference(HashMap<String, Types>),
     Union(HashMap<String, Types>),
-    All(BTreeMap<Uuid, HashMap<String, Types>>),
-    Order(Vec<(Uuid, HashMap<String, Types>)>),
-    GroupBy(HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>),
-    OrderedGroupBy(HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>),
-    OptionOrder(Vec<(Uuid, Option<HashMap<String, Types>>)>),
-    OptionGroupBy(HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>),
-    OptionSelect(BTreeMap<Uuid, Option<HashMap<String, Types>>>),
+    All(BTreeMap<ID, HashMap<String, Types>>),
+    Order(Vec<(ID, HashMap<String, Types>)>),
+    GroupBy(HashMap<String, BTreeMap<ID, HashMap<String, Types>>>),
+    OrderedGroupBy(HashMap<String, Vec<(ID, HashMap<String, Types>)>>),
+    OptionOrder(Vec<(ID, Option<HashMap<String, Types>>)>),
+    OptionGroupBy(HashMap<String, BTreeMap<ID, Option<HashMap<String, Types>>>>),
+    OptionSelect(BTreeMap<ID, Option<HashMap<String, Types>>>),
     CheckValues(HashMap<String, bool>),
     TimeRange(BTreeMap<DateTime<Utc>, HashMap<String, Types>>),
     WithCount(CountResponse),
@@ -234,8 +233,8 @@ impl From<HashMap<String, HashMap<String, Types>>> for Response {
     }
 }
 
-impl From<BTreeMap<Uuid, Option<HashMap<String, Types>>>> for Response {
-    fn from(map: BTreeMap<Uuid, Option<HashMap<String, Types>>>) -> Self {
+impl From<BTreeMap<ID, Option<HashMap<String, Types>>>> for Response {
+    fn from(map: BTreeMap<ID, Option<HashMap<String, Types>>>) -> Self {
         Self::OptionSelect(map)
     }
 }
@@ -258,38 +257,38 @@ impl From<BTreeMap<DateTime<Utc>, HashMap<String, Types>>> for Response {
     }
 }
 
-impl From<BTreeMap<Uuid, HashMap<String, Types>>> for Response {
-    fn from(map: BTreeMap<Uuid, HashMap<String, Types>>) -> Self {
+impl From<BTreeMap<ID, HashMap<String, Types>>> for Response {
+    fn from(map: BTreeMap<ID, HashMap<String, Types>>) -> Self {
         Self::All(map)
     }
 }
 
-impl From<Vec<(Uuid, HashMap<String, Types>)>> for Response {
-    fn from(map: Vec<(Uuid, HashMap<String, Types>)>) -> Self {
+impl From<Vec<(ID, HashMap<String, Types>)>> for Response {
+    fn from(map: Vec<(ID, HashMap<String, Types>)>) -> Self {
         Self::Order(map)
     }
 }
 
-impl From<HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>> for Response {
-    fn from(map: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>) -> Self {
+impl From<HashMap<String, BTreeMap<ID, HashMap<String, Types>>>> for Response {
+    fn from(map: HashMap<String, BTreeMap<ID, HashMap<String, Types>>>) -> Self {
         Self::GroupBy(map)
     }
 }
 
-impl From<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>> for Response {
-    fn from(map: HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>) -> Self {
+impl From<HashMap<String, Vec<(ID, HashMap<String, Types>)>>> for Response {
+    fn from(map: HashMap<String, Vec<(ID, HashMap<String, Types>)>>) -> Self {
         Self::OrderedGroupBy(map)
     }
 }
 
-impl From<Vec<(Uuid, Option<HashMap<String, Types>>)>> for Response {
-    fn from(map: Vec<(Uuid, Option<HashMap<String, Types>>)>) -> Self {
+impl From<Vec<(ID, Option<HashMap<String, Types>>)>> for Response {
+    fn from(map: Vec<(ID, Option<HashMap<String, Types>>)>) -> Self {
         Self::OptionOrder(map)
     }
 }
 
-impl From<HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>> for Response {
-    fn from(map: HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>) -> Self {
+impl From<HashMap<String, BTreeMap<ID, Option<HashMap<String, Types>>>>> for Response {
+    fn from(map: HashMap<String, BTreeMap<ID, Option<HashMap<String, Types>>>>) -> Self {
         Self::OptionGroupBy(map)
     }
 }

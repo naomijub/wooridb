@@ -4,7 +4,6 @@ pub(crate) mod wql;
 use actix::prelude::*;
 use actix_web::web;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use std::{
     io::Error,
     sync::{atomic::AtomicUsize, Arc, Mutex},
@@ -40,28 +39,5 @@ impl Handler<DataRegister> for Executor {
     fn handle(&mut self, msg: DataRegister, _: &mut Self::Context) -> Self::Result {
         use crate::io::read::read_log;
         read_log(msg)
-    }
-}
-
-#[derive(PartialEq, PartialOrd, Eq, Ord)]
-pub enum ID {
-    Uuid(Uuid),
-    Number(usize),
-    String(String),
-
-}
-
-impl ID {
-    pub fn new() -> ID {
-        let uuid = Uuid::new_v4();
-        ID::Uuid(uuid)
-    }
-
-    pub fn new_with_usize(number: usize) -> ID {
-        ID::Number(number)
-    }
-
-    pub fn new_with_str(s: &str) -> ID {
-        ID::String(s.to_owned())
     }
 }

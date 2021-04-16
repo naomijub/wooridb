@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use uuid::Uuid;
-use wql::{MatchCondition, Types};
+use wql::{MatchCondition, Types, ID};
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -51,7 +50,7 @@ impl From<String> for Action {
 pub struct MatchUpdateArgs {
     pub entity: String,
     pub content: HashMap<String, Types>,
-    pub id: uuid::Uuid,
+    pub id: ID,
     pub conditions: MatchCondition,
 }
 
@@ -59,7 +58,7 @@ impl MatchUpdateArgs {
     pub fn new(
         entity: String,
         content: HashMap<String, Types>,
-        id: uuid::Uuid,
+        id: ID,
         conditions: MatchCondition,
     ) -> Self {
         Self {
@@ -74,11 +73,11 @@ impl MatchUpdateArgs {
 pub struct UpdateArgs {
     pub entity: String,
     pub content: HashMap<String, Types>,
-    pub id: Uuid,
+    pub id: ID,
 }
 
 impl UpdateArgs {
-    pub fn new(entity: String, content: HashMap<String, Types>, id: Uuid) -> Self {
+    pub fn new(entity: String, content: HashMap<String, Types>, id: ID) -> Self {
         Self {
             entity,
             content,
@@ -90,11 +89,11 @@ impl UpdateArgs {
 pub struct InsertArgs {
     pub entity: String,
     pub content: HashMap<String, Types>,
-    pub uuid: Option<Uuid>,
+    pub uuid: Option<ID>,
 }
 
 impl InsertArgs {
-    pub fn new(entity: String, content: HashMap<String, Types>, uuid: Option<Uuid>) -> Self {
+    pub fn new(entity: String, content: HashMap<String, Types>, uuid: Option<ID>) -> Self {
         Self {
             entity,
             content,

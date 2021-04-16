@@ -2,8 +2,7 @@ use actix::MailboxError;
 use actix_web::{error, HttpResponse};
 use std::io;
 
-use uuid::Uuid;
-use wql::Types;
+use wql::{Types, ID};
 
 use crate::schemas::error::Response;
 
@@ -18,7 +17,7 @@ pub enum Error {
     Serialization(ron::Error),
     #[cfg(feature = "json")]
     SerdeJson(serde_json::Error),
-    UuidNotCreatedForEntity(String, Uuid),
+    IdNotCreatedForEntity(String, ID),
     FailedToParseState,
     FailedToParseRegistry,
     UnknownCondition,
@@ -61,7 +60,7 @@ pub fn error_to_http(e: &Error) -> HttpResponse {
         | Error::DuplicatedUnique(_, _, _)
         | Error::EntityNotCreated(_)
         | Error::EntityNotCreatedWithUniqueness(_)
-        | Error::UuidNotCreatedForEntity(_, _)
+        | Error::IdNotCreatedForEntity(_, _)
         | Error::InvalidUuid(_)
         | Error::UpdateContentEncryptKeys(_)
         | Error::CheckNonEncryptedKeys(_)
@@ -119,8 +118,8 @@ impl std::fmt::Display for Error {
             Error::SerdeJson(e) => {
                 Response::new(String::from("SerdeJson"), format!("{:?}", e)).write(f)
             }
-            Error::UuidNotCreatedForEntity(s, id) => Response::new(
-                String::from("UuidNotCreatedForEntity"),
+            Error::IdNotCreatedForEntity(s, id) => Response::new(
+                String::from("IdNotCreatedForEntity"),
                 format!("Uuid {:?} not created for entity {}", id, s),
             )
             .write(f),

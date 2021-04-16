@@ -1,15 +1,14 @@
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
 use std::collections::{BTreeMap, HashMap, HashSet};
-use uuid::Uuid;
-use wql::Types;
+use wql::{Types, ID};
 
 use crate::{core::query::filter_keys_and_hash, io::read::read_date_log, model::error::Error};
 
 use super::wql::Executor;
 pub struct ReadEntityRange {
     entity_name: String,
-    uuid: Uuid,
+    uuid: ID,
     start_date: DateTime<Utc>,
     end_date: DateTime<Utc>,
     date_log: String,
@@ -18,7 +17,7 @@ pub struct ReadEntityRange {
 impl ReadEntityRange {
     pub fn new(
         entity_name: &str,
-        uuid: Uuid,
+        uuid: ID,
         start_date: DateTime<Utc>,
         end_date: DateTime<Utc>,
         date_log: String,
@@ -186,12 +185,12 @@ impl Handler<ReadEntitiesAt> for Executor {
 
 pub struct ReadEntityIdAt {
     entity_name: String,
-    uuid: Uuid,
+    uuid: ID,
     date_log: String,
 }
 
 impl ReadEntityIdAt {
-    pub fn new(entity_name: &str, uuid: Uuid, date_log: String) -> Self {
+    pub fn new(entity_name: &str, uuid: ID, date_log: String) -> Self {
         Self {
             entity_name: entity_name.to_owned(),
             uuid,

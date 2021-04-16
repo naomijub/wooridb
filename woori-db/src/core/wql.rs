@@ -31,13 +31,16 @@ pub fn evict_entity_id_content(entity: &EvictEntityId) -> String {
         "{}|{}|{}|{};",
         Action::EvictEntityId,
         date,
-        entity.id,
+        entity.id.to_string(),
         entity.name
     )
 }
 
-pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, Uuid, String) {
-    let uuid = content.uuid.map_or_else(Uuid::new_v4, |id| id);
+pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, wql::ID, String) {
+    let uuid = content
+        .uuid
+        .as_ref()
+        .map_or_else(|| wql::ID::Uuid(Uuid::new_v4()), |id| id.to_owned());
 
     let date = content.datetime;
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
@@ -53,7 +56,7 @@ pub fn insert_entity_content(content: &InsertEntityContent) -> (DateTime<Utc>, U
 }
 
 pub fn update_set_entity_content(content: &UpdateSetEntityContent) -> (DateTime<Utc>, String) {
-    let uuid = content.id;
+    let uuid = &content.id;
     let date = content.datetime;
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
@@ -72,7 +75,7 @@ pub fn update_set_entity_content(content: &UpdateSetEntityContent) -> (DateTime<
 pub fn update_content_entity_content(
     content: &UpdateContentEntityContent,
 ) -> (DateTime<Utc>, String) {
-    let uuid = content.id;
+    let uuid = &content.id;
     let date: DateTime<Utc> = Utc::now();
     let date_str = to_string_pretty(&date, pretty_config_inner()).unwrap();
     let log = format!(
@@ -201,11 +204,11 @@ mod test {
 
     #[test]
     fn insert_entitywith_uuid_test() {
-        let uuid = Uuid::new_v4();
+        let uuid = wql::ID::Uuid(Uuid::new_v4());
         let entity = InsertEntityContent {
             name: "my_entity".to_string(),
             content: "suppose this is a log".to_string(),
-            uuid: Some(uuid),
+            uuid: Some(uuid.clone()),
             datetime: Utc::now(),
         };
         let (_, _, s) = insert_entity_content(&entity);
@@ -218,7 +221,7 @@ mod test {
 
     #[test]
     fn update_set_entity_content_test() {
-        let id = uuid::Uuid::new_v4();
+        let id = wql::ID::Uuid(uuid::Uuid::new_v4());
         let entity = UpdateSetEntityContent {
             name: "my-entity".to_string(),
             current_state: "state".to_string(),
@@ -238,7 +241,7 @@ mod test {
 
     #[test]
     fn update_content_entity_content_test() {
-        let id = uuid::Uuid::new_v4();
+        let id = wql::ID::Uuid(uuid::Uuid::new_v4());
         let entity = UpdateContentEntityContent {
             name: "my-entity".to_string(),
             current_state: "state".to_string(),
@@ -257,7 +260,7 @@ mod test {
 
     #[test]
     fn delete_entity_test() {
-        let id = uuid::Uuid::new_v4();
+        let id = wql::ID::Uuid(uuid::Uuid::new_v4());
         let entity = DeleteId {
             name: "my-entity".to_string(),
             content_log: "log".to_string(),
@@ -287,7 +290,7 @@ mod test {
         let uuid = Uuid::new_v4();
         let entity = EvictEntityId {
             name: "hello".to_string(),
-            id: uuid,
+            id: wql::ID::Uuid(uuid),
         };
 
         let actual = evict_entity_id_content(&entity);

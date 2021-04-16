@@ -5,8 +5,7 @@ use std::{
 
 use actix_web::{HttpResponse, Responder};
 use rayon::prelude::*;
-use uuid::Uuid;
-use wql::{ToSelect, Types, Wql};
+use wql::{ToSelect, Types, Wql, ID};
 
 use crate::{
     actors::{
@@ -39,11 +38,11 @@ pub async fn wql_handler(
 ) -> impl Responder {
     let query = Wql::from_str(&body);
     let response = match query {
-        Ok(Wql::Select(entity, ToSelect::All, Some(uuid), _)) => {
-            select_all_with_id(entity, uuid, local_data).await
+        Ok(Wql::Select(entity, ToSelect::All, Some(id), _)) => {
+            select_all_with_id(entity, id, local_data).await
         }
-        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(uuid), _)) => {
-            select_keys_with_id(entity, uuid, keys, local_data).await
+        Ok(Wql::Select(entity, ToSelect::Keys(keys), Some(id), _)) => {
+            select_keys_with_id(entity, id, keys, local_data).await
         }
         Ok(Wql::Select(entity, ToSelect::All, None, functions)) => {
             select_all(entity, local_data, functions).await
@@ -51,11 +50,11 @@ pub async fn wql_handler(
         Ok(Wql::Select(entity, ToSelect::Keys(keys), None, functions)) => {
             select_args(entity, keys, local_data, functions).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::All, uuids, functions)) => {
-            select_all_with_ids(entity, uuids, local_data, functions).await
+        Ok(Wql::SelectIds(entity, ToSelect::All, ids, functions)) => {
+            select_all_with_ids(entity, ids, local_data, functions).await
         }
-        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions)) => {
-            select_keys_with_ids(entity, keys, uuids, local_data, functions).await
+        Ok(Wql::SelectIds(entity, ToSelect::Keys(keys), ids, functions)) => {
+            select_keys_with_ids(entity, keys, ids, local_data, functions).await
         }
         Ok(Wql::SelectWhen(entity, ToSelect::All, None, date)) => {
             select_all_when_controller(entity, date, actor).await
@@ -63,21 +62,21 @@ pub async fn wql_handler(
         Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), None, date)) => {
             select_keys_when_controller(entity, date, keys, actor).await
         }
-        Ok(Wql::SelectWhen(entity, ToSelect::All, Some(uuid), date)) => {
-            select_all_id_when_controller(entity, date, uuid, actor).await
+        Ok(Wql::SelectWhen(entity, ToSelect::All, Some(id), date)) => {
+            select_all_id_when_controller(entity, date, id, actor).await
         }
-        Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(uuid), date)) => {
-            select_keys_id_when_controller(entity, date, keys, uuid, actor).await
+        Ok(Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(id), date)) => {
+            select_keys_id_when_controller(entity, date, keys, id, actor).await
         }
-        Ok(Wql::SelectWhenRange(entity_name, uuid, start_date, end_date)) => {
-            select_all_when_range_controller(entity_name, uuid, start_date, end_date, actor).await
+        Ok(Wql::SelectWhenRange(entity_name, id, start_date, end_date)) => {
+            select_all_when_range_controller(entity_name, id, start_date, end_date, actor).await
         }
         Ok(Wql::SelectWhere(entity_name, args_to_select, clauses, functions)) => {
             select_where_controller(entity_name, args_to_select, clauses, local_data, functions)
                 .await
         }
-        Ok(Wql::CheckValue(entity, uuid, content)) => {
-            check_value_controller(entity, uuid, content, local_data, encryption, actor).await
+        Ok(Wql::CheckValue(entity, id, content)) => {
+            check_value_controller(entity, id, content, local_data, encryption, actor).await
         }
         Ok(Wql::RelationQuery(queries, wql::Relation::Intersect, relation_type)) => {
             intersect(queries, relation_type, local_data, actor).await
@@ -106,7 +105,7 @@ pub async fn wql_handler(
 
 pub async fn check_value_controller(
     entity: String,
-    uuid: Uuid,
+    id: ID,
     content: HashMap<String, String>,
     local_data: DataLocalContext,
     encryption: DataEncryptContext,
@@ -139,7 +138,7 @@ pub async fn check_value_controller(
         local_data.clone()
     };
 
-    let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+    let previous_entry = local_data.get(&entity).unwrap().get(&id).unwrap();
     let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
     let state = actor.send(State(previous_state_str)).await??;
     let keys = content
@@ -158,7 +157,7 @@ pub async fn check_value_controller(
 
 async fn select_all_when_range_controller(
     entity: String,
-    uuid: Uuid,
+    id: ID,
     start_date: String,
     end_date: String,
     actor: DataExecutor,
@@ -177,7 +176,7 @@ async fn select_all_when_range_controller(
 
     let result = actor
         .send(ReadEntityRange::new(
-            &entity, uuid, start_date, end_date, date_log,
+            &entity, id, start_date, end_date, date_log,
         ))
         .await??;
 
@@ -206,7 +205,7 @@ async fn select_all_when_controller(
 pub async fn select_all_id_when_controller(
     entity: String,
     date: String,
-    uuid: Uuid,
+    id: ID,
     actor: DataExecutor,
 ) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
@@ -218,7 +217,7 @@ pub async fn select_all_id_when_controller(
     #[cfg(not(test))]
     let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor
-        .send(ReadEntityIdAt::new(&entity, uuid, date_log))
+        .send(ReadEntityIdAt::new(&entity, id, date_log))
         .await??;
     let result = filter_keys_and_hash(result, None);
     Ok(result.into())
@@ -228,7 +227,7 @@ pub async fn select_keys_id_when_controller(
     entity: String,
     date: String,
     keys: Vec<String>,
-    uuid: Uuid,
+    id: ID,
     actor: DataExecutor,
 ) -> Result<QueryResponse, Error> {
     use chrono::{DateTime, Utc};
@@ -241,7 +240,7 @@ pub async fn select_keys_id_when_controller(
     #[cfg(not(test))]
     let date_log = date.format("data/%Y_%m_%d.log").to_string();
     let result = actor
-        .send(ReadEntityIdAt::new(&entity, uuid, date_log))
+        .send(ReadEntityIdAt::new(&entity, id, date_log))
         .await??;
     let result = filter_keys_and_hash(result, Some(keys));
 
@@ -273,7 +272,7 @@ async fn select_keys_when_controller(
 
 pub async fn select_all_with_id(
     entity: String,
-    uuid: Uuid,
+    id: ID,
     local_data: DataLocalContext,
 ) -> Result<QueryResponse, Error> {
     let registry = {
@@ -283,10 +282,10 @@ pub async fn select_all_with_id(
             return Err(Error::LockData);
         };
         let registry = if let Some(id_to_registry) = local_data.get(&entity) {
-            if let Some(reg) = id_to_registry.get(&uuid) {
+            if let Some(reg) = id_to_registry.get(&id) {
                 reg
             } else {
-                return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+                return Err(Error::IdNotCreatedForEntity(entity, id));
             }
         } else {
             return Err(Error::EntityNotCreated(entity));
@@ -302,7 +301,7 @@ pub async fn select_all_with_id(
 
 pub async fn select_all_with_ids(
     entity: String,
-    uuids: Vec<Uuid>,
+    ids: Vec<ID>,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<QueryResponse, Error> {
@@ -314,33 +313,32 @@ pub async fn select_all_with_ids(
             return Err(Error::LockData);
         };
         let registries = if let Some(id_to_registry) = local_data.get(&entity) {
-            uuids
-                .into_par_iter()
+            ids.into_par_iter()
                 .filter_map(|id| {
                     Some((
-                        id,
+                        id.clone(),
                         id_to_registry
                             .get(&id)
-                            .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id))
+                            .ok_or_else(|| Error::IdNotCreatedForEntity(entity.clone(), id))
                             .ok(),
                     ))
                     .filter(|(_id, reg)| reg.is_some())
                 })
-                .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
-                .collect::<Vec<(Uuid, Option<(DataRegister, HashMap<String, Types>)>)>>()
+                .map(|(id, reg)| (id, reg.map(ToOwned::to_owned)))
+                .collect::<Vec<(ID, Option<(DataRegister, HashMap<String, Types>)>)>>()
         } else {
             return Err(Error::EntityNotCreated(entity));
         };
         registries
     };
 
-    let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
-    for (uuid, registry) in registries.into_iter().skip(offset).take(limit) {
+    let mut states: BTreeMap<ID, Option<HashMap<String, Types>>> = BTreeMap::new();
+    for (id, registry) in registries.into_iter().skip(offset).take(limit) {
         if let Some((_, state)) = registry {
             let filtered = filter_keys_and_hash(state, None);
-            states.insert(uuid, Some(filtered));
+            states.insert(id, Some(filtered));
         } else {
-            states.insert(uuid, None);
+            states.insert(id, None);
         }
     }
 
@@ -353,7 +351,7 @@ pub async fn select_all_with_ids(
 
 pub async fn select_keys_with_id(
     entity: String,
-    uuid: Uuid,
+    id: ID,
     keys: Vec<String>,
     local_data: DataLocalContext,
 ) -> Result<QueryResponse, Error> {
@@ -365,10 +363,10 @@ pub async fn select_keys_with_id(
             return Err(Error::LockData);
         };
         let registry = if let Some(id_to_registry) = local_data.get(&entity) {
-            if let Some(reg) = id_to_registry.get(&uuid) {
+            if let Some(reg) = id_to_registry.get(&id) {
                 reg
             } else {
-                return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+                return Err(Error::IdNotCreatedForEntity(entity, id));
             }
         } else {
             return Err(Error::EntityNotCreated(entity));
@@ -385,7 +383,7 @@ pub async fn select_keys_with_id(
 pub async fn select_keys_with_ids(
     entity: String,
     keys: Vec<String>,
-    uuids: Vec<Uuid>,
+    ids: Vec<ID>,
     local_data: DataLocalContext,
     functions: HashMap<String, wql::Algebra>,
 ) -> Result<QueryResponse, Error> {
@@ -398,33 +396,32 @@ pub async fn select_keys_with_ids(
             return Err(Error::LockData);
         };
         let registries = if let Some(id_to_registry) = local_data.get(&entity) {
-            uuids
-                .into_par_iter()
+            ids.into_par_iter()
                 .filter_map(|id| {
                     Some((
-                        id,
+                        id.clone(),
                         id_to_registry
                             .get(&id)
-                            .ok_or_else(|| Error::UuidNotCreatedForEntity(entity.clone(), id))
+                            .ok_or_else(|| Error::IdNotCreatedForEntity(entity.clone(), id))
                             .ok(),
                     ))
                     .filter(|(_id, reg)| reg.is_some())
                 })
-                .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
-                .collect::<Vec<(Uuid, Option<(DataRegister, HashMap<String, Types>)>)>>()
+                .map(|(id, reg)| (id, reg.map(ToOwned::to_owned)))
+                .collect::<Vec<(ID, Option<(DataRegister, HashMap<String, Types>)>)>>()
         } else {
             return Err(Error::EntityNotCreated(entity));
         };
         registries
     };
 
-    let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
-    for (uuid, registry) in registries.into_iter().skip(offset).take(limit) {
+    let mut states: BTreeMap<ID, Option<HashMap<String, Types>>> = BTreeMap::new();
+    for (id, registry) in registries.into_iter().skip(offset).take(limit) {
         if let Some((_, state)) = registry {
             let filtered = filter_keys_and_hash(state, Some(keys.clone()));
-            states.insert(uuid, Some(filtered));
+            states.insert(id, Some(filtered));
         } else {
-            states.insert(uuid, None);
+            states.insert(id, None);
         }
     }
 

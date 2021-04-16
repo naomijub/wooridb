@@ -57,7 +57,7 @@ pub async fn history_controller(
             if let Some(reg) = id_to_registry.get(&info.entity_id) {
                 reg
             } else {
-                return Err(Error::UuidNotCreatedForEntity(
+                return Err(Error::IdNotCreatedForEntity(
                     info.entity_key,
                     info.entity_id,
                 ));

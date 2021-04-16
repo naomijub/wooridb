@@ -223,6 +223,14 @@ impl ID {
     pub fn new_with_str(s: &str) -> ID {
         ID::String(s.to_owned())
     }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            ID::Number(num) => num.to_string(),
+            ID::String(s) => s.to_owned(),
+            ID::Uuid(id) => id.to_string(),
+        }
+    }
 }
 
 impl FromStr for ID {

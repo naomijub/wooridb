@@ -4,8 +4,7 @@ use std::{
 };
 
 use rayon::prelude::*;
-use uuid::Uuid;
-use wql::{Algebra, Types};
+use wql::{Algebra, Types, ID};
 
 use crate::{
     model::DataRegister,
@@ -25,15 +24,15 @@ pub(crate) fn filter_keys_and_hash(
 }
 
 pub fn registries_to_states(
-    registries: BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
+    registries: BTreeMap<ID, (DataRegister, HashMap<String, Types>)>,
     keys: Option<HashSet<String>>,
     offset: usize,
     limit: usize,
-) -> BTreeMap<Uuid, HashMap<String, Types>> {
-    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
-    for (uuid, (_, state)) in registries.into_iter().skip(offset).take(limit) {
+) -> BTreeMap<ID, HashMap<String, Types>> {
+    let mut states: BTreeMap<ID, HashMap<String, Types>> = BTreeMap::new();
+    for (id, (_, state)) in registries.into_iter().skip(offset).take(limit) {
         let filtered = filter_keys_and_hash(state, keys.clone());
-        states.insert(uuid, filtered);
+        states.insert(id, filtered);
     }
     states
 }
@@ -57,9 +56,9 @@ pub(crate) fn get_limit_offset_count(
 }
 
 pub(crate) fn dedup_states(
-    states: BTreeMap<Uuid, HashMap<String, Types>>,
+    states: BTreeMap<ID, HashMap<String, Types>>,
     functions: &HashMap<String, wql::Algebra>,
-) -> BTreeMap<Uuid, HashMap<String, Types>> {
+) -> BTreeMap<ID, HashMap<String, Types>> {
     if let Some(Algebra::Dedup(k)) = functions.get("DEDUP") {
         let key = if k.starts_with("NIL(") {
             String::from(&k[4..k.len() - 1])
@@ -68,7 +67,7 @@ pub(crate) fn dedup_states(
         };
 
         let mut set: HashSet<String> = HashSet::new();
-        let mut new_states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+        let mut new_states: BTreeMap<ID, HashMap<String, Types>> = BTreeMap::new();
         for (id, state) in states {
             let k_value = state.get(&key);
 
@@ -93,9 +92,9 @@ pub(crate) fn dedup_states(
 }
 
 pub(crate) fn dedup_option_states(
-    states: BTreeMap<Uuid, Option<HashMap<String, Types>>>,
+    states: BTreeMap<ID, Option<HashMap<String, Types>>>,
     functions: &HashMap<String, wql::Algebra>,
-) -> BTreeMap<Uuid, Option<HashMap<String, Types>>> {
+) -> BTreeMap<ID, Option<HashMap<String, Types>>> {
     let dedup = functions.get("DEDUP");
     if let Some(Algebra::Dedup(k)) = dedup {
         let key = if k.starts_with("NIL(") {
@@ -105,7 +104,7 @@ pub(crate) fn dedup_option_states(
         };
 
         let mut set: HashSet<String> = HashSet::new();
-        let mut new_states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
+        let mut new_states: BTreeMap<ID, Option<HashMap<String, Types>>> = BTreeMap::new();
         for (id, state) in states.iter().filter(|(_, s)| s.is_some()) {
             let some_state = state.clone().unwrap();
             let k_value = some_state.get(&key);
@@ -129,7 +128,7 @@ pub(crate) fn dedup_option_states(
 }
 
 pub(crate) fn get_result_after_manipulation(
-    states: BTreeMap<Uuid, HashMap<String, Types>>,
+    states: BTreeMap<ID, HashMap<String, Types>>,
     functions: &HashMap<String, wql::Algebra>,
     should_count: bool,
 ) -> QueryResponse {
@@ -138,7 +137,7 @@ pub(crate) fn get_result_after_manipulation(
         let mut states = states
             .into_par_iter()
             .map(|(id, state)| (id, state))
-            .collect::<Vec<(Uuid, HashMap<String, Types>)>>();
+            .collect::<Vec<(ID, HashMap<String, Types>)>>();
         if ord == &wql::Order::Asc {
             states.sort_by(|a, b| {
                 a.1.get(k)
@@ -159,7 +158,7 @@ pub(crate) fn get_result_after_manipulation(
             states.into()
         }
     } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
-        let mut groups: HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>> = HashMap::new();
+        let mut groups: HashMap<String, BTreeMap<ID, HashMap<String, Types>>> = HashMap::new();
         for (id, state) in states {
             let key = state.get(k).unwrap_or(&Types::Nil);
             let g = groups
@@ -176,10 +175,10 @@ pub(crate) fn get_result_after_manipulation(
                         states
                             .into_iter()
                             .map(|(id, state)| (id, state))
-                            .collect::<Vec<(Uuid, HashMap<String, Types>)>>(),
+                            .collect::<Vec<(ID, HashMap<String, Types>)>>(),
                     )
                 })
-                .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                .collect::<HashMap<String, Vec<(ID, HashMap<String, Types>)>>>();
 
             if ord == &wql::Order::Asc {
                 let group_states = group_states
@@ -192,7 +191,7 @@ pub(crate) fn get_result_after_manipulation(
                         });
                         (key.to_owned(), states.to_owned())
                     })
-                    .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                    .collect::<HashMap<String, Vec<(ID, HashMap<String, Types>)>>>();
 
                 group_states.into()
             } else {
@@ -206,7 +205,7 @@ pub(crate) fn get_result_after_manipulation(
                         });
                         (key.to_owned(), states.to_owned())
                     })
-                    .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                    .collect::<HashMap<String, Vec<(ID, HashMap<String, Types>)>>>();
                 group_states.into()
             }
         } else if should_count {
@@ -224,7 +223,7 @@ pub(crate) fn get_result_after_manipulation(
 }
 
 pub(crate) fn get_result_after_manipulation_for_options(
-    states: BTreeMap<Uuid, Option<HashMap<String, Types>>>,
+    states: BTreeMap<ID, Option<HashMap<String, Types>>>,
     functions: &HashMap<String, wql::Algebra>,
     should_count: bool,
 ) -> QueryResponse {
@@ -233,12 +232,12 @@ pub(crate) fn get_result_after_manipulation_for_options(
         let states = states
             .into_par_iter()
             .map(|(id, state)| (id, state))
-            .collect::<Vec<(Uuid, Option<HashMap<String, Types>>)>>();
+            .collect::<Vec<(ID, Option<HashMap<String, Types>>)>>();
         let mut states = states
             .into_par_iter()
             .filter(|(_, s)| s.is_some())
             .map(|(id, s)| (id, s.unwrap()))
-            .collect::<Vec<(Uuid, HashMap<String, Types>)>>();
+            .collect::<Vec<(ID, HashMap<String, Types>)>>();
         if ord == &wql::Order::Asc {
             states.sort_by(|a, b| {
                 a.1.get(k)
@@ -259,7 +258,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
             states.into()
         }
     } else if let Some(Algebra::GroupBy(k)) = functions.get("GROUP") {
-        let mut groups: HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>> =
+        let mut groups: HashMap<String, BTreeMap<ID, Option<HashMap<String, Types>>>> =
             HashMap::new();
         for (id, state) in states {
             if let Some(s) = state {
@@ -288,10 +287,10 @@ pub(crate) fn get_result_after_manipulation_for_options(
                             .into_iter()
                             .filter(|(_, state)| state.is_some())
                             .map(|(id, state)| (id, state.unwrap()))
-                            .collect::<Vec<(Uuid, HashMap<String, Types>)>>(),
+                            .collect::<Vec<(ID, HashMap<String, Types>)>>(),
                     )
                 })
-                .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                .collect::<HashMap<String, Vec<(ID, HashMap<String, Types>)>>>();
 
             if ord == &wql::Order::Asc {
                 let group_states = group_states
@@ -304,7 +303,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
                         });
                         (key.to_owned(), states.to_owned())
                     })
-                    .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                    .collect::<HashMap<String, Vec<(ID, HashMap<String, Types>)>>>();
 
                 group_states.into()
             } else {
@@ -318,7 +317,7 @@ pub(crate) fn get_result_after_manipulation_for_options(
                         });
                         (key.to_owned(), states.to_owned())
                     })
-                    .collect::<HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>>();
+                    .collect::<HashMap<String, Vec<(ID, HashMap<String, Types>)>>>();
                 group_states.into()
             }
         } else if should_count {

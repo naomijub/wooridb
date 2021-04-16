@@ -152,17 +152,17 @@ async fn get_query_value(
     actor: DataExecutor,
 ) -> Result<Response, Error> {
     match query {
-        Wql::Select(entity, ToSelect::All, Some(uuid), _) => {
-            select_all_with_id(entity, uuid, local_data).await
+        Wql::Select(entity, ToSelect::All, Some(id), _) => {
+            select_all_with_id(entity, id, local_data).await
         }
-        Wql::Select(entity, ToSelect::Keys(keys), Some(uuid), _) => {
-            select_keys_with_id(entity, uuid, keys, local_data).await
+        Wql::Select(entity, ToSelect::Keys(keys), Some(id), _) => {
+            select_keys_with_id(entity, id, keys, local_data).await
         }
-        Wql::SelectWhen(entity, ToSelect::All, Some(uuid), date) => {
-            select_all_id_when_controller(entity, date, uuid, actor).await
+        Wql::SelectWhen(entity, ToSelect::All, Some(id), date) => {
+            select_all_id_when_controller(entity, date, id, actor).await
         }
-        Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(uuid), date) => {
-            select_keys_id_when_controller(entity, date, keys, uuid, actor).await
+        Wql::SelectWhen(entity, ToSelect::Keys(keys), Some(id), date) => {
+            select_keys_id_when_controller(entity, date, keys, id, actor).await
         }
         _ => Err(Error::QueryFormat(String::from(ERROR))),
     }
@@ -176,11 +176,11 @@ async fn get_join_query_value(query: Wql, local_data: DataLocalContext) -> Resul
         Wql::Select(entity, ToSelect::Keys(keys), None, functions) => {
             select_args(entity, keys, local_data, functions).await
         }
-        Wql::SelectIds(entity, ToSelect::All, uuids, functions) => {
-            select_all_with_ids(entity, uuids, local_data, functions).await
+        Wql::SelectIds(entity, ToSelect::All, ids, functions) => {
+            select_all_with_ids(entity, ids, local_data, functions).await
         }
-        Wql::SelectIds(entity, ToSelect::Keys(keys), uuids, functions) => {
-            select_keys_with_ids(entity, keys, uuids, local_data, functions).await
+        Wql::SelectIds(entity, ToSelect::Keys(keys), ids, functions) => {
+            select_keys_with_ids(entity, keys, ids, local_data, functions).await
         }
         Wql::SelectWhere(entity_name, args_to_select, clauses, functions) => {
             select_where_controller(entity_name, args_to_select, clauses, local_data, functions)

@@ -40,8 +40,7 @@ use std::{
     str::FromStr,
     sync::{atomic::Ordering, Arc, Mutex},
 };
-use uuid::Uuid;
-use wql::{Types, Wql};
+use wql::{Types, Wql, ID};
 
 pub async fn wql_handler(
     body: String,
@@ -159,12 +158,12 @@ pub async fn create_controller(
 
 pub async fn evict_controller(
     entity: String,
-    uuid: Option<Uuid>,
+    id: Option<ID>,
     local_data: Arc<Arc<Mutex<LocalContext>>>,
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
 ) -> Result<TxResponse, Error> {
-    if uuid.is_none() {
+    if id.is_none() {
         let message = format!("Entity {} evicted", &entity);
         let (offset, is_empty) = actor.send(EvictEntity::new(&entity)).await??;
 
@@ -189,8 +188,10 @@ pub async fn evict_controller(
         actor.send(LocalData::new(local_data)).await??;
         Ok(DeleteOrEvictEntityResponse::new(entity, None, message, TxType::EvictEntityTree).into())
     } else {
-        let id = uuid.unwrap();
-        let (offset, is_empty) = actor.send(EvictEntityId::new(&entity, id)).await??;
+        let id = id.unwrap();
+        let (offset, is_empty) = actor
+            .send(EvictEntityId::new(&entity, id.clone()))
+            .await??;
 
         if is_empty {
             bytes_counter.store(0, Ordering::SeqCst);
@@ -214,8 +215,8 @@ pub async fn evict_controller(
         };
         actor.send(LocalData::new(local_data)).await??;
 
-        let message = format!("Entity {} with id {} evicted", &entity, &id);
-        Ok(DeleteOrEvictEntityResponse::new(entity, uuid, message, TxType::EvictEntity).into())
+        let message = format!("Entity {} with id {} evicted", &entity, &id.to_string());
+        Ok(DeleteOrEvictEntityResponse::new(entity, Some(id), message, TxType::EvictEntity).into())
     }
 }
 
@@ -344,7 +345,10 @@ pub async fn insert_controller(
             return Err(Error::LockData);
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
-            map.insert(content_value.1, (local_data_register, encrypted_content));
+            map.insert(
+                content_value.1.clone(),
+                (local_data_register, encrypted_content),
+            );
         }
         local_data.clone()
     };
@@ -358,7 +362,8 @@ pub async fn insert_controller(
 
     let message = format!(
         "Entity {} inserted with Uuid {}",
-        &args.entity, &content_value.1
+        &args.entity,
+        &content_value.1.to_string()
     );
     Ok(InsertEntityResponse::new(args.entity, content_value.1, message).into())
 }
@@ -397,7 +402,7 @@ pub async fn update_set_controller(
         } else if local_data.contains_key(&args.entity)
             && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
         {
-            return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+            return Err(Error::IdNotCreatedForEntity(args.entity, args.id));
         }
     }
 
@@ -435,7 +440,7 @@ pub async fn update_set_controller(
             &args.entity,
             &state_log,
             &content_log,
-            args.id,
+            args.id.clone(),
             datetime,
             &to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
@@ -472,7 +477,11 @@ pub async fn update_set_controller(
     actor
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
-    let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
+    let message = format!(
+        "Entity {} with Uuid {} updated",
+        &args.entity,
+        &args.id.to_string()
+    );
     Ok(
         UpdateEntityResponse::new(args.entity, args.id, state_log, message, TxType::UpdateSet)
             .into(),
@@ -518,7 +527,7 @@ pub async fn update_content_controller(
         } else if local_data.contains_key(&args.entity)
             && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
         {
-            return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+            return Err(Error::IdNotCreatedForEntity(args.entity, args.id));
         }
     }
 
@@ -555,7 +564,7 @@ pub async fn update_content_controller(
             &args.entity,
             &state_log,
             &content_log,
-            args.id,
+            args.id.clone(),
             &to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
         ))
@@ -590,7 +599,11 @@ pub async fn update_content_controller(
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
 
-    let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
+    let message = format!(
+        "Entity {} with Uuid {} updated",
+        &args.entity,
+        &args.id.to_string()
+    );
     Ok(UpdateEntityResponse::new(
         args.entity,
         args.id,
@@ -608,8 +621,8 @@ pub async fn delete_controller(
     bytes_counter: DataAtomicUsize,
     actor: DataExecutor,
 ) -> Result<TxResponse, Error> {
-    let uuid = Uuid::from_str(&id)?;
-    let message = format!("Entity {} with Uuid {} deleted", &entity, id);
+    let id = ID::from_str(&id).map_err(|e| Error::QueryFormat(e))?;
+    let message = format!("Entity {} with Uuid {} deleted", &entity, id.to_string());
     let mut offset = bytes_counter.load(Ordering::SeqCst);
 
     let previous_entry = {
@@ -621,12 +634,12 @@ pub async fn delete_controller(
         if !local_data.contains_key(&entity) {
             return Err(Error::EntityNotCreated(entity));
         } else if local_data.contains_key(&entity)
-            && !local_data.get(&entity).unwrap().contains_key(&uuid)
+            && !local_data.get(&entity).unwrap().contains_key(&id)
         {
-            return Err(Error::UuidNotCreatedForEntity(entity, uuid));
+            return Err(Error::IdNotCreatedForEntity(entity, id));
         }
 
-        let previous_entry = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+        let previous_entry = local_data.get(&entity).unwrap().get(&id).unwrap();
         previous_entry.clone().0
     };
 
@@ -642,7 +655,7 @@ pub async fn delete_controller(
         } else {
             return Err(Error::LockData);
         };
-        let insert_reg = local_data.get(&entity).unwrap().get(&uuid).unwrap();
+        let insert_reg = local_data.get(&entity).unwrap().get(&id).unwrap();
         (HashMap::new(), insert_reg.0.to_owned())
     };
 
@@ -656,7 +669,7 @@ pub async fn delete_controller(
         .send(DeleteId::new(
             &entity,
             &content_log,
-            uuid,
+            id.clone(),
             &previous_register_log,
         ))
         .await??;
@@ -678,7 +691,7 @@ pub async fn delete_controller(
             return Err(Error::LockData);
         };
         if let Some(map) = local_data.get_mut(&entity) {
-            if let Some(reg) = map.get_mut(&uuid) {
+            if let Some(reg) = map.get_mut(&id) {
                 *reg = (local_data_register, state_to_be.0);
             }
         }
@@ -692,7 +705,7 @@ pub async fn delete_controller(
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
 
-    Ok(DeleteOrEvictEntityResponse::new(entity, Some(uuid), message, TxType::Delete).into())
+    Ok(DeleteOrEvictEntityResponse::new(entity, Some(id), message, TxType::Delete).into())
 }
 
 pub async fn match_update_set_controller(
@@ -716,7 +729,7 @@ pub async fn match_update_set_controller(
         } else if local_data.contains_key(&args.entity)
             && !local_data.get(&args.entity).unwrap().contains_key(&args.id)
         {
-            return Err(Error::UuidNotCreatedForEntity(args.entity, args.id));
+            return Err(Error::IdNotCreatedForEntity(args.entity, args.id));
         }
 
         let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
@@ -768,7 +781,7 @@ pub async fn match_update_set_controller(
             name: args.entity.clone(),
             current_state: state_log.clone(),
             content_log,
-            id: args.id,
+            id: args.id.clone(),
             datetime,
             previous_registry: to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
@@ -806,7 +819,11 @@ pub async fn match_update_set_controller(
         .send(OffsetCounter::new(bytes_counter.load(Ordering::SeqCst)))
         .await??;
 
-    let message = format!("Entity {} with Uuid {} updated", &args.entity, &args.id);
+    let message = format!(
+        "Entity {} with Uuid {} updated",
+        &args.entity,
+        &args.id.to_string()
+    );
     Ok(
         UpdateEntityResponse::new(args.entity, args.id, state_log, message, TxType::UpdateSet)
             .into(),

@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use chrono::{DateTime, Utc};
 use std::io::Error;
-use uuid::Uuid;
+use wql::ID;
 
 use crate::core::wql::{
     create_entity, delete_entity_content, evict_entity_content, evict_entity_id_content,
@@ -49,12 +49,12 @@ impl Handler<CreateEntity> for Executor {
 pub struct InsertEntityContent {
     pub name: String,
     pub content: String,
-    pub uuid: Option<Uuid>,
+    pub uuid: Option<ID>,
     pub datetime: DateTime<Utc>,
 }
 
 impl InsertEntityContent {
-    pub fn new(name: &str, content: &str, uuid: Option<Uuid>, datetime: DateTime<Utc>) -> Self {
+    pub fn new(name: &str, content: &str, uuid: Option<ID>, datetime: DateTime<Utc>) -> Self {
         Self {
             name: name.to_owned(),
             content: content.to_owned(),
@@ -65,11 +65,11 @@ impl InsertEntityContent {
 }
 
 impl Message for InsertEntityContent {
-    type Result = Result<(DateTime<Utc>, Uuid, usize, bool), Error>;
+    type Result = Result<(DateTime<Utc>, ID, usize, bool), Error>;
 }
 
 impl Handler<InsertEntityContent> for Executor {
-    type Result = Result<(DateTime<Utc>, Uuid, usize, bool), Error>;
+    type Result = Result<(DateTime<Utc>, ID, usize, bool), Error>;
 
     fn handle(&mut self, msg: InsertEntityContent, _: &mut Self::Context) -> Self::Result {
         use crate::io::write::write_to_log;
@@ -83,7 +83,7 @@ pub struct UpdateSetEntityContent {
     pub name: String,
     pub current_state: String,
     pub content_log: String,
-    pub id: Uuid,
+    pub id: ID,
     pub datetime: DateTime<Utc>,
     pub previous_registry: String,
 }
@@ -93,7 +93,7 @@ impl UpdateSetEntityContent {
         name: &str,
         current_state: &str,
         content_log: &str,
-        id: Uuid,
+        id: ID,
         datetime: DateTime<Utc>,
         previous_registry: &str,
     ) -> Self {
@@ -128,7 +128,7 @@ pub struct UpdateContentEntityContent {
     pub name: String,
     pub current_state: String,
     pub content_log: String,
-    pub id: Uuid,
+    pub id: ID,
     pub previous_registry: String,
 }
 
@@ -137,7 +137,7 @@ impl UpdateContentEntityContent {
         name: &str,
         current_state: &str,
         content_log: &str,
-        id: Uuid,
+        id: ID,
         previous_registry: &str,
     ) -> Self {
         Self {
@@ -168,12 +168,12 @@ impl Handler<UpdateContentEntityContent> for Executor {
 pub struct DeleteId {
     pub name: String,
     pub content_log: String,
-    pub uuid: Uuid,
+    pub uuid: ID,
     pub previous_registry: String,
 }
 
 impl DeleteId {
-    pub fn new(name: &str, content_log: &str, uuid: Uuid, previous_registry: &str) -> Self {
+    pub fn new(name: &str, content_log: &str, uuid: ID, previous_registry: &str) -> Self {
         Self {
             name: name.to_owned(),
             content_log: content_log.to_owned(),
@@ -226,11 +226,11 @@ impl Handler<EvictEntity> for Executor {
 
 pub struct EvictEntityId {
     pub name: String,
-    pub id: Uuid,
+    pub id: ID,
 }
 
 impl EvictEntityId {
-    pub fn new(name: &str, id: Uuid) -> Self {
+    pub fn new(name: &str, id: ID) -> Self {
         Self {
             name: name.to_owned(),
             id,
@@ -295,12 +295,12 @@ mod test {
 
     #[actix_rt::test]
     async fn update_set_test() {
-        let uuid = uuid::Uuid::new_v4();
+        let uuid = wql::ID::Uuid(uuid::Uuid::new_v4());
         let update_set = UpdateSetEntityContent::new(
             "update-set-my-entity",
             "this is the content",
             "this is the current state",
-            uuid,
+            uuid.clone(),
             Utc::now(),
             "this is the previous registry",
         );
@@ -318,12 +318,12 @@ mod test {
 
     #[actix_rt::test]
     async fn update_content_test() {
-        let uuid = uuid::Uuid::new_v4();
+        let uuid = wql::ID::Uuid(uuid::Uuid::new_v4());
         let update_content = UpdateSetEntityContent::new(
             "update-content-my-entity",
             "this is the content",
             "this is the current state",
-            uuid,
+            uuid.clone(),
             Utc::now(),
             "this is the previous registry",
         );
@@ -338,11 +338,11 @@ mod test {
 
     #[actix_rt::test]
     async fn delete_test() {
-        let uuid = uuid::Uuid::new_v4();
+        let uuid = wql::ID::Uuid(uuid::Uuid::new_v4());
         let update_content = DeleteId::new(
             "delete-my-entity",
             "this is the content",
-            uuid,
+            uuid.clone(),
             "this is the previous registry",
         );
         let actor = Executor::new().start();
@@ -367,8 +367,9 @@ mod test {
 
     #[actix_rt::test]
     async fn evict_id_test() {
+        use wql::ID;
         let uuid = uuid::Uuid::new_v4();
-        let evict = EvictEntityId::new("evict-id-my-entity", uuid);
+        let evict = EvictEntityId::new("evict-id-my-entity", ID::Uuid(uuid));
         let actor = Executor::new().start();
 
         let resp = actor.send(evict).await.unwrap();

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use uuid::Uuid;
+use wql::ID;
 
 use crate::{
     model::{error::Error, DataLocalContext},
@@ -10,7 +10,7 @@ use crate::{
 pub fn get_registries(
     entity: &str,
     local_data: &DataLocalContext,
-) -> Result<BTreeMap<Uuid, StateInfo>, Error> {
+) -> Result<BTreeMap<ID, StateInfo>, Error> {
     let local_data = if let Ok(guard) = local_data.lock() {
         guard
     } else {

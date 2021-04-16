@@ -310,12 +310,9 @@ async fn test_update_set_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
-    let payload = format!(
-        "UPDATE test_update SET {{a: 12, c: Nil,}} INTO {}",
-        uuid.unwrap()
-    );
+    let payload = format!("UPDATE test_update SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)
@@ -328,7 +325,7 @@ async fn test_update_set_post_ok() {
     assert!(body.contains("entity: \"test_update\""));
 
     read::assert_content("UPDATE_SET|");
-    read::assert_content(&uuid.unwrap().to_string());
+    read::assert_content(&uuid);
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(12),");
     read::assert_content("\"b\": Float(12.3),");
@@ -366,11 +363,11 @@ async fn test_update_uniqueness_set_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "UPDATE test_unique_set_update SET {{a: 123, c: Nil,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -423,7 +420,7 @@ async fn test_update_content_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "UPDATE test_update CONTENT {{
@@ -435,7 +432,7 @@ async fn test_update_content_post_ok() {
         f: \"world\",
         g: true,
         h: 3.6,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -447,7 +444,7 @@ async fn test_update_content_post_ok() {
     assert!(resp.status().is_success());
 
     read::assert_content("UPDATE_CONTENT|");
-    read::assert_content(&uuid.unwrap().to_string());
+    read::assert_content(&uuid);
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(135),");
     read::assert_content("\"b\": Float(11),");
@@ -485,13 +482,13 @@ async fn test_update_wrong_entity() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "UPDATE test_anything CONTENT {{
         a: 12,
         g: true,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -573,12 +570,9 @@ async fn test_delete_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
-    let payload = format!(
-        "UPDATE test_delete SET {{a: 12, c: Nil,}} INTO {}",
-        uuid.unwrap()
-    );
+    let payload = format!("UPDATE test_delete SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)
@@ -587,7 +581,7 @@ async fn test_delete_post_ok() {
 
     let _ = test::call_service(&mut app, req).await;
 
-    let payload = format!("Delete {} FROM test_delete", uuid.unwrap());
+    let payload = format!("Delete {} FROM test_delete", uuid);
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)
@@ -622,9 +616,9 @@ async fn test_delete_without_update() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
-    let payload = format!("Delete {} FROM test_delete", uuid.unwrap());
+    let payload = format!("Delete {} FROM test_delete", uuid);
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)
@@ -633,7 +627,7 @@ async fn test_delete_without_update() {
 
     let mut resp = test::call_service(&mut app, req).await;
     let body = resp.take_body().as_str().to_string();
-    assert_eq!(body, format!("(\n tx_type: Delete,\n entity: \"test_delete\",\n uuid: Some(\"{}\"),\n state: \"\",\n message: \"Entity test_delete with Uuid {} deleted\",\n)", uuid.unwrap(), uuid.unwrap()));
+    assert_eq!(body, format!("(\n tx_type: Delete,\n entity: \"test_delete\",\n uuid: Some(\"{}\"),\n state: \"\",\n message: \"Entity test_delete with Uuid {} deleted\",\n)", uuid, uuid));
 
     assert!(resp.status().is_success());
 
@@ -663,11 +657,11 @@ async fn test_match_all_update_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "MATCH ALL(a > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -702,11 +696,11 @@ async fn test_match_any_update_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "MATCH ANY(a > 100, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -741,11 +735,11 @@ async fn test_match_any_update_fail() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "MATCH ANY(a > 200, b <= 10.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -783,11 +777,11 @@ async fn test_match_any_update_fake_key() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "MATCH ANY(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -822,11 +816,11 @@ async fn test_match_all_update_fake_key() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "MATCH ALL(g > 100, b <= 20.0) UPDATE test_match_all SET {{a: 43, c: Nil,}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -893,10 +887,10 @@ async fn test_evict_entity_id_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
     assert!(resp_insert.status().is_success());
 
-    let evict = format!("Evict {} from test_evict_id", uuid.unwrap());
+    let evict = format!("Evict {} from test_evict_id", uuid);
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(evict)
@@ -908,10 +902,7 @@ async fn test_evict_entity_id_post_ok() {
     read::assert_content("EVICT_ENTITY_ID|");
     read::assert_content("|test_evict_id;");
 
-    let payload = format!(
-        "UPDATE test_evict_id SET {{a: 12, c: Nil,}} INTO {}",
-        uuid.unwrap()
-    );
+    let payload = format!("UPDATE test_evict_id SET {{a: 12, c: Nil,}} INTO {}", uuid);
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
         .set_payload(payload)
@@ -924,7 +915,7 @@ async fn test_evict_entity_id_post_ok() {
 
     assert_eq!(
         body,
-        format!("(\n error_type: \"UuidNotCreatedForEntity\",\n error_message: \"Uuid {} not created for entity test_evict_id\",\n)", uuid.unwrap())
+        format!("(\n error_type: \"UuidNotCreatedForEntity\",\n error_message: \"Uuid {} not created for entity test_evict_id\",\n)", uuid)
     );
     clear();
 }
@@ -977,11 +968,11 @@ async fn test_update_set_encrypt_post_ok() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "UPDATE test_ok_encrypt SET {{a: 12, c: Nil, pswd: \"Nil-password\",}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")
@@ -1024,11 +1015,11 @@ async fn test_update_content_encrypt_post_err() {
     let mut resp_insert = test::call_service(&mut app, req).await;
     let body = resp_insert.take_body().as_str().to_string();
     let response: TxResponse = ron::de::from_str(&body).unwrap();
-    let uuid = response.uuid;
+    let uuid = response.uuid.unwrap().to_string();
 
     let payload = format!(
         "UPDATE test_ok_encrypt CONTENT {{a: 12, c: Nil, pswd: \"Nil-password\",}} INTO {}",
-        uuid.unwrap()
+        uuid
     );
     let req = test::TestRequest::post()
         .header("Content-Type", "application/wql")

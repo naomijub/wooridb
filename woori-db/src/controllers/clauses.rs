@@ -1,8 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use rayon::prelude::*;
-use uuid::Uuid;
-use wql::{Algebra, Clause, ToSelect, Types, Value};
+use wql::{Algebra, Clause, ToSelect, Types, Value, ID};
 
 use crate::{
     core::registry::get_registries,
@@ -35,7 +34,7 @@ pub async fn select_where(
     clauses: Vec<Clause>,
     local_data: DataLocalContext,
     functions: &HashMap<String, wql::Algebra>,
-) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
+) -> Result<BTreeMap<ID, HashMap<String, Types>>, Error> {
     let (limit, offset, _) = get_limit_offset_count(functions);
     let args_to_key = clauses
         .clone()
@@ -62,10 +61,10 @@ pub async fn select_where(
 }
 
 async fn filter_where_clauses(
-    states: BTreeMap<Uuid, HashMap<String, Types>>,
+    states: BTreeMap<ID, HashMap<String, Types>>,
     args_to_key: HashMap<String, String>,
     clauses: &[Clause],
-) -> BTreeMap<Uuid, HashMap<String, Types>> {
+) -> BTreeMap<ID, HashMap<String, Types>> {
     let default = String::new();
     let mut states = states.clone();
     for clause in clauses {
@@ -229,10 +228,10 @@ fn or_clauses(
 }
 
 async fn generate_state(
-    registries: &BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
+    registries: &BTreeMap<ID, (DataRegister, HashMap<String, Types>)>,
     args_to_select: ToSelect,
-) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
-    let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
+) -> Result<BTreeMap<ID, HashMap<String, Types>>, Error> {
+    let mut states: BTreeMap<ID, HashMap<String, Types>> = BTreeMap::new();
     for (uuid, (_, state)) in registries {
         let state = state
             .into_par_iter()
