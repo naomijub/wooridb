@@ -82,17 +82,17 @@ PORT=1438
 > 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
 - `create_entity`                      time:   [4.7008 ms 4.7367 ms 4.7725 ms]
-- `insert_entity`                      time:   [9.5938 ms 9.8263 ms 10.057 ms]
-- `update_set_entity`                  time:   [11.899 ms 11.984 ms 12.083 ms]
-- `update_content_entity`              time:   [12.048 ms 12.328 ms 12.719 ms]
+- `insert_entity`                      time:   [12.647 ms 12.977 ms 13.308 ms]
+- `update_set_entity`                  time:   [14.896 ms 15.087 ms 15.309 ms]
+- `update_content_entity`              time:   [14.871 ms 15.070 ms 15.307 ms]
 - `delete_entity`                      time:   [5.3966 ms 5.4423 ms 5.4908 ms] - Filtered 400s
 - `evict_entity_id`                    time:   [15.534 ms 15.623 ms 15.721 ms] - Filtered 400s
 - `evict_entity`                       time:   [12.318 ms 12.416 ms 12.540 ms] - Filtered 400s
-- `select_all` 20 entities             time:   [5.8810 ms 5.9318 ms 5.9889 ms]
-- `select_all` 10 entities             time:   [5.4012 ms 5.4432 ms 5.4860 ms]
-- `select_all` 1 entity                time:   [4.8442 ms 4.8786 ms 4.9140 ms]
-- `history_10_registries_for_entity`   time:   [5.7265 ms 5.7868 ms 5.8673 ms]
-- `history_20_registries_for_entity`   time:   [6.1166 ms 6.1943 ms 6.2987 ms]
+- `select_all` 20 entities             time:   [6.3402 ms 6.4743 ms 6.6356 ms]
+- `select_all` 10 entities             time:   [5.8318 ms 5.9682 ms 6.1340 ms]
+- `select_all` 1 entity                time:   [5.1030 ms 5.1379 ms 5.1738 ms]
+- `history_10_registries_for_entity`   time:   [5.4936 ms 5.5328 ms 5.5725 ms]
+- `history_20_registries_for_entity`   time:   [6.0676 ms 6.1049 ms 6.1429 ms]
 
 ### WQL 
 > 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
