@@ -3,11 +3,10 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use wql::Types;
 
 use crate::{auth::schemas::Role, model::DataRegister};
 
-pub type StateInfo = (DataRegister, HashMap<String, Types>);
+pub type StateInfo = (DataRegister, Vec<u8>);
 pub type LocalContext = BTreeMap<String, BTreeMap<Uuid, StateInfo>>;
 pub type UniquenessContext = BTreeMap<String, HashMap<String, HashSet<String>>>;
 pub type EncryptContext = BTreeMap<String, HashSet<String>>;
