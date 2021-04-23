@@ -8,7 +8,6 @@ Some other features are:
 - Hashed values are filtered out and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
 - [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
   - [x] JSON is supported via feature.
-  - [ ] EDN to be supported via feature.
 - Entities are indexed by `entity_name` (Entity Tree), `DateTime` (Time Serial) and `Uuid` (Entity ID). Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
 - Able to handle very large numbers when using the `P` suffix.
@@ -48,11 +47,11 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 - `Debug mode`: `make debug` in project root.
 
 ### Docker
-you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-6`**. To execute the docker container run:
+you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-8`**. To execute the docker container run:
 
-* `docker run -p 1438:1438 naomijubs/wooridb:beta-6 debug` for debug mode.
-* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 run`  for size optimization.
-* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 release` for performance optimization.
+* `docker run -p 1438:1438 naomijubs/wooridb:beta-8 debug` for debug mode.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 run`  for size optimization.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 release` for performance optimization.
 * All `-e/--env` can be replaced by a `--env-file path/to/your/.env`. Your `.env`file should contain the following fields:
 ```
 HASHING_COST=16

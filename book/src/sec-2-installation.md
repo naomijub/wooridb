@@ -16,11 +16,11 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 
 ### Docker
 
-You can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. Currently the most stable tag is [**`beta-6`**](https://github.com/naomijub/wooridb/releases/tag/0.1.6). To execute the docker container run:
+You can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. Currently the most stable tag is [**`beta-8`**](https://github.com/naomijub/wooridb/releases/tag/0.1.6). To execute the docker container run:
 
-* `docker run -p 1438:1438 naomijubs/wooridb:beta-6 debug` for debug mode.
-* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 run` for size optimization.
-* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 release` for performance optimization.
+* `docker run -p 1438:1438 naomijubs/wooridb:beta-8 debug` for debug mode.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 run` for size optimization.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 release` for performance optimization.
 * All `-e/--env` can be replaced by a `--env-file path/to/your/.env`. Your `.env` file should contain the following fields:
 ```
 HASHING_COST=16
