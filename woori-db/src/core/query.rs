@@ -25,13 +25,14 @@ pub(crate) fn filter_keys_and_hash(
 }
 
 pub fn registries_to_states(
-    registries: BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
+    registries: BTreeMap<Uuid, (DataRegister, Vec<u8>)>,
     keys: Option<HashSet<String>>,
     offset: usize,
     limit: usize,
 ) -> BTreeMap<Uuid, HashMap<String, Types>> {
     let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
     for (uuid, (_, state)) in registries.into_iter().skip(offset).take(limit) {
+        let state: HashMap<String, Types> = bincode::deserialize(&state).unwrap();
         let filtered = filter_keys_and_hash(state, keys.clone());
         states.insert(uuid, filtered);
     }

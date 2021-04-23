@@ -344,7 +344,8 @@ pub async fn insert_controller(
             return Err(Error::LockData);
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
-            map.insert(content_value.1, (local_data_register, encrypted_content));
+            let encoded: Vec<u8> = bincode::serialize(&encrypted_content).unwrap();
+            map.insert(content_value.1, (local_data_register, encoded));
         }
         local_data.clone()
     };
@@ -420,8 +421,8 @@ pub async fn update_set_controller(
         previous_entry.clone()
     };
 
-    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
-    let mut previous_state = actor.send(State(previous_state_str)).await??;
+    let mut previous_state: HashMap<String, Types> =
+        bincode::deserialize(&previous_entry.1.clone()).unwrap();
     let encrypted_content_clone = encrypted_content.clone();
     encrypted_content.into_iter().for_each(|(k, v)| {
         let local_state = previous_state.entry(k).or_insert_with(|| v.clone());
@@ -438,7 +439,7 @@ pub async fn update_set_controller(
             &content_log,
             args.id,
             datetime,
-            &to_string_pretty(&previous_entry.clone(), pretty_config_inner())
+            &to_string_pretty(&previous_entry, pretty_config_inner())
                 .map_err(Error::Serialization)?,
         ))
         .await??;
@@ -462,7 +463,8 @@ pub async fn update_set_controller(
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
             if let Some(reg) = map.get_mut(&args.id) {
-                *reg = (local_data_register, encrypted_content_clone);
+                let encoded: Vec<u8> = bincode::serialize(&encrypted_content_clone).unwrap();
+                *reg = (local_data_register, encoded);
             }
         }
         local_data.clone()
@@ -542,8 +544,8 @@ pub async fn update_content_controller(
         previous_entry.clone()
     };
 
-    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
-    let mut previous_state = actor.send(State(previous_state_str)).await??;
+    let mut previous_state: HashMap<String, Types> =
+        bincode::deserialize(&previous_entry.1.clone()).unwrap();
 
     content
         .into_iter()
@@ -580,7 +582,8 @@ pub async fn update_content_controller(
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
             if let Some(reg) = map.get_mut(&args.id) {
-                *reg = (local_data_register, previous_state);
+                let encoded: Vec<u8> = bincode::serialize(&previous_state).unwrap();
+                *reg = (local_data_register, encoded);
             }
         }
         local_data.clone()
@@ -681,7 +684,8 @@ pub async fn delete_controller(
         };
         if let Some(map) = local_data.get_mut(&entity) {
             if let Some(reg) = map.get_mut(&uuid) {
-                *reg = (local_data_register, state_to_be.0);
+                let encoded: Vec<u8> = bincode::serialize(&state_to_be.0).unwrap();
+                *reg = (local_data_register, encoded);
             }
         }
         local_data.clone()
@@ -724,13 +728,15 @@ pub async fn match_update_set_controller(
         let previous_entry = local_data.get(&args.entity).unwrap().get(&args.id).unwrap();
         previous_entry.clone()
     };
-    let previous_state_str = actor.send(previous_entry.0.to_owned()).await??;
-    let mut previous_state = actor.send(State(previous_state_str)).await??;
+
+    let previous_entry: HashMap<String, Types> =
+        bincode::deserialize(&previous_entry.1.clone()).unwrap();
+    let mut previous_state = previous_entry.clone();
 
     actor
         .send(MatchUpdate {
             conditions: args.conditions,
-            previous_state: previous_state.clone(),
+            previous_state: previous_entry.clone(),
         })
         .await??;
 
@@ -795,7 +801,8 @@ pub async fn match_update_set_controller(
         };
         if let Some(map) = local_data.get_mut(&args.entity) {
             if let Some(reg) = map.get_mut(&args.id) {
-                *reg = (local_data_register, encrypted_content);
+                let encoded: Vec<u8> = bincode::serialize(&encrypted_content).unwrap();
+                *reg = (local_data_register, encoded);
             }
         }
         local_data.clone()

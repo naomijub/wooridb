@@ -84,8 +84,7 @@ fn get_previous_registry(fractions: &[&str]) -> Result<Option<DataRegister>, Err
         .to_owned();
     let state = &state[..(state.len() - 1)];
 
-    let resp: Result<(DataRegister, HashMap<String, Types>), Error> = match ron::de::from_str(state)
-    {
+    let resp: Result<(DataRegister, Vec<u8>), Error> = match ron::de::from_str(state) {
         Ok(x) => Ok(x),
         Err(_) => Err(Error::FailedToParseRegistry),
     };

@@ -295,7 +295,7 @@ pub async fn select_all_with_id(
         registry
     };
 
-    let state = registry.1;
+    let state: HashMap<String, Types> = bincode::deserialize(&registry.1).unwrap();
     let filterd_state = filter_keys_and_hash(state, None);
     Ok(filterd_state.into())
 }
@@ -327,7 +327,7 @@ pub async fn select_all_with_ids(
                     .filter(|(_id, reg)| reg.is_some())
                 })
                 .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
-                .collect::<Vec<(Uuid, Option<(DataRegister, HashMap<String, Types>)>)>>()
+                .collect::<Vec<(Uuid, Option<(DataRegister, Vec<u8>)>)>>()
         } else {
             return Err(Error::EntityNotCreated(entity));
         };
@@ -337,6 +337,7 @@ pub async fn select_all_with_ids(
     let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
     for (uuid, registry) in registries.into_iter().skip(offset).take(limit) {
         if let Some((_, state)) = registry {
+            let state: HashMap<String, Types> = bincode::deserialize(&state).unwrap();
             let filtered = filter_keys_and_hash(state, None);
             states.insert(uuid, Some(filtered));
         } else {
@@ -377,7 +378,7 @@ pub async fn select_keys_with_id(
         registry
     };
 
-    let state = registry.1;
+    let state: HashMap<String, Types> = bincode::deserialize(&registry.1).unwrap();
     let filtered = filter_keys_and_hash(state, Some(keys));
     Ok(filtered.into())
 }
@@ -411,7 +412,7 @@ pub async fn select_keys_with_ids(
                     .filter(|(_id, reg)| reg.is_some())
                 })
                 .map(|(uuid, reg)| (uuid, reg.map(ToOwned::to_owned)))
-                .collect::<Vec<(Uuid, Option<(DataRegister, HashMap<String, Types>)>)>>()
+                .collect::<Vec<(Uuid, Option<(DataRegister, Vec<u8>)>)>>()
         } else {
             return Err(Error::EntityNotCreated(entity));
         };
@@ -421,6 +422,7 @@ pub async fn select_keys_with_ids(
     let mut states: BTreeMap<Uuid, Option<HashMap<String, Types>>> = BTreeMap::new();
     for (uuid, registry) in registries.into_iter().skip(offset).take(limit) {
         if let Some((_, state)) = registry {
+            let state: HashMap<String, Types> = bincode::deserialize(&state).unwrap();
             let filtered = filter_keys_and_hash(state, Some(keys.clone()));
             states.insert(uuid, Some(filtered));
         } else {

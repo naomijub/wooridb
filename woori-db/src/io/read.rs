@@ -271,7 +271,7 @@ mod test {
         assert!(local_data.is_ok());
         assert_eq!(
                 format!("{:?}", local_data), 
-                "Ok({\"encrypt_ent\": {}, \"encrypt_ent2\": {}, \"hello\": {50e68bc1-0c3b-4ffc-93be-46e57f59b415: (DataRegister { file_name: \"2021_02_10.log\", offset: 447, bytes_length: 153 }, {})}, \"oh_yeah\": {27367bd0-1966-4005-a8b5-5e323e1c3524: (DataRegister { file_name: \"2021_02_10.log\", offset: 180, bytes_length: 247 }, {})}})"
+                "Ok({\"encrypt_ent\": {}, \"encrypt_ent2\": {}, \"hello\": {50e68bc1-0c3b-4ffc-93be-46e57f59b415: (DataRegister { file_name: \"2021_02_10.log\", offset: 447, bytes_length: 153 }, [0, 0, 0, 0, 0, 0, 0, 0])}, \"oh_yeah\": {27367bd0-1966-4005-a8b5-5e323e1c3524: (DataRegister { file_name: \"2021_02_10.log\", offset: 180, bytes_length: 247 }, [0, 0, 0, 0, 0, 0, 0, 0])}})"
             );
     }
 
@@ -280,9 +280,10 @@ mod test {
         let unique_data = unique_data();
 
         assert!(unique_data.is_ok());
-        assert_eq!(
-                format!("{:?}", unique_data), 
-                "Ok({\"uniq2_ent2\": {\"id\": {\"Integer(4234)\", \"Integer(734)\"}, \"rg\": {\"Precise(\\\"42356546\\\")\", \"Precise(\\\"123456789\\\")\"}}, \"uniq_ent\": {\"cpf\": {\"Precise(\\\"42356546\\\")\", \"Precise(\\\"423560546\\\")\"}, \"snn\": {}}})"
-            );
+        let body = format!("{:?}", unique_data);
+        assert!(body.contains("\"uniq2_ent2\": {\"id\":"));
+        assert!(body.contains("\"rg\": {\"Precise"));
+        assert!(body.contains("\"uniq_ent\": {\"cpf\": {\"Precise"));
+        assert!(body.contains("\"snn\": {}}}"));
     }
 }

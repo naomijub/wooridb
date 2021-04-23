@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
 
-use futures::{future, stream, StreamExt};
 use rayon::prelude::*;
 use uuid::Uuid;
 use wql::{Algebra, Clause, ToSelect, Types, Value};
@@ -68,73 +67,105 @@ async fn filter_where_clauses(
     clauses: &[Clause],
 ) -> BTreeMap<Uuid, HashMap<String, Types>> {
     let default = String::new();
-    stream::iter(states)
-        .filter(|(_, state)| {
-            future::ready(
-                clauses
-                    .par_iter()
-                    .map(|clause| match clause {
-                        Clause::ValueAttribution(_, _, _) => true,
-                        Clause::Or(_, inner_clauses) => {
-                            or_clauses(state, &args_to_key, inner_clauses)
+    let mut states = states.clone();
+    for clause in clauses {
+        match clause {
+            Clause::ValueAttribution(_, _, _) => {}
+            Clause::Or(_, inner_clauses) => {
+                for (id, state) in states.clone() {
+                    if !or_clauses(&state, &args_to_key, &inner_clauses) {
+                        states.remove(&id);
+                    }
+                }
+            }
+            Clause::ContainsKeyValue(_, key, value) => {
+                for (id, state) in states.clone() {
+                    if !state.get(key).map_or(false, |v| value == v) {
+                        states.remove(&id);
+                    }
+                }
+            }
+            Clause::SimpleComparisonFunction(f, key, value) => {
+                let key = args_to_key.get(key).unwrap_or(&default);
+                for (id, state) in states.clone() {
+                    state.get(key).map(|v| match f {
+                        wql::Function::Eq => {
+                            if !(v == value) {
+                                states.remove(&id);
+                            }
                         }
-                        Clause::ContainsKeyValue(_, key, value) => {
-                            state.get(key).map_or(false, |v| value == v)
+                        wql::Function::NotEq => {
+                            if !(v != value) {
+                                states.remove(&id);
+                            }
                         }
-                        Clause::SimpleComparisonFunction(f, key, value) => {
-                            let key = args_to_key.get(key).unwrap_or(&default);
-                            state.get(key).map_or(false, |v| match f {
-                                wql::Function::Eq => v == value,
-                                wql::Function::NotEq => v != value,
-                                wql::Function::GEq => v >= value,
-                                wql::Function::G => v > value,
-                                wql::Function::LEq => v <= value,
-                                wql::Function::L => {
-                                    println!("{:?} < {:?} = {}", v, value, v < value);
-                                    v < value
+                        wql::Function::GEq => {
+                            if !(v >= &value) {
+                                states.remove(&id);
+                            }
+                        }
+                        wql::Function::G => {
+                            if !(v > &value) {
+                                states.remove(&id);
+                            }
+                        }
+                        wql::Function::LEq => {
+                            if !(v <= &value) {
+                                states.remove(&id);
+                            }
+                        }
+                        wql::Function::L => {
+                            if !(v < &value) {
+                                states.remove(&id);
+                            }
+                        }
+                        wql::Function::Like => {
+                            if let (Types::String(content), Types::String(regex)) = (v, value) {
+                                let pattern = regex.replace("%", "");
+
+                                if (regex.starts_with('%')
+                                    && regex.ends_with('%')
+                                    && content.contains(&pattern))
+                                    || (regex.starts_with('%') && content.ends_with(&pattern))
+                                    || (regex.ends_with('%') && content.starts_with(&pattern))
+                                    || content.contains(&pattern)
+                                {
+                                    ()
+                                } else {
+                                    states.remove(&id);
                                 }
-                                wql::Function::Like => {
-                                    if let (Types::String(content), Types::String(regex)) =
-                                        (v, value)
-                                    {
-                                        let pattern = regex.replace("%", "");
-                                        if regex.starts_with('%') && regex.ends_with('%') {
-                                            content.contains(&pattern)
-                                        } else if regex.starts_with('%') {
-                                            content.ends_with(&pattern)
-                                        } else if regex.ends_with('%') {
-                                            content.starts_with(&pattern)
-                                        } else {
-                                            content.contains(&pattern)
-                                        }
-                                    } else {
-                                        false
-                                    }
-                                }
-                                _ => false,
-                            })
+                            } else {
+                                states.remove(&id);
+                            }
                         }
-                        Clause::ComplexComparisonFunctions(wql::Function::In, key, set) => {
-                            let key = args_to_key.get(key).unwrap_or(&default);
-                            state.get(key).map_or(false, |v| set.contains(v))
-                        }
-                        Clause::ComplexComparisonFunctions(
-                            wql::Function::Between,
-                            key,
-                            start_end,
-                        ) => {
-                            let key = args_to_key.get(key).unwrap_or(&default);
-                            state
-                                .get(key)
-                                .map_or(false, |v| v >= &start_end[0] && v <= &start_end[1])
-                        }
-                        _ => false,
-                    })
-                    .all(|f| f),
-            )
-        })
-        .collect::<BTreeMap<Uuid, HashMap<String, Types>>>()
-        .await
+                        _ => {}
+                    });
+                }
+            }
+            Clause::ComplexComparisonFunctions(wql::Function::In, key, set) => {
+                let key = args_to_key.get(key).unwrap_or(&default);
+                for (id, state) in states.clone() {
+                    if !state.get(key).map_or(false, |v| set.contains(v)) {
+                        states.remove(&id);
+                    }
+                }
+            }
+            Clause::ComplexComparisonFunctions(wql::Function::Between, key, start_end) => {
+                let key = args_to_key.get(key).unwrap_or(&default);
+                for (id, state) in states.clone() {
+                    if !state
+                        .get(key)
+                        .map_or(false, |v| v >= &start_end[0] && v <= &start_end[1])
+                    {
+                        states.remove(&id);
+                    }
+                }
+            }
+            _ => (),
+        }
+    }
+
+    states
 }
 
 fn or_clauses(
@@ -198,11 +229,12 @@ fn or_clauses(
 }
 
 async fn generate_state(
-    registries: &BTreeMap<Uuid, (DataRegister, HashMap<String, Types>)>,
+    registries: &BTreeMap<Uuid, (DataRegister, Vec<u8>)>,
     args_to_select: ToSelect,
 ) -> Result<BTreeMap<Uuid, HashMap<String, Types>>, Error> {
     let mut states: BTreeMap<Uuid, HashMap<String, Types>> = BTreeMap::new();
     for (uuid, (_, state)) in registries {
+        let state: HashMap<String, Types> = bincode::deserialize(&state).unwrap();
         let state = state
             .into_par_iter()
             .filter(|(_, v)| !v.is_hash())

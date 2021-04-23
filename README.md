@@ -8,7 +8,6 @@ Some other features are:
 - Hashed values are filtered out and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
 - [`Ron`](https://github.com/ron-rs/ron/blob/master/docs/grammar.md) schemas for input and output.
   - [x] JSON is supported via feature.
-  - [ ] EDN to be supported via feature.
 - Entities are indexed by `entity_name` (Entity Tree), `DateTime` (Time Serial) and `Uuid` (Entity ID). Entity format is a HashMap where keys are strings and values are supported [`Types`](https://github.com/naomijub/wooridb/blob/main/wql/src/lib.rs#L78).
 - Stores persistent data locally.
 - Able to handle very large numbers when using the `P` suffix.
@@ -48,11 +47,11 @@ To run WooriDB it is necessary to have Rust installed in the machine. There are 
 - `Debug mode`: `make debug` in project root.
 
 ### Docker
-you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-6`**. To execute the docker container run:
+you can find the latest docker image at **[naomijub/wooridb](https://hub.docker.com/repository/docker/naomijubs/wooridb)**. The current most stable tag is **`beta-8`**. To execute the docker container run:
 
-* `docker run -p 1438:1438 naomijubs/wooridb:beta-6 debug` for debug mode.
-* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 run`  for size optimization.
-* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 release` for performance optimization.
+* `docker run -p 1438:1438 naomijubs/wooridb:beta-8 debug` for debug mode.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 run`  for size optimization.
+* `docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 release` for performance optimization.
 * All `-e/--env` can be replaced by a `--env-file path/to/your/.env`. Your `.env`file should contain the following fields:
 ```
 HASHING_COST=16
@@ -79,35 +78,35 @@ PORT=1438
 - [ ] [issues](https://github.com/naomijub/wooridb/issues?q=is%3Aissue+is%3Aopen+label%3AMilestone)
 
 ## Current Benchmarks
->  MacBook Pro, 2.2 GHz Intel Core i7, 16 GB 2400 MHz DDR4
+> 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
-- `create_entity`           time:   [15.269 ms 15.332 ms 15.396 ms]
-- `insert_entity`           time:   [27.438 ms 28.177 ms 28.958 ms]
-- `update_set_entity`       time:   [22.969 ms 23.382 ms 23.839 ms]
-- `update_content_entity`   time:   [23.181 ms 23.578 ms 24.037 ms]
-- `delete_entity`           time:   [41.999 ms 42.719 ms 43.492 ms] - Filtered 400s
-- `evict_entity_id`         time:   [41.387 ms 42.029 ms 42.731 ms] - Filtered 400s
-- `evict_entity`            time:   [31.582 ms 31.805 ms 32.039 ms] - Filtered 400s
-- `select_all` 20 entities  time:   [23.692 ms 24.183 ms 24.690 ms]
-- `select_all` 10 entities  time:   [22.018 ms 22.301 ms 22.586 ms]
-- `select_all` 1 entity     time:   [19.963 ms 20.679 ms 21.412 ms]
-
-> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
-
-- `history_10_registries_for_entity`   time:   [23.732 ms 24.811 ms 25.982 ms]
-- `history_20_registries_for_entity`   time:   [26.011 ms 26.847 ms 27.690 ms]
+- `create_entity`                      time:   [4.7008 ms 4.7367 ms 4.7725 ms]
+- `insert_entity`                      time:   [12.647 ms 12.977 ms 13.308 ms]
+- `update_set_entity`                  time:   [14.896 ms 15.087 ms 15.309 ms]
+- `update_content_entity`              time:   [14.871 ms 15.070 ms 15.307 ms]
+- `delete_entity`                      time:   [5.3966 ms 5.4423 ms 5.4908 ms] - Filtered 400s
+- `evict_entity_id`                    time:   [15.534 ms 15.623 ms 15.721 ms] - Filtered 400s
+- `evict_entity`                       time:   [12.318 ms 12.416 ms 12.540 ms] - Filtered 400s
+- `select_all` 20 entities             time:   [6.3402 ms 6.4743 ms 6.6356 ms]
+- `select_all` 10 entities             time:   [5.8318 ms 5.9682 ms 6.1340 ms]
+- `select_all` 1 entity                time:   [5.1030 ms 5.1379 ms 5.1738 ms]
+- `history_10_registries_for_entity`   time:   [5.4936 ms 5.5328 ms 5.5725 ms]
+- `history_20_registries_for_entity`   time:   [6.0676 ms 6.1049 ms 6.1429 ms]
 
 ### WQL 
-> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+> 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
 - `create_entity`           time:   [433.57 ns 435.00 ns 436.38 ns]
 - `inser_entity`            time:   [1.6349 us 1.6406 us 1.6463 us]
 - `select_all`              time:   [429.79 ns 431.05 ns 432.14 ns]
 - `select_args`             time:   [655.40 ns 657.53 ns 659.71 ns]
 
+### File approximated size
+
+For ~10000 entries in a day, the file size will be 2.5 GB for registries (and for cached values - this may become an issue soon). After compression it can be reduced to 10% of this.
 
 ### artillery.io 
-> Ubuntu 18.04.5 LTS, Dell Intel® Core™ i7-10510U CPU @ 1.80GHz × 8, memory 15,4 GB
+> 2,3 GHz Intel Core i9 8-Core 32 GB 2667 MHz DDR4
 
 [**Insert**](./insert-report.json)
 
