@@ -181,11 +181,11 @@
 <li><code>Debug mode</code>: <code>make debug</code> in project root.</li>
 </ul>
 <h3 id="docker"><a class="header" href="#docker">Docker</a></h3>
-<p>You can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. Currently the most stable tag is <a href="https://github.com/naomijub/wooridb/releases/tag/0.1.6"><strong><code>beta-6</code></strong></a>. To execute the docker container run:</p>
+<p>You can find the latest docker image at <strong><a href="https://hub.docker.com/repository/docker/naomijubs/wooridb">naomijub/wooridb</a></strong>. Currently the most stable tag is <a href="https://github.com/naomijub/wooridb/releases/tag/0.1.6"><strong><code>beta-8</code></strong></a>. To execute the docker container run:</p>
 <ul>
-<li><code>docker run -p 1438:1438 naomijubs/wooridb:beta-6 debug</code> for debug mode.</li>
-<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 run</code> for size optimization.</li>
-<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-6 release</code> for performance optimization.</li>
+<li><code>docker run -p 1438:1438 naomijubs/wooridb:beta-8 debug</code> for debug mode.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 run</code> for size optimization.</li>
+<li><code>docker run -p 1438:1438 -e AUTH_HASHING_COST=8 -e ADMIN=your-admin-id -e ADMIN_PASSWORD=your-admin-pswd naomijubs/wooridb:beta-8 release</code> for performance optimization.</li>
 <li>All <code>-e/--env</code> can be replaced by a <code>--env-file path/to/your/.env</code>. Your <code>.env</code> file should contain the following fields:</li>
 </ul>
 <pre><code>HASHING_COST=16
