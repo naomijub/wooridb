@@ -237,7 +237,7 @@ CLIENT_SHUTDOWN=5000
 </code></pre>
 <ul>
 <li><code>MAX_CONNECTIONS</code> is the maximum number of connections supported simultaneously.</li>
-<li><code>CLIENT_SHUTDOWN</code> is the time to drop a client's connection, use 0 to disbale it.</li>
+<li><code>CLIENT_SHUTDOWN</code> is the time to drop a client's connection, use 0 to disable it.</li>
 <li>To run the project in <code>release</code> mode it is important to export the following environment variables <code>HASHING_COST, PORT,  MAX_CONNECTIONS, CLIENT_SHUTDOWN, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME</code>. There are no default values for <code>AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME</code>.</li>
 </ul>
 <h1 id="features"><a class="header" href="#features">Features</a></h1>
@@ -1536,7 +1536,7 @@ Support temporality for where clause</li>
 <li><code>NonSelectQuery</code> - Tx operation done at <code>/wql/query</code>. Tx operations are done at <code>/wql/tx</code>.</li>
 <li><code>ActixMailbox(MailboxError)</code> - Internal server error meaning that some actor mailbox crashed.</li>
 <li><code>LockData</code> - Failed to get a lock on Data</li>
-<li><code>Ron(ron::Error)</code> - Ron serialization error that occured in user creation.</li>
+<li><code>Ron(ron::Error)</code> - Ron serialization error that occurred in user creation.</li>
 <li><code>InvalidUuid(uuid::Error)</code> - Uuid could not be parsed.</li>
 <li><code>UpdateContentEncryptKeys(Vec&lt;keys&gt;)</code> - <code>UPDATE CONTENT</code> cannot update encrypted <code>keys</code>.</li>
 <li><code>CheckNonEncryptedKeys(Vec&lt;keys&gt;)</code> - Cannot <code>CHECK</code> non encrypted <code>keys</code>.</li>
