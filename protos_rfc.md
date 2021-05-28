@@ -20,25 +20,25 @@ pub enum Types {
 
 ```rust
 message KeyPair {
-  string key = 0;
-  WqpTypes value = 1;
+  string key = 1;
+  WqpTypes value = 2;
 }
 
 message WqlTypes {
   oneof types {
-    bytes char = 0;
-    int64 int = 1;
-    string string = 2;
-    string uuid = 3;
-    double float = 4;
-    bool boolean = 5;
-    // Vector(Vec<Types>) = 6; cyclic?
-    repeated WqpTypes vec = 6;
-    // Map(HashMap<String, Types>) = 7; cyclic?? or Map like in Order
-    repeat KeyPair map = 7;
-    string precise = 8;
-    string datetime = 9; // or datetime
-    Empty nil = 10;
+    bytes char = 1;
+    int64 int = 2;
+    string string = 3;
+    string uuid = 4;
+    double float = 5;
+    bool boolean = 6;
+    // Vector(Vec<Types>) = 7; cyclic?
+    repeated WqpTypes vec = 7;
+    // Map(HashMap<String, Types>) = 8; cyclic?? or Map like in Order
+    repeat KeyPair map = 8;
+    string precise = 9;
+    string datetime = 10; // or datetime
+    Empty nil = 11;
   }
 }
 ```
@@ -151,25 +151,37 @@ message TxResponse {
 ### Entity History
 `BTreeMap<chrono::DateTime<Utc>, HashMap<std::string::String, Types>`
 
+```rust
+message SingleEntityHistory {
+  string datetime = 1;
+  repeat KeyPair map = 2;
+}
+
+message EntityHistory {
+  repeat SingleEntityHistory entities = 1; 
+}
+```
 
 ### Query
 
-Id(HashMap<String, Types>),
-Intersect(HashMap<String, Types>),
-Difference(HashMap<String, Types>),
-Union(HashMap<String, Types>),
-All(BTreeMap<Uuid, HashMap<String, Types>>),
-Order(Vec<(Uuid, HashMap<String, Types>)>),
-GroupBy(HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>),
-OrderedGroupBy(HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>),
-OptionOrder(Vec<(Uuid, Option<HashMap<String, Types>>)>),
-OptionGroupBy(HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>),
-OptionSelect(BTreeMap<Uuid, Option<HashMap<String, Types>>>),
-CheckValues(HashMap<String, bool>),
-TimeRange(BTreeMap<DateTime<Utc>, HashMap<String, Types>>),
-WithCount(CountResponse),
-DateSelect(HashMap<String, HashMap<String, Types>>),
-Join(Vec<HashMap<String, Types>>),
+```rust
+Id(HashMap<String, Types>), // [x]
+Intersect(HashMap<String, Types>), // [x]
+Difference(HashMap<String, Types>), // [x]
+Union(HashMap<String, Types>), // [x]
+All(BTreeMap<Uuid, HashMap<String, Types>>), // [x]
+Order(Vec<(Uuid, HashMap<String, Types>)>), // [x]
+GroupBy(HashMap<String, BTreeMap<Uuid, HashMap<String, Types>>>), // [x]
+OrderedGroupBy(HashMap<String, Vec<(Uuid, HashMap<String, Types>)>>), // [ ]
+OptionOrder(Vec<(Uuid, Option<HashMap<String, Types>>)>), // [ ]
+OptionGroupBy(HashMap<String, BTreeMap<Uuid, Option<HashMap<String, Types>>>>), // [ ]
+OptionSelect(BTreeMap<Uuid, Option<HashMap<String, Types>>>), // [ ]
+CheckValues(HashMap<String, bool>), // [ ]
+TimeRange(BTreeMap<DateTime<Utc>, HashMap<String, Types>>), // [ ]
+WithCount(CountResponse), // [ ]
+DateSelect(HashMap<String, HashMap<String, Types>>), // [ ]
+Join(Vec<HashMap<String, Types>>), // [ ]
+```
 
 * Count versions as well type `uint64`
 
@@ -182,6 +194,49 @@ message Order {
 * Map query types to a message like Order, this is the only way to repeat map types.
 * The value_type can be any type except another map.
 
+```rust
+enum QueryType {
+    QUERY_TYPE_ID = 1;
+    QUERY_TYPE_INTERSECT = 2;
+    QUERY_TYPE_DIFFERENCE = 3;
+    QUERY_TYPE_Union = 4;
+    QUERY_TYPE_All = 5;
+    QUERY_TYPE_Order = 6;
+    QUERY_TYPE_GroupBy = 7;
+    QUERY_TYPE_OrderedGroupBy = 8;
+    QUERY_TYPE_OptionOrder = 9;
+    QUERY_TYPE_OptionGroupBy = 10;
+    QUERY_TYPE_OptionSelect = 11;
+    QUERY_TYPE_CheckValues = 12;
+    QUERY_TYPE_TimeRange = 13;
+    QUERY_TYPE_WithCount = 14;
+    QUERY_TYPE_DateSelect = 15;
+    QUERY_TYPE_Join = 16;
+}
+
+message QueryPair {
+  string key = 1;
+  repeat KeyPair unique = 1;
+}
+
+message QueryGroup {
+  string group_key = 1;
+  repeat QueryPair multiple = 2;
+}
+
+message QueryResponseTypes {
+  oneof types {
+    repeat KeyPair unique = 1;
+    repeat QueryPair multiple = 2;
+    repeat QueryGroup group = 3;
+  }
+}
+
+message QueryResponse {
+  QueryType query_type = 1;
+  QueryResponseTypes response = 2;
+}
+```
 
 ## Auth
 
