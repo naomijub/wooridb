@@ -296,8 +296,8 @@ pub async fn select_all_with_id(
     };
 
     let state: HashMap<String, Types> = bincode::deserialize(&registry.1).unwrap();
-    let filterd_state = filter_keys_and_hash(state, None);
-    Ok(filterd_state.into())
+    let filtered_state = filter_keys_and_hash(state, None);
+    Ok(filtered_state.into())
 }
 
 pub async fn select_all_with_ids(

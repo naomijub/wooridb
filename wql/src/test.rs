@@ -26,8 +26,8 @@ mod test_create {
     }
 
     #[test]
-    fn create_mispelled() {
-        let wql = Wql::from_str("KREATE ENTITY mispelled");
+    fn create_misspelled() {
+        let wql = Wql::from_str("KREATE ENTITY misspelled");
 
         assert_eq!(
             wql.err(),
@@ -339,7 +339,7 @@ mod test_update {
     }
 
     #[test]
-    fn update_entity_mispelled_action() {
+    fn update_entity_misspelled_action() {
         let wql = Wql::from_str(
             "UPDATE this_entity 
         TO {

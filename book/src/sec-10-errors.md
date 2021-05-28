@@ -29,7 +29,7 @@ Woori DB has a variety of Error messages, from WQL when parsing the transaction 
 - `NonSelectQuery` - Tx operation done at `/wql/query`. Tx operations are done at `/wql/tx`.
 - `ActixMailbox(MailboxError)` - Internal server error meaning that some actor mailbox crashed.
 - `LockData` - Failed to get a lock on Data
-- `Ron(ron::Error)` - Ron serialization error that occured in user creation.
+- `Ron(ron::Error)` - Ron serialization error that occurred in user creation.
 - `InvalidUuid(uuid::Error)` - Uuid could not be parsed.
 - `UpdateContentEncryptKeys(Vec<keys>)` - `UPDATE CONTENT` cannot update encrypted `keys`.
 - `CheckNonEncryptedKeys(Vec<keys>)` - Cannot `CHECK` non encrypted `keys`.

@@ -49,5 +49,5 @@ CLIENT_SHUTDOWN=5000
 ```
 
 * `MAX_CONNECTIONS` is the maximum number of connections supported simultaneously.
-* `CLIENT_SHUTDOWN` is the time to drop a client's connection, use 0 to disbale it.
+* `CLIENT_SHUTDOWN` is the time to drop a client's connection, use 0 to disable it.
 * To run the project in `release` mode it is important to export the following environment variables `HASHING_COST, PORT,  MAX_CONNECTIONS, CLIENT_SHUTDOWN, AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME`. There are no default values for `AUTH_HASHING_COST, ADMIN, ADMIN_PASSWORD, SESSION_EXPIRATION_TIME`.
