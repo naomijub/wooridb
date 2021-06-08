@@ -16,6 +16,9 @@ WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which mean
 - Professor [Andy Pavlo](http://www.cs.cmu.edu/~pavlo/) Database Design Course. 
 - [Zero Trust in Time Series Data?](https://www.ockam.io/learn/blog/trust_influxdb)
 
+## Help starting your own database
+- [Build your own database](https://github.com/danistefanovic/build-your-own-x#build-your-own-database)
+
 ## Naming conventions:
 - Entity Tree is similar to a SQL table, it is the data structure that contains all ids and entities map relations.
 - Entity ID is the id of an entity inside of an Entity Tree.
