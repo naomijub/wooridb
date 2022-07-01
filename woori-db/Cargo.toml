@@ -1,6 +1,6 @@
 [package]
 name = "woori-db"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Julia Naomi <jnboeira@outlook.com>"]
 description = "WooriDB is a general purpose time serial database with some relation algebra"
 readme = "README.md"
