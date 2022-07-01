@@ -281,9 +281,10 @@ mod test {
 
         assert!(unique_data.is_ok());
         let body = format!("{:?}", unique_data);
-        assert!(body.contains("\"uniq2_ent2\": {\"id\":"));
+        assert!(body.contains("\"uniq2_ent2\": {"));
         assert!(body.contains("\"rg\": {\"Precise"));
-        assert!(body.contains("\"uniq_ent\": {\"cpf\": {\"Precise"));
+        assert!(body.contains("\"uniq_ent\": {"));
+        assert!(body.contains("{\"cpf\": {\"Precise"));
         assert!(body.contains("\"snn\": {}}}"));
     }
 }

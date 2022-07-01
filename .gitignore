@@ -10,3 +10,4 @@ compress
 decompress
 **/*.zst
 **/.DS_Store
+.vscode
