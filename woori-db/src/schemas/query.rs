@@ -77,13 +77,13 @@ impl CountResponse {
         }
     }
 
-    pub fn to_response(self) -> Result<String, Error> {
+    pub fn to_response(&self) -> Result<String, Error> {
         let count = self.count;
-        match *self.response {
+        match &*self.response {
             Response::Id(state) => {
                 let resp = CountId {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -94,7 +94,7 @@ impl CountResponse {
             Response::All(state) => {
                 let resp = CountAll {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -105,7 +105,7 @@ impl CountResponse {
             Response::Order(state) => {
                 let resp = CountOrder {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -116,7 +116,7 @@ impl CountResponse {
             Response::GroupBy(state) => {
                 let resp = CountGroupBy {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -127,7 +127,7 @@ impl CountResponse {
             Response::OrderedGroupBy(state) => {
                 let resp = CountOrderedGroupBy {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -138,7 +138,7 @@ impl CountResponse {
             Response::OptionOrder(state) => {
                 let resp = CountOptionOrder {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -149,7 +149,7 @@ impl CountResponse {
             Response::OptionGroupBy(state) => {
                 let resp = CountOptionGroupBy {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -160,7 +160,7 @@ impl CountResponse {
             Response::OptionSelect(state) => {
                 let resp = CountOptionSelect {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -171,7 +171,7 @@ impl CountResponse {
             Response::CheckValues(state) => {
                 let resp = CountCheckValues {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -182,7 +182,7 @@ impl CountResponse {
             Response::TimeRange(state) => {
                 let resp = CountTimeRange {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 #[cfg(feature = "json")]
                 return Ok(serde_json::to_string(&resp)?);
@@ -193,7 +193,7 @@ impl CountResponse {
             Response::DateSelect(state) => {
                 let resp = CountDateSelect {
                     count,
-                    response: state,
+                    response: state.to_owned(),
                 };
                 Ok(ron::ser::to_string_pretty(&resp, pretty_config_output())?)
             }
@@ -325,7 +325,7 @@ impl Response {
                         for ent in v {
                             let mut s = s.clone();
                             for entry in ent
-                                .into_iter()
+                                .iter()
                                 .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
                             {
                                 let entry_name = if s.contains_key(entry.0) {
@@ -348,7 +348,7 @@ impl Response {
                         for ent in v {
                             let mut s = s.clone();
                             for entry in ent
-                                .into_iter()
+                                .iter()
                                 .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
                             {
                                 let entry_name = if s.contains_key(entry.0) {
@@ -372,7 +372,7 @@ impl Response {
                             for ent in v {
                                 let mut s = s.clone();
                                 for entry in ent
-                                    .into_iter()
+                                    .iter()
                                     .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
                                 {
                                     let entry_name = if s.contains_key(entry.0) {
@@ -397,7 +397,7 @@ impl Response {
                             for ent in v {
                                 let mut s = s.clone();
                                 for entry in ent
-                                    .into_iter()
+                                    .iter()
                                     .filter(|(k, _)| *k != "tx_time" && *k != &ent_b.1)
                                 {
                                     let entry_name = if s.contains_key(entry.0) {
@@ -475,7 +475,7 @@ impl Response {
         Some(hm)
     }
 
-    pub fn to_string(self) -> Result<String, Error> {
+    pub fn to_string(&self) -> Result<String, Error> {
         match self {
             Response::Id(state) => Ok(ron::ser::to_string_pretty(&state, pretty_config_output())?),
             Response::Intersect(state) => {
