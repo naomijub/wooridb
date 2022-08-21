@@ -18,7 +18,7 @@ use http::{ping, readiness, routes};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=info");
+    //std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
     let env_port = std::env::var("PORT").unwrap_or_else(|_| "1438".to_owned());
     let port = env_port.parse::<u16>().expect("PORT must be a u16");

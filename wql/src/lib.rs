@@ -80,6 +80,24 @@ pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql,
     )
 }
 
+// Keep in sync with Types
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "value")]
+pub enum TypesSelfDescribing {
+    Char(char),
+    Integer(isize),
+    String(String),
+    Uuid(Uuid),
+    Float(f64),
+    Boolean(bool),
+    Vector(Vec<TypesSelfDescribing>),
+    Map(HashMap<String, TypesSelfDescribing>),
+    Hash(String),
+    Precise(String),
+    DateTime(DateTime<Utc>),
+    Nil,
+}
+
 #[allow(clippy::derive_hash_xor_eq)] // for now
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Types {
@@ -95,6 +113,25 @@ pub enum Types {
     Precise(String),
     DateTime(DateTime<Utc>),
     Nil,
+}
+
+impl From<Types> for TypesSelfDescribing {
+    fn from (item: Types) -> Self {
+        match item {
+            Types::Char (c) => TypesSelfDescribing::Char (c),
+            Types::Integer (i) => TypesSelfDescribing::Integer (i),
+            Types::String (s) => TypesSelfDescribing::String (s),
+            Types::Uuid (u) => TypesSelfDescribing::Uuid (u),
+            Types::Float (f) => TypesSelfDescribing::Float (f),
+            Types::Boolean (b) => TypesSelfDescribing::Boolean (b),
+            Types::Vector (v) => TypesSelfDescribing::Vector (v.into_iter().map(|e| TypesSelfDescribing::from (e)).collect()),
+            Types::Map (m) => TypesSelfDescribing::Map (m.into_iter().map(|(k, v)| (k, TypesSelfDescribing::from (v)) ).collect ()),
+            Types::Hash (h) => TypesSelfDescribing::Hash (h),
+            Types::Precise (p) => TypesSelfDescribing::Precise (p),
+            Types::DateTime (d) => TypesSelfDescribing::DateTime (d),
+            Types::Nil => TypesSelfDescribing::Nil,
+        }
+    }
 }
 
 impl Types {
@@ -142,7 +179,54 @@ impl Types {
     }
 }
 
+impl TypesSelfDescribing {
+    pub fn default_values(&self) -> TypesSelfDescribing {
+        match self {
+            TypesSelfDescribing::Char(_) => TypesSelfDescribing::Char(' '),
+            TypesSelfDescribing::Integer(_) => TypesSelfDescribing::Integer(0),
+            TypesSelfDescribing::String(_) => TypesSelfDescribing::String(String::new()),
+            TypesSelfDescribing::Uuid(_) => TypesSelfDescribing::Uuid(Uuid::new_v4()),
+            TypesSelfDescribing::Float(_) => TypesSelfDescribing::Float(0_f64),
+            TypesSelfDescribing::Boolean(_) => TypesSelfDescribing::Boolean(false),
+            TypesSelfDescribing::Vector(_) => TypesSelfDescribing::Vector(Vec::new()),
+            TypesSelfDescribing::Map(_) => TypesSelfDescribing::Map(HashMap::new()),
+            TypesSelfDescribing::Hash(_) => TypesSelfDescribing::Hash(String::new()),
+            TypesSelfDescribing::Precise(_) => TypesSelfDescribing::Precise(String::from("0")),
+            TypesSelfDescribing::DateTime(_) => TypesSelfDescribing::DateTime(Utc::now()),
+            TypesSelfDescribing::Nil => TypesSelfDescribing::Nil,
+        }
+    }
+
+    pub fn to_hash(&self, cost: Option<u32>) -> Result<TypesSelfDescribing, String> {
+        use bcrypt::{hash, DEFAULT_COST};
+        let value = match self {
+            TypesSelfDescribing::Char(c) => format!("{}", c),
+            TypesSelfDescribing::Integer(i) => format!("{}", i),
+            TypesSelfDescribing::String(s) => s.to_string(),
+            TypesSelfDescribing::DateTime(date) => date.to_string(),
+            TypesSelfDescribing::Uuid(id) => format!("{}", id),
+            TypesSelfDescribing::Float(f) => format!("{:?}", integer_decode(f.to_owned())),
+            TypesSelfDescribing::Boolean(b) => format!("{}", b),
+            TypesSelfDescribing::Vector(vec) => format!("{:?}", vec),
+            TypesSelfDescribing::Map(map) => format!("{:?}", map),
+            TypesSelfDescribing::Precise(p) => p.to_string(),
+            TypesSelfDescribing::Hash(_) => return Err(String::from("Hash cannot be hashed")),
+            TypesSelfDescribing::Nil => return Err(String::from("Nil cannot be hashed")),
+        };
+        match hash(&value, cost.map_or(DEFAULT_COST, |c| c)) {
+            Ok(s) => Ok(TypesSelfDescribing::Hash(s)),
+            Err(e) => Err(format!("{:?}", e)),
+        }
+    }
+
+    pub fn is_hash(&self) -> bool {
+        matches!(self, TypesSelfDescribing::Hash(_))
+    }
+}
+
+
 impl Eq for Types {}
+impl Eq for TypesSelfDescribing {}
 impl PartialOrd for Types {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
@@ -175,6 +259,39 @@ impl PartialOrd for Types {
     }
 }
 
+impl PartialOrd for TypesSelfDescribing {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (TypesSelfDescribing::Integer(a), TypesSelfDescribing::Integer(b)) => Some(a.cmp(b)),
+
+            (TypesSelfDescribing::Float(a), TypesSelfDescribing::Float(b)) => Some(if a > b {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
+            (TypesSelfDescribing::Integer(a), TypesSelfDescribing::Float(b)) => Some(if &(*a as f64) > b {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
+            (TypesSelfDescribing::Float(a), TypesSelfDescribing::Integer(b)) => Some(if a > &(*b as f64) {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }),
+            (TypesSelfDescribing::Char(a), TypesSelfDescribing::Char(b)) => Some(a.cmp(b)),
+            (TypesSelfDescribing::String(a), TypesSelfDescribing::String(b)) | (TypesSelfDescribing::Precise(a), TypesSelfDescribing::Precise(b)) => {
+                Some(a.cmp(b))
+            }
+            (TypesSelfDescribing::Uuid(a), TypesSelfDescribing::Uuid(b)) => Some(a.cmp(b)),
+            (TypesSelfDescribing::Boolean(a), TypesSelfDescribing::Boolean(b)) => Some(a.cmp(b)),
+            (TypesSelfDescribing::Vector(a), TypesSelfDescribing::Vector(b)) => Some(a.len().cmp(&b.len())),
+            _ => None,
+        }
+    }
+}
+
+
 // UNSAFE
 #[allow(clippy::derive_hash_xor_eq)] // for now
 impl Hash for Types {
@@ -199,6 +316,34 @@ impl Hash for Types {
             Types::Precise(t) => t.hash(state),
             Types::DateTime(t) => t.hash(state),
             Types::Nil => "".hash(state),
+        }
+    }
+}
+
+// UNSAFE
+#[allow(clippy::derive_hash_xor_eq)] // for now
+impl Hash for TypesSelfDescribing {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        match self {
+            TypesSelfDescribing::Char(t) => t.hash(state),
+            TypesSelfDescribing::Integer(t) => t.hash(state),
+            TypesSelfDescribing::String(t) => t.hash(state),
+            TypesSelfDescribing::Uuid(t) => t.hash(state),
+            TypesSelfDescribing::Float(t) => {
+                let int_t = integer_decode(t.to_owned());
+                int_t.hash(state)
+            }
+            TypesSelfDescribing::Boolean(t) => t.hash(state),
+            TypesSelfDescribing::Vector(t) => t.hash(state),
+            TypesSelfDescribing::Map(t) => t.into_iter().fold((), |acc, (k, v)| {
+                k.hash(state);
+                v.hash(state);
+                acc
+            }),
+            TypesSelfDescribing::Hash(t) => t.hash(state),
+            TypesSelfDescribing::Precise(t) => t.hash(state),
+            TypesSelfDescribing::DateTime(t) => t.hash(state),
+            TypesSelfDescribing::Nil => "".hash(state),
         }
     }
 }

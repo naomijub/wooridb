@@ -15,6 +15,7 @@ edition = "2018"
 test_read = []
 history = []
 json = ["serde_json"]
+json_pure = ["json", "wql/json_pure"]
 
 [dependencies]
 actix = "0.10.0"

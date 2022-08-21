@@ -4,6 +4,7 @@ use std::{
 };
 
 use actix_web::{HttpResponse, Responder};
+use log::debug;
 use rayon::prelude::*;
 use uuid::Uuid;
 use wql::{ToSelect, Types, Wql};
@@ -46,6 +47,7 @@ pub async fn wql_handler(
             select_keys_with_id(entity, uuid, keys, local_data).await
         }
         Ok(Wql::Select(entity, ToSelect::All, None, functions)) => {
+            debug! ("wql_handler will call select_all");
             select_all(entity, local_data, functions).await
         }
         Ok(Wql::Select(entity, ToSelect::Keys(keys), None, functions)) => {
@@ -456,6 +458,7 @@ pub async fn select_all(
             return Err(Error::EntityNotCreated(entity));
         }
         .to_owned();
+        debug! ("select_all returning registries: {:?}", registries);
         registries
     };
 
