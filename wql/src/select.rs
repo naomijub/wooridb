@@ -7,7 +7,7 @@ const ALGEBRA: [&str; 6] = ["DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT
 const OPERATORS: [&str; 10] = [
     "ID", "IDS", "WHERE", "WHEN", "DEDUP", "GROUP", "ORDER", "OFFSET", "LIMIT", "COUNT",
 ];
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Order {
     Asc,
     Desc,
@@ -18,15 +18,15 @@ impl std::str::FromStr for Order {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s == ":asc" {
-            Ok(Order::Asc)
+            Ok(Self::Asc)
         } else if s == ":desc" {
-            Ok(Order::Desc)
+            Ok(Self::Desc)
         } else {
             Err(String::from("Order parameter should be :asc/:desc"))
         }
     }
 }
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Algebra {
     Dedup(String),
     GroupBy(String),
@@ -43,11 +43,13 @@ use super::{
     ToSelect, Wql,
 };
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn select_all(chars: &mut std::str::Chars) -> Result<Wql, String> {
     let arg = ToSelect::All;
     select_body(arg, chars)
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn select_args(chars: &mut std::str::Chars) -> Result<Wql, String> {
     let args: Vec<String> = read_select_args(chars)?;
     let arg = ToSelect::Keys(args);

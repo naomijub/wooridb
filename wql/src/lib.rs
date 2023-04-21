@@ -18,7 +18,7 @@ use logic::{integer_decode, read_map, read_match_args};
 pub use relation::{Relation, RelationType};
 pub use where_clause::{Clause, Function, Value};
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Wql {
     CreateEntity(String, Vec<String>, Vec<String>),
     Insert(String, Entity, Option<Uuid>),
@@ -39,7 +39,7 @@ pub enum Wql {
 
 pub use select::{Algebra, Order};
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum ToSelect {
     All,
     Keys(Vec<String>),
@@ -47,7 +47,7 @@ pub enum ToSelect {
 
 pub type Entity = HashMap<String, Types>;
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum MatchCondition {
     All(Vec<MatchCondition>),
     Any(Vec<MatchCondition>),
@@ -59,6 +59,7 @@ pub enum MatchCondition {
     L(String, Types),
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn tokenize(wql: &str) -> std::str::Chars {
     wql.chars()
 }
@@ -73,6 +74,7 @@ impl std::str::FromStr for Wql {
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql, String> {
     c.map_or_else(
         || Err(String::from("Empty WQL")),
@@ -80,7 +82,6 @@ pub(crate) fn parse(c: Option<char>, chars: &mut std::str::Chars) -> Result<Wql,
     )
 }
 
-#[allow(clippy::derive_hash_xor_eq)] // for now
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Types {
     Char(char),
@@ -98,47 +99,47 @@ pub enum Types {
 }
 
 impl Types {
-    pub fn default_values(&self) -> Types {
+    pub fn default_values(&self) -> Self {
         match self {
-            Types::Char(_) => Types::Char(' '),
-            Types::Integer(_) => Types::Integer(0),
-            Types::String(_) => Types::String(String::new()),
-            Types::Uuid(_) => Types::Uuid(Uuid::new_v4()),
-            Types::Float(_) => Types::Float(0_f64),
-            Types::Boolean(_) => Types::Boolean(false),
-            Types::Vector(_) => Types::Vector(Vec::new()),
-            Types::Map(_) => Types::Map(HashMap::new()),
-            Types::Hash(_) => Types::Hash(String::new()),
-            Types::Precise(_) => Types::Precise(String::from("0")),
-            Types::DateTime(_) => Types::DateTime(Utc::now()),
-            Types::Nil => Types::Nil,
+            Self::Char(_) => Self::Char(' '),
+            Self::Integer(_) => Self::Integer(0),
+            Self::String(_) => Self::String(String::new()),
+            Self::Uuid(_) => Self::Uuid(Uuid::new_v4()),
+            Self::Float(_) => Self::Float(0_f64),
+            Self::Boolean(_) => Self::Boolean(false),
+            Self::Vector(_) => Self::Vector(Vec::new()),
+            Self::Map(_) => Self::Map(HashMap::new()),
+            Self::Hash(_) => Self::Hash(String::new()),
+            Self::Precise(_) => Self::Precise(String::from("0")),
+            Self::DateTime(_) => Self::DateTime(Utc::now()),
+            Self::Nil => Self::Nil,
         }
     }
 
-    pub fn to_hash(&self, cost: Option<u32>) -> Result<Types, String> {
+    pub fn to_hash(&self, cost: Option<u32>) -> Result<Self, String> {
         use bcrypt::{hash, DEFAULT_COST};
         let value = match self {
-            Types::Char(c) => format!("{}", c),
-            Types::Integer(i) => format!("{}", i),
-            Types::String(s) => s.to_string(),
-            Types::DateTime(date) => date.to_string(),
-            Types::Uuid(id) => format!("{}", id),
-            Types::Float(f) => format!("{:?}", integer_decode(f.to_owned())),
-            Types::Boolean(b) => format!("{}", b),
-            Types::Vector(vec) => format!("{:?}", vec),
-            Types::Map(map) => format!("{:?}", map),
-            Types::Precise(p) => p.to_string(),
-            Types::Hash(_) => return Err(String::from("Hash cannot be hashed")),
-            Types::Nil => return Err(String::from("Nil cannot be hashed")),
+            Self::Char(c) => format!("{}", c),
+            Self::Integer(i) => format!("{}", i),
+            Self::String(s) => s.to_string(),
+            Self::DateTime(date) => date.to_string(),
+            Self::Uuid(id) => format!("{}", id),
+            Self::Float(f) => format!("{:?}", integer_decode(f.to_owned())),
+            Self::Boolean(b) => format!("{}", b),
+            Self::Vector(vec) => format!("{:?}", vec),
+            Self::Map(map) => format!("{:?}", map),
+            Self::Precise(p) => p.to_string(),
+            Self::Hash(_) => return Err(String::from("Hash cannot be hashed")),
+            Self::Nil => return Err(String::from("Nil cannot be hashed")),
         };
-        match hash(&value, cost.map_or(DEFAULT_COST, |c| c)) {
-            Ok(s) => Ok(Types::Hash(s)),
+        match hash(value, cost.map_or(DEFAULT_COST, |c| c)) {
+            Ok(s) => Ok(Self::Hash(s)),
             Err(e) => Err(format!("{:?}", e)),
         }
     }
 
-    pub fn is_hash(&self) -> bool {
-        matches!(self, Types::Hash(_))
+    pub const fn is_hash(&self) -> bool {
+        matches!(self, Self::Hash(_))
     }
 }
 
@@ -146,59 +147,58 @@ impl Eq for Types {}
 impl PartialOrd for Types {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
-            (Types::Integer(a), Types::Integer(b)) => Some(a.cmp(b)),
+            (Self::Integer(a), Self::Integer(b)) => Some(a.cmp(b)),
 
-            (Types::Float(a), Types::Float(b)) => Some(if a > b {
+            (Self::Float(a), Self::Float(b)) => Some(if a > b {
                 Ordering::Greater
             } else {
                 Ordering::Less
             }),
-            (Types::Integer(a), Types::Float(b)) => Some(if &(*a as f64) > b {
+            (Self::Integer(a), Self::Float(b)) => Some(if &(*a as f64) > b {
                 Ordering::Greater
             } else {
                 Ordering::Less
             }),
-            (Types::Float(a), Types::Integer(b)) => Some(if a > &(*b as f64) {
+            (Self::Float(a), Self::Integer(b)) => Some(if a > &(*b as f64) {
                 Ordering::Greater
             } else {
                 Ordering::Less
             }),
-            (Types::Char(a), Types::Char(b)) => Some(a.cmp(b)),
-            (Types::String(a), Types::String(b)) | (Types::Precise(a), Types::Precise(b)) => {
+            (Self::Char(a), Self::Char(b)) => Some(a.cmp(b)),
+            (Self::String(a), Self::String(b)) | (Self::Precise(a), Self::Precise(b)) => {
                 Some(a.cmp(b))
             }
-            (Types::Uuid(a), Types::Uuid(b)) => Some(a.cmp(b)),
-            (Types::Boolean(a), Types::Boolean(b)) => Some(a.cmp(b)),
-            (Types::Vector(a), Types::Vector(b)) => Some(a.len().cmp(&b.len())),
+            (Self::Uuid(a), Self::Uuid(b)) => Some(a.cmp(b)),
+            (Self::Boolean(a), Self::Boolean(b)) => Some(a.cmp(b)),
+            (Self::Vector(a), Self::Vector(b)) => Some(a.len().cmp(&b.len())),
             _ => None,
         }
     }
 }
 
 // UNSAFE
-#[allow(clippy::derive_hash_xor_eq)] // for now
 impl Hash for Types {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
-            Types::Char(t) => t.hash(state),
-            Types::Integer(t) => t.hash(state),
-            Types::String(t) => t.hash(state),
-            Types::Uuid(t) => t.hash(state),
-            Types::Float(t) => {
+            Self::Char(t) => t.hash(state),
+            Self::Integer(t) => t.hash(state),
+            Self::String(t) => t.hash(state),
+            Self::Uuid(t) => t.hash(state),
+            Self::Float(t) => {
                 let int_t = integer_decode(t.to_owned());
                 int_t.hash(state)
             }
-            Types::Boolean(t) => t.hash(state),
-            Types::Vector(t) => t.hash(state),
-            Types::Map(t) => t.into_iter().fold((), |acc, (k, v)| {
+            Self::Boolean(t) => t.hash(state),
+            Self::Vector(t) => t.hash(state),
+            Self::Map(t) => t.iter().fold((), |acc, (k, v)| {
                 k.hash(state);
                 v.hash(state);
                 acc
             }),
-            Types::Hash(t) => t.hash(state),
-            Types::Precise(t) => t.hash(state),
-            Types::DateTime(t) => t.hash(state),
-            Types::Nil => "".hash(state),
+            Self::Hash(t) => t.hash(state),
+            Self::Precise(t) => t.hash(state),
+            Self::DateTime(t) => t.hash(state),
+            Self::Nil => "".hash(state),
         }
     }
 }

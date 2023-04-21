@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use super::{FromStr, HashMap, MatchCondition, Types};
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCondition>, String> {
     let base = chars
         .skip_while(|c| c == &'(' || c.is_whitespace())
@@ -79,6 +80,7 @@ pub(crate) fn read_match_args(chars: &mut std::str::Chars) -> Result<Vec<MatchCo
     Ok(conditions)
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Types>, String> {
     let mut res: HashMap<String, Types> = HashMap::new();
     let mut key: Option<String> = None;
@@ -131,6 +133,7 @@ pub(crate) fn read_map(chars: &mut std::str::Chars) -> Result<HashMap<String, Ty
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_map_as_str(
     chars: &mut std::str::Chars,
 ) -> Result<HashMap<String, String>, String> {
@@ -172,6 +175,7 @@ pub(crate) fn read_map_as_str(
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_inner_map(
     chars: &mut std::str::Chars,
 ) -> Result<HashMap<String, Types>, String> {
@@ -231,6 +235,7 @@ fn read_vec(chars: &mut std::str::Chars) -> Result<Vec<Types>, String> {
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_select_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
     let mut res = Vec::new();
     if chars.next() != Some('{') {
@@ -256,6 +261,7 @@ pub(crate) fn read_select_args(chars: &mut std::str::Chars) -> Result<Vec<String
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, String> {
     let mut res = Vec::new();
     if chars.next() != Some('{') {
@@ -284,6 +290,7 @@ pub(crate) fn read_args(chars: &mut std::str::Chars) -> Result<Vec<String>, Stri
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn parse_key(c: char, chars: &mut std::str::Chars) -> String {
     let key_rest = chars
         .take_while(|c| c.is_alphanumeric() || c == &'_')
@@ -324,6 +331,7 @@ pub fn parse_value(c: char, chars: &mut std::str::Chars) -> Result<Types, String
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn parse_str_value(c: char, chars: &mut std::str::Chars) -> String {
     format!(
         "{}{}",
@@ -335,6 +343,7 @@ pub(crate) fn parse_str_value(c: char, chars: &mut std::str::Chars) -> String {
     .replace('\"', "")
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
     let result = chars.try_fold((false, String::new()), |(last_was_escape, mut s), c| {
         if last_was_escape {
@@ -369,6 +378,7 @@ pub(crate) fn read_str(chars: &mut std::str::Chars) -> Result<Types, String> {
     }
 }
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, String> {
     let mut uuids = Vec::new();
     let mut uuid = String::new();
@@ -394,6 +404,7 @@ pub(crate) fn read_uuids(chars: &mut std::str::Chars) -> Result<Vec<Uuid>, Strin
 }
 
 // UNSAFE
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn integer_decode(val: f64) -> u64 {
     val.to_bits()
 }

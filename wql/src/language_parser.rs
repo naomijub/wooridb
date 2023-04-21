@@ -7,6 +7,7 @@ use crate::{
 
 use super::{read_map, read_match_args, FromStr, MatchCondition, Uuid, Wql};
 
+#[allow(clippy::redundant_pub_crate)]
 pub(crate) fn read_symbol(a: char, chars: &mut std::str::Chars) -> Result<Wql, String> {
     let symbol = chars.take_while(|c| !c.is_whitespace()).collect::<String>();
 
