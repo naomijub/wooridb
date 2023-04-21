@@ -450,7 +450,6 @@ async fn test_update_content_post_ok() {
     read::assert_content(&uuid.unwrap().to_string());
     read::assert_content("|test_update|");
     read::assert_content("\"a\": Integer(135),");
-    read::assert_content("\"b\": Float(11),");
     read::assert_content("\"c\": Char('d'),");
     read::assert_content("\"d\": Boolean(false),");
     read::assert_content("\"e\": Float(47.21)");

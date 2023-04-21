@@ -55,7 +55,7 @@ pub async fn create_user_controller(
     #[cfg(not(feature = "json"))]
     let credentials: Result<CreateUserWithAdmin, Error> = match from_str(&body) {
         Ok(x) => Ok(x),
-        Err(e) => Err(Error::Ron(e)),
+        Err(e) => Err(Error::Ron(e.into())),
     };
 
     if let Ok(cred) = credentials {
@@ -117,7 +117,7 @@ pub async fn delete_users_controller(
     #[cfg(not(feature = "json"))]
     let credentials: Result<DeleteUsersWithAdmin, Error> = match from_str(&body) {
         Ok(x) => Ok(x),
-        Err(e) => Err(Error::Ron(e)),
+        Err(e) => Err(Error::Ron(e.into())),
     };
 
     if let Ok(cred) = credentials {

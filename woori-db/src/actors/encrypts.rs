@@ -169,8 +169,8 @@ impl Handler<VerifyEncryption> for Executor {
 
 fn pretty_config() -> PrettyConfig {
     PrettyConfig::new()
-        .with_indentor("".to_string())
-        .with_new_line("".to_string())
+        .indentor("".to_string())
+        .new_line("".to_string())
 }
 
 #[cfg(test)]
