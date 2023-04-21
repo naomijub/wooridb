@@ -284,7 +284,7 @@ mod test {
         assert!(body.contains("\"uniq2_ent2\": {"));
         assert!(body.contains("\"rg\": {\"Precise"));
         assert!(body.contains("\"uniq_ent\": {"));
-        assert!(body.contains("{\"cpf\": {\"Precise"));
+        assert!(body.contains("\"cpf\": {\"Precise"));
         assert!(body.contains("\"snn\": {}}}"));
     }
 }

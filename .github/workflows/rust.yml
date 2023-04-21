@@ -19,10 +19,12 @@ jobs:
       run: cargo test -- --nocapture
     - name: DB-FMT
       run: cargo fmt -- --check
-    - name: WQL-install-clippy
+    - name: DB-install-clippy
       run: rustup component add clippy
-    - name: WQL-clippy
+    - name: DB-clippy
       run: cargo clippy -- -W clippy::pedantic
+    - name: DB-deep-clippy
+      run: cargo clippy --all-features -- -W clippy::all -W clippy::nursery -D "warnings"
 
   build_release_tests:
     runs-on: ubuntu-latest
@@ -183,4 +185,6 @@ jobs:
       run: rustup component add clippy
     - name: WQL-clippy
       run: cargo clippy --manifest-path wql/Cargo.toml -- -W clippy::pedantic
+    - name: WQL-deep-clippy
+      run: cargo clippy --all-features --manifest-path wql/Cargo.toml -- -W clippy::all -W clippy::nursery -D "warnings"
 

@@ -183,7 +183,7 @@ fn clause_entity_definition(entity_name: &str, clause: &str) -> Clause {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Clause {
     ContainsKeyValue(String, String, Types),
     ValueAttribution(String, String, Value),
@@ -193,7 +193,7 @@ pub enum Clause {
     Error,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Function {
     Eq,
     GEq,
@@ -213,21 +213,21 @@ impl FromStr for Function {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match &s.to_lowercase()[..] {
-            "==" => Function::Eq,
-            ">=" => Function::GEq,
-            ">" => Function::G,
-            "<=" => Function::LEq,
-            "<" => Function::L,
-            "!=" | "<>" => Function::NotEq,
-            "like" => Function::Like,
-            "between" => Function::Between,
-            "in" => Function::In,
-            _ => Function::Error,
+            "==" => Self::Eq,
+            ">=" => Self::GEq,
+            ">" => Self::G,
+            "<=" => Self::LEq,
+            "<" => Self::L,
+            "!=" | "<>" => Self::NotEq,
+            "like" => Self::Like,
+            "between" => Self::Between,
+            "in" => Self::In,
+            _ => Self::Error,
         })
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Value(pub String);
 
 #[cfg(test)]

@@ -23,21 +23,19 @@ pub fn join(chars: &mut std::str::Chars) -> Result<Wql, String> {
                 is_entity = false;
                 if entity_a.0.is_empty() {
                     entity_a.0 = ent;
-                    ent = String::new();
                 } else {
                     entity_b.0 = ent;
-                    ent = String::new();
                 }
+                ent = String::new();
             }
             Some(',') => {
                 is_entity = true;
                 if entity_a.1.is_empty() {
                     entity_a.1 = key;
-                    key = String::new();
                 } else {
                     entity_b.1 = key;
-                    key = String::new();
                 }
+                key = String::new();
             }
             Some(')') => {
                 entity_b.1 = key;
@@ -70,7 +68,7 @@ pub fn join(chars: &mut std::str::Chars) -> Result<Wql, String> {
 
     let queries_wql = queries
         .into_iter()
-        .map(|q| Wql::from_str(q))
+        .map(Wql::from_str)
         .collect::<Result<Vec<Wql>, String>>()?;
 
     // WITH clause

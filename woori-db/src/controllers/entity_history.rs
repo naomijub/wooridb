@@ -45,7 +45,7 @@ pub async fn history_controller(
     #[cfg(feature = "json")]
     let info: EntityHistoryInfo = serde_json::from_str(&body)?;
     #[cfg(not(feature = "json"))]
-    let info: EntityHistoryInfo = ron::de::from_str(&body)?;
+    let info: EntityHistoryInfo = ron::de::from_str(&body).map_err(|e| Error::Ron(e.into()))?;
 
     let registry = {
         let local_data = if let Ok(guard) = local_data.lock() {

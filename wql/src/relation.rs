@@ -4,14 +4,14 @@ use std::str::FromStr;
 use crate::Wql;
 const ERROR: &str = "Supported operations for INTERSECT and DIFFERECE are KEY for mathching keys and KEY_VALUE for matching key_values";
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum Relation {
     Difference,
     Intersect,
     Union,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum RelationType {
     Key,
     KeyValue,
@@ -52,7 +52,7 @@ pub fn relation(chars: &mut std::str::Chars, relation: Relation) -> Result<Wql, 
 
     let queries = queries
         .into_iter()
-        .map(|q| Wql::from_str(q))
+        .map(Wql::from_str)
         .collect::<Result<Vec<Wql>, String>>()?;
 
     let queries = queries.into_iter()
