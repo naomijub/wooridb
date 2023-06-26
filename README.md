@@ -3,6 +3,9 @@
 
 WooriDB is a general purpose (**EXPERIMENTAL**) time serial database, which means it contains all entities registries indexed by DateTime. It is schemaless, key-value storage and uses its own query syntax that is similar to SparQL and Crux's Datalog. 
 
+[![](https://media.giphy.com/media/FOe2EcTuBYGbG0Yc3w/giphy.gif)](https://www.patreon.com/naomijub) <br/>
+[If you want me to continue improving this project: Patreon link](https://www.patreon.com/naomijub)
+
 Some other features are:
 - Hashing keys content with [`ENCRYPT`](https://github.com/naomijub/wooridb#create-entity) keyword.
 - Hashed values are filtered out and can only be checked with  [`CHECK`](https://github.com/naomijub/wooridb#checks-validity-of-of-an-encrypted-key) keyword.
